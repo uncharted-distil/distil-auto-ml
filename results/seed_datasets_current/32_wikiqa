@@ -1,0 +1,1 @@
+{"prob_name": "32_wikiqa", "ll_metric": "f1", "ll_score": 0.7252396166134184, "test_score": 0.4539007092198581, "elapsed": 850.9857094287872, "_extra": {}, "_misc": {"use_schema": false}}

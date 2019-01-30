@@ -1,0 +1,1 @@
+{"prob_name": "1491_one_hundred_plants_margin_clust", "ll_metric": "normalizedMutualInformation", "ll_score": 0.8167311557463074, "test_score": 0.8206203019928928, "elapsed": 7.744799852371216, "_extra": {}, "_misc": {"use_schema": false}}

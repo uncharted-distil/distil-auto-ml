@@ -1,0 +1,1 @@
+{"prob_name": "31_urbansound", "ll_metric": "accuracy", "ll_score": 0.4837758112094395, "test_score": 0.9292035398230089, "elapsed": 183.43622851371765, "_extra": {}, "_misc": {"use_schema": false}}

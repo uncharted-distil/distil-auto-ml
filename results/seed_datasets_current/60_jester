@@ -1,0 +1,1 @@
+{"prob_name": "60_jester", "ll_metric": "meanAbsoluteError", "ll_score": 3.9170365956355178, "test_score": -3.0914091143771962, "elapsed": 772.4767751693726, "_extra": {}, "_misc": {"use_schema": false}}
