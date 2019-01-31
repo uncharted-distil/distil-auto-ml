@@ -1,0 +1,1 @@
+{"prob_name": "1567_poker_hand", "ll_metric": "f1Macro", "ll_score": 0.05556513926157457, "test_score": 0.36038981541868764, "elapsed": 790.8441286087036, "model_details": {"cv_score": 0.2486760391682629, "best_params": {"class_weight": "balanced", "estimator": "RandomForest", "min_samples_leaf": 16, "n_estimators": 1024}, "num_fits": 1}}

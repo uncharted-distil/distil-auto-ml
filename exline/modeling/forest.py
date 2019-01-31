@@ -42,10 +42,10 @@ class AnyForest:
         self.model_cls = self.__possible_model_cls[(mode, estimator)]
     
     def fit(self, X, y):
-        if self.mode == 'classification':
-            assert y.dtype == int
-            assert y.min() == 0, 'may need to remap_labels'
-            assert y.max() == len(set(y)) - 1, 'may need to remap_labels'
+        # if self.mode == 'classification':
+        #     assert y.dtype == int
+        #     assert y.min() == 0, 'may need to remap_labels'
+        #     assert y.max() == len(set(y)) - 1, 'may need to remap_labels'
             
         self.model = self.model_cls(**self.params).fit(X, y)
         return self

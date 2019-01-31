@@ -36,48 +36,48 @@ python -m exline.main --prob-name  LL1_336_MS_Geolife_transport_mode_prediction_
 # --
 # Timeseries
 
-python -m exline.main --prob-name 66_chlorineConcentration
+python -m exline.main --prob-name 66_chlorineConcentration # +
 
 # --
 # Graph matching
 
-python -m exline.main --prob-name 49_facebook
+# python -m exline.main --prob-name 49_facebook # +
 
 # !! SGM doesn't beat baseline, but we get perfect score because of "null transform" checking
-# I suspect there's probably something wrong with the baseline.
+# I suspect there's something wrong with the baseline.
 
 # --
 # Vertex nomination
 
-python -m exline.main --prob-name LL1_net_nomination_seed
+# python -m exline.main --prob-name LL1_net_nomination_seed # +
 
 # !! This is not a great VN problem.  Don't have any others.  Should add CORA or something.
 
 # --
 # Recommender system
 
-python -m exline.main --prob-name 60_jester
+# python -m exline.main --prob-name 60_jester # +
 
 # !! Simple ensemble is reliably better than single model, though hyperband could do better I'm sure.
 
 # --
 # Link prediction
 
-python -m exline.main --prob-name 59_umls
+# python -m exline.main --prob-name 59_umls # +
 
 # --
 # Question answering
 
-CUDA_VISIBLE_DEVICES=4 python -m exline.main --prob-name 32_wikiqa
+# python -m exline.main --prob-name 32_wikiqa # =
 
 # --
 # Clustering
 
-python -m exline.main --prob-name 1491_one_hundred_plants_margin_clust
+# python -m exline.main --prob-name 1491_one_hundred_plants_margin_clust
 # !! kmeans, same as baseline, but there's no training data so not really any way to tune
 
-python -m exline.main --prob-name 6_70_com_amazon
-python -m exline.main --prob-name 6_86_com_DBLP
+# python -m exline.main --prob-name 6_70_com_amazon
+# python -m exline.main --prob-name 6_86_com_DBLP
 # !! bigclam or "null clustering" hack.  Task is ill defined, I think.
 
 # --
@@ -87,19 +87,19 @@ python -m exline.main --prob-name 6_86_com_DBLP
 python -m exline.main --prob-name LL1_736_stock_market
 
 # multilabel, multitable regression
-python -m exline.main --prob-name uu2_gp_hyperparameter_estimation    # !!!! Metric is wrong for one of these
-python -m exline.main --prob-name uu2_gp_hyperparameter_estimation_v2
+# python -m exline.main --prob-name uu2_gp_hyperparameter_estimation    # !!!! our metric is wrong for one of these
+# python -m exline.main --prob-name uu2_gp_hyperparameter_estimation_v2
  
 # audio classification
 python -m exline.main --prob-name 31_urbansound
 
 # sparse timeseries
-python -m exline.main --prob-name uu1_datasmash
+# python -m exline.main --prob-name uu1_datasmash
 
 # text classification
-python -m exline.main --prob-name 30_personae
+# python -m exline.main --prob-name 30_personae
 
-python -m exline.main --prob-name 22_handgeometry
+CUDA_VISIBLE_DEVICES=6 python -m exline.main --prob-name 22_handgeometry
 
 # --
 # No support

@@ -1,0 +1,1 @@
+{"prob_name": "313_spectrometer", "ll_metric": "f1Macro", "ll_score": 0.1909495266638124, "test_score": 0.4833929686870863, "elapsed": 161.04666876792908, "model_details": {"cv_score": 0.27015175674916847, "best_params": {"class_weight": "balanced", "estimator": "RandomForest", "min_samples_leaf": 1, "n_estimators": 128}, "num_fits": 5}}

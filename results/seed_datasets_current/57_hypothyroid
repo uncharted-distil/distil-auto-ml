@@ -1,0 +1,1 @@
+{"prob_name": "57_hypothyroid", "ll_metric": "f1Macro", "ll_score": 0.8426610142037679, "test_score": 0.9682746364872075, "elapsed": 7.401467323303223, "model_details": {"cv_score": 0.7298885584897425, "best_params": {"class_weight": null, "estimator": "RandomForest", "min_samples_leaf": 1, "n_estimators": 512}, "num_fits": 1}}

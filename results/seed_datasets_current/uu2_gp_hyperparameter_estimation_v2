@@ -1,0 +1,1 @@
+{"prob_name": "uu2_gp_hyperparameter_estimation_v2", "ll_metric": "rootMeanSquaredErrorAvg", "ll_score": 0.9370918399292338, "test_score": -0.5950053725651087, "elapsed": 45.55287408828735, "model_details": {"cv_score": -0.6274165714651665, "best_params": {"bootstrap": true, "estimator": "RandomForest", "min_samples_leaf": 2, "n_estimators": 2048}, "num_fits": 1}}

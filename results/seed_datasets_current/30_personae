@@ -1,0 +1,1 @@
+{"prob_name": "30_personae", "ll_metric": "f1", "ll_score": 0.5714285714285715, "test_score": 0.6190476190476191, "elapsed": 21.557799816131592, "model_details": {"best_params": {"vect__ngram_range": [1, 2], "vect__max_features": 30000, "cls__class_weight": null, "cls__C": 0.0013065201621247212}, "best_fitness": 0.7321971595655806}}

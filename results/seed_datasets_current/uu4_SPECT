@@ -1,0 +1,1 @@
+{"prob_name": "uu4_SPECT", "ll_metric": "f1", "ll_score": 0.8920863309352518, "test_score": 0.9037037037037037, "elapsed": 16.675273418426514, "model_details": {"cv_score": 0.9146757679180887, "best_params": {"class_weight": "balanced", "estimator": "RandomForest", "min_samples_leaf": 4, "n_estimators": 32}, "num_fits": 5}}

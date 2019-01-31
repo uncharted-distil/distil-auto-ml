@@ -1,0 +1,1 @@
+{"prob_name": "38_sick", "ll_metric": "f1Macro", "ll_score": 0.8499658266067984, "test_score": 0.9527346810844695, "elapsed": 6.993196725845337, "model_details": {"cv_score": 0.9235080863249077, "best_params": {"class_weight": "balanced", "estimator": "RandomForest", "min_samples_leaf": 2, "n_estimators": 256}, "num_fits": 1}}

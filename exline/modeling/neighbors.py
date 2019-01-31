@@ -49,7 +49,7 @@ def whiten(X_train, X_test):
     return pca.transform(X_train), pca.transform(X_test)
 
 
-def precomputed_knn1_cv(train_dist, test_dist, y_train, y_test, target_metric):
+def precomputed_knn1_cv(train_dist, test_dist, y_train, target_metric):
     np.fill_diagonal(train_dist, np.inf) # don't predict self
     
     pred_cv    = y_train[train_dist.argmin(axis=-1)] # !! Should break ties better
@@ -57,21 +57,21 @@ def precomputed_knn1_cv(train_dist, test_dist, y_train, y_test, target_metric):
     
     # !! Only for debugging
     pred_test    = y_train[test_dist.argmin(axis=-1)]
-    fitness_test = metrics[target_metric](y_test, pred_test)
+    # fitness_test = metrics[target_metric](y_test, pred_test)
     
     return pred_test, {
         "fitness_cv"   : fitness_cv,
-        "fitness_test" : fitness_test,
+        # "fitness_test" : fitness_test,
     }
 
 
-def knn1_cv(X_train, X_test, y_train, y_test, target_metric, metric, whitened, dists=None):
+def knn1_cv(X_train, X_test, y_train, target_metric, metric, whitened, dists=None):
     if whitened:
         X_train, X_test = whiten(X_train, X_test)
     
     train_dist = cdist(X_train, X_train, metric=metric)
     test_dist  = cdist(X_test, X_train, metric=metric)
-    return precomputed_knn1_cv(train_dist, test_dist, y_train, y_test, target_metric=target_metric)
+    return precomputed_knn1_cv(train_dist, test_dist, y_train, target_metric=target_metric)
 
 
 # Diffusion
@@ -182,30 +182,32 @@ class NeighborsCV(EXLineBaseModel):
         self._y_train = None
     
     def fit(self, X_train, y_train, U_train):
-        X_test, y_test = U_train['X_test'], U_train['y_test']
+        X_test = U_train['X_test']
         
         self._y_train = y_train
         
         # KNN models
-        self._fit_knn(X_train, X_test, y_train, y_test)
+        self._fit_knn(X_train, X_test, y_train)
         
         # Diffusion model, w/ best metric from KNN
         if self.diffusion:
             knn_settings     = list(self.fitness.keys())
             metric, whitened = knn_settings[np.argmax([self.fitness[k]['fitness_cv'] for k in knn_settings])] # best settings
-            self._fit_diffusion(X_train, X_test, y_train, y_test, metric, whitened)
+            self._fit_diffusion(X_train, X_test, y_train, metric, whitened)
         
         # Random Forest model
         if self.forest:
-            self._fit_rf(X_train, X_test, y_train, y_test)
+            self._fit_rf(X_train, X_test, y_train)
         
         return self
     
-    def score(self, X_test):
+    def predict(self, X):
         # Ensembles K best models.  Handles ties correctly.
         # Shouldn't be ensembling when some of the models are absolute garbage
         # Should maybe drop models that do worse than chance.
         # Alternatively, we chould determine ensembling methods via CV
+        
+        print('!! NeighborsCV dos not use the passed argument', file=sys.stderr)
         
         all_fitness_cv = [v['fitness_cv'] for _,v in self.fitness.items()]
         
@@ -222,7 +224,7 @@ class NeighborsCV(EXLineBaseModel):
         
         return ens_pred
     
-    def _fit_knn(self, X_train, X_test, y_train, y_test):
+    def _fit_knn(self, X_train, X_test, y_train):
         # Fit a series of KNN models
         
         global _dtw_dist_row_train
@@ -242,7 +244,7 @@ class NeighborsCV(EXLineBaseModel):
             metric, whitened = knn_setting
             if metric != 'dtw':
                 pred, scores = knn1_cv(
-                    X_train, X_test, y_train, y_test, 
+                    X_train, X_test, y_train, 
                     target_metric=self.target_metric,
                     metric=metric,
                     whitened=whitened
@@ -254,7 +256,7 @@ class NeighborsCV(EXLineBaseModel):
                 
                 full_dist = np.vstack(parmap(_dtw_dist_row_train, list(X_all), verbose=1))
                 train_dist, test_dist = full_dist[:n_train], full_dist[n_train:]
-                pred, scores = precomputed_knn1_cv(train_dist, test_dist, y_train, y_test, target_metric=self.target_metric)
+                pred, scores = precomputed_knn1_cv(train_dist, test_dist, y_train, target_metric=self.target_metric)
             
             self.preds[knn_setting]   = pred
             self.fitness[knn_setting] = scores
@@ -262,7 +264,7 @@ class NeighborsCV(EXLineBaseModel):
             if self.verbose:
                 print(knn_setting, self.fitness[knn_setting], file=sys.stderr)
     
-    def _fit_diffusion(self, X_train, X_test, y_train, y_test, metric, whitened):
+    def _fit_diffusion(self, X_train, X_test, y_train, metric, whitened):
         # Fit a diffusion model
         
         global _dtw_dist_row_all
@@ -293,13 +295,13 @@ class NeighborsCV(EXLineBaseModel):
         self.preds[('diff', metric, whitened)] = pred_test
         self.fitness[('diff', metric, whitened)] = {
             "fitness_cv"   : scores,
-            "fitness_test" : metrics[self.target_metric](y_test, pred_test),
+            # "fitness_test" : metrics[self.target_metric](y_test, pred_test),
         }
         
         if self.verbose:
             print(('diff', metric, whitened), self.fitness[('diff', metric, whitened)], file=sys.stderr)
     
-    def _fit_rf(self, X_train, X_test, y_train, y_test):
+    def _fit_rf(self, X_train, X_test, y_train):
         # Fit a RandomForest model
         
         forest    = ForestCV(target_metric=self.target_metric)
@@ -309,7 +311,7 @@ class NeighborsCV(EXLineBaseModel):
         self.preds['rf']   = pred_test
         self.fitness['rf'] = {
             "fitness_cv"   : forest.best_fitness,
-            "fitness_test" : metrics[self.target_metric](y_test, pred_test)
+            # "fitness_test" : metrics[self.target_metric](y_test, pred_test)
         }
         
         if self.verbose:

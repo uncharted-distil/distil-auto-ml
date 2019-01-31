@@ -6,5 +6,5 @@
 
 class EXLineBaseModel:
     @property
-    def properties(self):
+    def details(self):
         return {}

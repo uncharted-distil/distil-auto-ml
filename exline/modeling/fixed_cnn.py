@@ -111,10 +111,7 @@ class FixedCNNForest(EXLineBaseModel):
         self._models = []
         for fe in self._feature_extractors:
             train_feats = self.extract_features(fe, dataloaders, mode='train')
-            model = ForestCV(
-                target_metric=self.target_metric, 
-                estimator=['RandomForest'] if self.is_classification else ['ExtraTrees', 'RandomForest']
-            )
+            model = ForestCV(target_metric=self.target_metric)
             model = model.fit(train_feats, y_train)
             self._models.append(model)
         

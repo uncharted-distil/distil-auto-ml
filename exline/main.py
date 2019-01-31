@@ -46,19 +46,21 @@ X_train, X_test, y_train, y_test, ll_metric, ll_score, d3mds = load_problem(
 )
 
 # --
-# Run
+# Pick pipeline
 
 route, hparams = get_routing_info(X_train, X_test, y_train, ll_metric, d3mds)
+prep_fn        = getattr(PreprocessorFunctions, route)
+model_cls      = model_lookup[route]
 
-print('----------------------------------', file=sys.stderr)
-print('prob_name:     %s' % args.prob_name, file=sys.stderr)
-print('target_metric: %s' % ll_metric,      file=sys.stderr)
-print('router:        %s' % route,          file=sys.stderr)
-print('hparams:       %s' % str(hparams),   file=sys.stderr)
-print('----------------------------------', file=sys.stderr)
-
-prep_fn   = getattr(PreprocessorFunctions, route)
-model_cls = model_lookup[route]
+print('-----------------------------------',        file=sys.stderr)
+print('prob_name     : %s' % args.prob_name,        file=sys.stderr)
+print('target_metric : %s' % ll_metric,             file=sys.stderr)
+print('route         : %s' % route,                 file=sys.stderr)
+print('prep_fn       : %s' % str(prep_fn),          file=sys.stderr)
+print('model_cls     : %s' % str(model_cls),        file=sys.stderr)
+print('hparams       : %s' % str(hparams),          file=sys.stderr)
+print('num_obs       : %s' % str(X_train.shape[0]), file=sys.stderr)
+print('-----------------------------------',        file=sys.stderr)
 
 Xf_train, Xf_test, U_train, hparams = prep_fn(X_train, X_test, y_train, ll_metric, d3mds, hparams)
 

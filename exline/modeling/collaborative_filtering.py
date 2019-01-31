@@ -122,6 +122,8 @@ class SGDCollaborativeFilter(EXLineBaseModel):
                 }, file=sys.stderr)
             
             model = model.to('cpu')
+        
+        return self
     
     def predict(self, X):
         

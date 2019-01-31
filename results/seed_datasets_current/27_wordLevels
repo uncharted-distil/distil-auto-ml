@@ -1,0 +1,1 @@
+{"prob_name": "27_wordLevels", "ll_metric": "f1Macro", "ll_score": 0.31504643163503304, "test_score": 0.30124652413672937, "elapsed": 21.15864586830139, "model_details": {"cv_score": 0.33000287127928635, "best_params": {"class_weight": "balanced", "estimator": "RandomForest", "min_samples_leaf": 1, "n_estimators": 512}, "num_fits": 1}}

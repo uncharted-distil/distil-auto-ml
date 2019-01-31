@@ -4,6 +4,9 @@
     d3m.py
 """
 
+import sys
+import numpy as np
+
 from exline.io import (
     load_ragged_collection,
     load_graph,
@@ -25,7 +28,7 @@ from exline.modeling.vertex_nomination import VertexNominationCV
 from exline.modeling.collaborative_filtering import SGDCollaborativeFilter
 from exline.modeling.link_prediction import RescalLinkPrediction
 from exline.modeling.text_classification import TextClassifierCV
-# from exline.modeling.pretrained_audio import AudiosetModel # !! Slow to import
+from exline.modeling.pretrained_audio import AudiosetModel # !! Slow to import
 from exline.modeling.community_detection import CommunityDetection
 from exline.modeling.clustering import ClusteringCV
 from exline.modeling.fixed_cnn import FixedCNNForest
@@ -42,50 +45,61 @@ class PreprocessorFunctions:
         Xf_train, Xf_test = DataFrameMapper(target_metric=ll_metric).pipeline(X_train, X_test, y_train)
         return Xf_train, Xf_test, None, hparams
     
+    @staticmethod
     def multitable(X_train, X_test, y_train, ll_metric, d3mds, hparams):
-        Xf_train, Xf_test, _ = load_ragged_collection(X_train, X_test, d3mds, collection_type='multitable')
+        Xf_train, Xf_test, _ = load_ragged_collection(X_train, X_test, d3mds, collection_type='table')
         Xf_train, Xf_test = set2hist(Xf_train, Xf_test)
         return Xf_train, Xf_test, None, hparams
     
+    @staticmethod
     def question_answering(X_train, X_test, y_train, ll_metric, d3mds, hparams):
         Xf_train, Xf_test, _ = load_and_join(X_train, X_test, d3mds)
         return Xf_train, Xf_test, None, hparams
     
+    @staticmethod
     def text(X_train, X_test, y_train, ll_metric, d3mds, hparams):
         Xf_train, Xf_test, _ = load_ragged_collection(X_train, X_test, d3mds, collection_type="text")
         return Xf_train, Xf_test, None, hparams
     
+    @staticmethod
     def audio(X_train, X_test, y_train, ll_metric, d3mds, hparams):
-        from exline.modeling.pretrained_audio import AudiosetModel
         Xf_train, Xf_test = load_audio(X_train, X_test, d3mds)
         return Xf_train, Xf_test, None, hparams
-        
+    
+    @staticmethod
     def clustering(X_train, X_test, y_train, ll_metric, d3mds, hparams):
         return X_train.copy(), X_test.copy(), None, hparams
-        
+    
+    @staticmethod
     def image(X_train, X_test, y_train, ll_metric, d3mds, hparams):
         Xf_train, Xf_test, _ = prep_image_collection(X_train, X_test, d3mds)
         return Xf_train, Xf_test, None, hparams
-        
+    
+    @staticmethod
     def graph_matching(X_train, X_test, y_train, ll_metric, d3mds, hparams):
         return X_train.copy(), X_test.copy(), {
             "graphs" : load_graphs(d3mds, n=2)
         }, hparams
     
+    @staticmethod
     def _one_graph(X_train, X_test, y_train, ll_metric, d3mds, hparams):
         return X_train.copy(), X_test.copy(), {
             "graph" : load_graph(d3mds)
         }, hparams
     
+    @staticmethod
     def vertex_nomination(*args, **kwargs):
-        return _one_graph(*args, **kwargs)
+        return PreprocessorFunctions._one_graph(*args, **kwargs)
     
+    @staticmethod
     def link_prediction(*args, **kwargs):
-        return _one_graph(*args, **kwargs)
+        return PreprocessorFunctions._one_graph(*args, **kwargs)
     
+    @staticmethod
     def community_detection(*args, **kwargs):
-        return _one_graph(*args, **kwargs)
+        return PreprocessorFunctions._one_graph(*args, **kwargs)
     
+    @staticmethod
     def timeseries(X_train, X_test, y_train, ll_metric, d3mds, hparams):
         Xf_train, Xf_test, meta_cols = load_ragged_collection(X_train, X_test, d3mds, collection_type="timeseries")
     
@@ -95,18 +109,15 @@ class PreprocessorFunctions:
             _ = hparams['metrics'].remove('dtw')
         
         Xf_train, Xf_test = maybe_truncate(Xf_train, Xf_test)
-        
-        U_train = {
+        return Xf_train, Xf_test, {
             "X_test" : Xf_test,
-            "y_test" : y_test,
-        }
-        
-        return Xf_train, Xf_test, U_train
+        }, hparams
     
+    @staticmethod
     def collaborative_filtering(X_train, X_test, y_train, ll_metric, d3mds, hparams):
         Xf_train, Xf_test, n_users, n_items = cf_remap_graphs(X_train, X_test)
         hparams.update({"n_users" : n_users, "n_items" : n_items})
-        Xf_train, Xf_test, None, hparams
+        return Xf_train, Xf_test, None, hparams
 
 
 model_lookup = {
@@ -114,7 +125,7 @@ model_lookup = {
     "multitable"              : ForestCV,
     "question_answering"      : BERTPairClassification,
     "text"                    : TextClassifierCV,
-    # "audio"                   : AudiosetModel,
+    "audio"                   : AudiosetModel,
     "graph_matching"          : SGMGraphMatcher,
     "vertex_nomination"       : VertexNominationCV,
     "link_prediction"         : RescalLinkPrediction,

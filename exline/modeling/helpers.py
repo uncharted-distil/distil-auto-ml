@@ -51,15 +51,24 @@ def adjust_f1_macro(model, Xf_test, y_train, y_test, alpha=0.01, subset=-1):
 # Ensembling
 
 def _vote(p, tiebreaker):
-    cnts = np.bincount(p)
-    if (cnts == cnts.max()).sum() > 1:
-        # if tie, break according to tiebreaker
-        top = np.where(cnts == cnts.max())[0]
-        return top[np.argmin([tiebreaker.index(t) for t in top])]
+    cnts = pd.value_counts(p)
+    
+    # if unique maximum, return it
+    # otherwise, break ties w/ tiebreaker
+    
+    if (cnts == cnts.max()).sum() == 1:
+        return cnts.index[0]
     else:
-        return cnts.argmax()
+        tie = cnts[cnts == cnts.max()].index
+        for t in tiebreaker:
+            if t in tie:
+                return t
 
 def tiebreaking_vote(preds, y_train):
     # Vote, breaking ties according to class prevalance
     tiebreaker = list(pd.value_counts(y_train).index)
     return np.array([_vote(p, tiebreaker) for p in preds.T])
+
+
+
+
