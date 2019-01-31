@@ -55,6 +55,3 @@ class TextClassifierCV:
     
     def predict(self, X):
         return self.model.predict(X)
-    
-    def score(self, X, y):
-        return metrics[self.target_metric](y, self.predict(X))

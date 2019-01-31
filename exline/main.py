@@ -98,7 +98,8 @@ if route in ['table']:
     
     model      = ForestCV(target_metric=ll_metric, **rparams)
     model      = model.fit(Xf_train, y_train)
-    test_score = model.score(Xf_test, y_test)
+    pred_test  = model.predict(Xf_test)
+    test_score = metrics[ll_metric](y_test, pred_test)
     
     _extra = {
         "cv_score"    : model.best_fitness,
@@ -113,7 +114,8 @@ elif route in ['multitable']:
     
     model      = ForestCV(target_metric=ll_metric, **rparams)
     model      = model.fit(Xf_train, y_train)
-    test_score = model.score(Xf_test, y_test)
+    pred_test  = model.predict(Xf_test)
+    test_score = metrics[ll_metric](y_test, pred_test)
     
 elif route in ['question_answering']:
     
@@ -132,7 +134,8 @@ elif route in ['text']:
     
     model      = TextClassifierCV(target_metric=ll_metric)
     model      = model.fit(Xf_train, y_train)
-    test_score = model.score(Xf_test, y_test)
+    pred_test  = model.predict(Xf_test)
+    test_score = metrics[ll_metric](y_test, pred_test)
     
     _extra = {
         "best_params"  : model.best_params,
@@ -140,6 +143,7 @@ elif route in ['text']:
     }
     
 elif route in ['timeseries']:
+    # !! More annoying to convert to fit/predict -- semi-supervised AND ensemble
     
     Xf_train, Xf_test, meta_cols = load_ragged_collection(X_train, X_test, d3mds, collection_type='timeseries')
     
@@ -161,21 +165,21 @@ elif route in ['timeseries']:
         "neighbors_fitness" : dict([(str(k), v) for k, v in model.fitness.items()])
     }
     
-    if meta_cols:
-        df_mapper = DataFrameMapper(target_metric=ll_metric)
-        Xf_train, Xf_test, y_train, y_test = df_mapper.pipeline(
-            X_train[meta_cols], X_test[meta_cols], y_train, y_test)
+    # if meta_cols:
+    #     df_mapper = DataFrameMapper(target_metric=ll_metric)
+    #     Xf_train, Xf_test, y_train, y_test = df_mapper.pipeline(
+    #         X_train[meta_cols], X_test[meta_cols], y_train, y_test)
         
-        extra_model      = ForestCV(target_metric=ll_metric)
-        extra_model      = extra_model.fit(Xf_train, y_train)
-        extra_test_score = extra_model.score(Xf_test, y_test)
+    #     extra_model      = ForestCV(target_metric=ll_metric)
+    #     extra_model      = extra_model.fit(Xf_train, y_train)
+    #     extra_test_score = extra_model.score(Xf_test, y_test)
         
-        _extra.update({
-            "rf_meta_cols" : {
-                "cv_score"    : extra_model.best_fitness,
-                "best_params" : extra_model.best_params,
-            }
-        })
+    #     _extra.update({
+    #         "rf_meta_cols" : {
+    #             "cv_score"    : extra_model.best_fitness,
+    #             "best_params" : extra_model.best_params,
+    #         }
+    #     })
     
 elif route in ['audio']:
     from exline.modeling.pretrained_audio import AudiosetModel
@@ -193,14 +197,13 @@ elif route in ['graph_matching']:
     assert len(graphs) == 2
     
     model      = SGMGraphMatcher(target_metric=ll_metric)
-    test_score = model.fit_score(graphs, X_train, X_test, y_train, y_test)
+    model      = model.fit(graphs, X_train, y_train)
+    pred_test  = model.predict(X_test)
+    test_score = metrics[ll_metric](y_test, pred_test)
     
     _extra = {
-        "train_acc"      : model.train_acc,
+        "train_acc"      : model.sgm_train_acc,
         "null_train_acc" : model.null_train_acc,
-        
-        "test_acc"       : model.test_acc,
-        "null_test_acc"  : model.null_test_acc,
     }
     
 elif route in ['vertex_nomination']:
@@ -249,18 +252,21 @@ elif route in ['community_detection']:
     }
     
 elif route in ['clustering']:
-    
     # !! Should do preprocessing
     
     model      = ClusteringCV(target_metric=ll_metric, **rparams)
-    test_score = model.fit_score(X_train, X_test, y_train, y_test)
+    model      = model.fit(X_train, y_train)
+    pred_test  = model.predict(X_test)
+    test_score = metrics[ll_metric](y_test, pred_test)
     
 elif route in ['image']:
     
-    paths_train, paths_test, meta_cols = prep_image_collection(X_train, X_test, d3mds)
+    Xf_train, Xf_test, meta_cols = prep_image_collection(X_train, X_test, d3mds)
     
     model      = FixedCNNForest(target_metric=ll_metric, **rparams)
-    test_score = model.fit_score(paths_train, paths_test, y_train, y_test)
+    model      = model.fit(Xf_train, y_train)
+    pred_test  = model.predict(Xf_test)
+    test_score = metrics[ll_metric](y_test, pred_test)
     
 else:
     raise Exception('no route triggered')

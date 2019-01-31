@@ -163,11 +163,13 @@ class NeighborsCV:
     def __init__(self, target_metric, metrics, diffusion=True, forest=True, whitens=[True, False], 
         ensemble_size=3, diffusion_ensemble_size=3, verbose=True):
         
-        self.target_metric = target_metric
-        self.metrics       = metrics
-        self.whitens       = whitens
-        self.verbose       = verbose
-        self.ensemble_size = ensemble_size
+        self.target_metric           = target_metric
+        self.is_classification       = target_metric in classification_metrics
+        
+        self.metrics                 = metrics
+        self.whitens                 = whitens
+        self.verbose                 = verbose
+        self.ensemble_size           = ensemble_size
         self.diffusion_ensemble_size = diffusion_ensemble_size
         
         self.diffusion = diffusion
@@ -178,21 +180,21 @@ class NeighborsCV:
         
         self._y_train = None
     
-    def fit(self, T_train, T_test, y_train, y_test):
+    def fit(self, X_train, X_test, y_train, y_test):
         self._y_train = y_train
         
         # KNN models
-        self._fit_knn(T_train, T_test, y_train, y_test)
+        self._fit_knn(X_train, X_test, y_train, y_test)
         
         # Diffusion model, w/ best metric from KNN
         if self.diffusion:
             knn_settings     = list(self.fitness.keys())
             metric, whitened = knn_settings[np.argmax([self.fitness[k]['fitness_cv'] for k in knn_settings])] # best settings
-            self._fit_diffusion(T_train, T_test, y_train, y_test, metric, whitened)
+            self._fit_diffusion(X_train, X_test, y_train, y_test, metric, whitened)
         
         # Random Forest model
         if self.forest:
-            self._fit_rf(T_train, T_test, y_train, y_test)
+            self._fit_rf(X_train, X_test, y_train, y_test)
         
         return self
     
@@ -210,9 +212,9 @@ class NeighborsCV:
             thresh = np.min(all_fitness_cv)
         
         ens_scores = np.vstack([self.preds[k] for k,v in self.fitness.items() if v['fitness_cv'] >= thresh])
-        if self.target_metric in classification_metrics:
+        if self.is_classification:
             ens_pred = tiebreaking_vote(ens_scores, self._y_train)
-        elif self.target_metric in regression_metrics:
+        else:
             ens_pred = ens_scores.mean(axis=0) # Might linear regression be better?
         
         return metrics[self.target_metric](y_test, ens_pred)

@@ -1,1 +1,1 @@
-{"prob_name": "49_facebook", "ll_metric": "accuracy", "ll_score": 0.9279801324503312, "test_score": 1.0, "elapsed": 1.1943731307983398, "_extra": {"train_acc": 0.8874172185430463, "null_train_acc": 1.0, "test_acc": 0.8526490066225165, "null_test_acc": 1.0}, "_misc": {"use_schema": false}}
+{"prob_name": "49_facebook", "ll_metric": "accuracy", "ll_score": 0.9279801324503312, "test_score": 0.8526490066225165, "elapsed": 1.1929993629455566, "_extra": {"train_acc": 0.8874172185430463, "null_train_acc": 1.0}, "_misc": {"use_schema": false}}
