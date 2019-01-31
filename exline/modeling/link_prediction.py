@@ -92,9 +92,9 @@ class RescalLinkPrediction:
     def __init__(self, target_metric):
         
         self.target_metric = target_metric
-        
+        self.adj_lr = None
     
-    def fit_score(self, graph, X_train, X_test, y_train, y_test):
+    def fit(self, graph, X_train, y_train):
         global _cv_fold
         
         edgelist = nx2edgelist(graph)
@@ -116,14 +116,14 @@ class RescalLinkPrediction:
         # --
         # Factorize whole matrix
         
-        adj    = edgelist2tensor(edgelist, num_nodes, num_edge_types)
-        adj_lr = rescal_link_prediction(adj)
+        adj         = edgelist2tensor(edgelist, num_nodes, num_edge_types)
+        self.adj_lr = rescal_link_prediction(adj)
         
-        scores = adj_lr[(
-            X_test.source_nodeID.values,
-            X_test.target_nodeID.values,
-            X_test.linkType.values,
-        )]
-        
-        test_score = metrics[self.target_metric](y_test, scores > self.opt_thresh)
-        return test_score
+        return self
+    
+    def predict(self, X):
+        return self.adj_lr[(
+            X.source_nodeID.values,
+            X.target_nodeID.values,
+            X.linkType.values,
+        )] > self.opt_thresh

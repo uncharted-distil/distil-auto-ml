@@ -226,7 +226,9 @@ elif route in ['link_prediction']:
     graph = list(graphs.values())[0]
     
     model      = RescalLinkPrediction(target_metric=ll_metric)
-    test_score = model.fit_score(graph, X_train, X_test, y_train, y_test)
+    model      = model.fit(graph, X_train, y_train)
+    pred_test  = model.predict(X_test)
+    test_score = metrics[ll_metric](y_test, pred_test)
     
     # !! This should also be routed to something like
     # SGDCollaborativeFilter, w/ non-exclusive binary outputs
@@ -238,7 +240,9 @@ elif route in ['community_detection']:
     graph = list(graphs.values())[0]
     
     model      = CommunityDetection(target_metric=ll_metric, **rparams)
-    test_score = model.fit_score(graph, X_train, X_test, y_train, y_test)
+    model      = model.fit(graph, X_train, y_train)
+    pred_test  = model.predict(X_test)
+    test_score = metrics[ll_metric](y_test, pred_test)
     
     _extra = {
         "null_model" : True
