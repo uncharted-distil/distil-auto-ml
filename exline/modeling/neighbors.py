@@ -175,8 +175,12 @@ class NeighborsCV:
         
         self.preds   = {}
         self.fitness = {}
+        
+        self._y_train = None
     
     def fit(self, T_train, T_test, y_train, y_test):
+        self._y_train = y_train
+        
         # KNN models
         self._fit_knn(T_train, T_test, y_train, y_test)
         
@@ -192,7 +196,7 @@ class NeighborsCV:
         
         return self
     
-    def score(self, T_test, y_test, y_train):
+    def score(self, T_test, y_test):
         # Ensembles K best models.  Handles ties correctly.
         # Shouldn't be ensembling when some of the models are absolute garbage
         # Should maybe drop models that do worse than chance.
@@ -207,7 +211,7 @@ class NeighborsCV:
         
         ens_scores = np.vstack([self.preds[k] for k,v in self.fitness.items() if v['fitness_cv'] >= thresh])
         if self.target_metric in classification_metrics:
-            ens_pred = tiebreaking_vote(ens_scores, y_train)
+            ens_pred = tiebreaking_vote(ens_scores, self._y_train)
         elif self.target_metric in regression_metrics:
             ens_pred = ens_scores.mean(axis=0) # Might linear regression be better?
         

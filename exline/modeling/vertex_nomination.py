@@ -19,13 +19,14 @@ class VertexNominationCV:
     def __init__(self, target_metric, num_components=8):
         self.target_metric  = target_metric
         self.num_components = num_components
+        
+        self.feats = None
     
-    def fit_score(self, graph, X_train, X_test, y_train, y_test):
+    def fit(self, graph, X_train, y_train):
+        X_train = X_train.copy()
         assert X_train.shape[1] == 1
-        assert X_test.shape[1] == 1
         
         X_train.columns = ('nodeID',)
-        X_test.columns  = ('nodeID',)
         
         # --
         # Featurize
@@ -35,8 +36,9 @@ class VertexNominationCV:
         adj = nx.adjacency_matrix(graph).astype(np.float64)
         U, _, _ = linalg.svds(adj, k=self.num_components)
         
-        Xf_train = np.hstack([df.loc[X_train.nodeID].values, U[X_train.nodeID.values]])
-        Xf_test  = np.hstack([df.loc[X_test.nodeID].values, U[X_test.nodeID.values]])
+        self.feats = pd.DataFrame(np.hstack([df.values, U])).set_index(df.index)
+        
+        Xf_train = self.feats.loc[X_train.nodeID].values
         
         # --
         # Choose the best model
@@ -50,12 +52,20 @@ class VertexNominationCV:
         svm = svm.fit(Xf_train, y_train)
         
         if (svm.best_fitness > forest.best_fitness):
-            self.test_pred   = svm.model.predict(Xf_test)
+            self.model       = svm.model
             self.best_params = svm.best_params
             self.score_cv    = svm.best_fitness
         else:
-            self.test_pred    = forest.predict(Xf_test)
+            self.model        = forest
             self.best_params  = forest.best_params
             self.best_fitness = forest.best_fitness
         
-        return metrics[self.target_metric](y_test, self.test_pred)
+        return self
+    
+    def predict(self, X):
+        X = X.copy()
+        assert X.shape[1] == 1
+        X.columns = ('nodeID',)
+        
+        Xf = self.feats.loc[X.nodeID].values
+        return self.model.predict(Xf)

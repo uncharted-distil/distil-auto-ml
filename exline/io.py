@@ -13,6 +13,22 @@ from copy import deepcopy
 
 from .external import D3MDS
 
+# class EXProblem:
+#     def __init__(self, prob_name, base_path):
+        
+#         self.d3mds = D3MDS(
+#             os.path.join(base_path, prob_name, '%s_dataset' % prob_name),
+#             os.path.join(base_path, prob_name, '%s_problem' % prob_name),
+#         )
+        
+#         self.X_train = self.d3mds.get_train_data()
+#         self.X_test  = self.d3mds.get_test_data()
+#         self.y_train = self.d3mds.get_train_targets().squeeze()
+#         self.y_test  = self.d3mds.get_test_targets().squeeze()
+        
+#         self.metric = self.d3mds.problem.get_performance_metrics()[0]['metric']
+
+
 def load_problem(prob_name, base_path, return_d3mds=False, use_schema=False, strict=True):
     d3mds = D3MDS(
         os.path.join(base_path, prob_name, '%s_dataset' % prob_name),
@@ -23,6 +39,7 @@ def load_problem(prob_name, base_path, return_d3mds=False, use_schema=False, str
     X_test  = d3mds.get_test_data()
     y_train = d3mds.get_train_targets().squeeze()
     y_test  = d3mds.get_test_targets().squeeze()
+    
     
     if use_schema:
         print("use_schema", file=sys.stderr)

@@ -68,9 +68,7 @@ python -m exline.main --prob-name 59_umls
 # --
 # Question answering
 
-# beeline/question_answering/qa_bert.py 
-# gets ~0.45 on wikiqa, which isn't even close to baseline
-# Baseline code doesn't produce baseline pretrained model, so something funny going on maybe.
+CUDA_VISIBLE_DEVICES=4 python -m exline.main --prob-name 32_wikiqa
 
 # --
 # Clustering

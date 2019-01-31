@@ -135,6 +135,7 @@ class BERTPairClassification:
         
         self.bert_model        = 'bert-base-uncased'
         self.do_lower_case     = True
+        self.device            = torch.device("cuda")
         
         self.tokenizer = BertTokenizer.from_pretrained(self.bert_model, do_lower_case=self.do_lower_case)
         
@@ -147,38 +148,33 @@ class BERTPairClassification:
         for param_group in self.optimizer.param_groups:
             param_group['lr'] = lr_this_step
             
-    def fit_score(self, X_train, X_test, y_train, y_test):
+    def _row2example(self, row):
+        return {
+            "text_a" : row[self.columns[0]],
+            "text_b" : row[self.columns[1]],
+            "label"  : int(row['_label']),
+        }
+    
+    def fit(self, X_train, y_train):
         
         # --
-        # Setup data
+        # Prep
         
-        print('BERTPairClassification: prep data', file=sys.stderr)
-        
-        X_train, X_test = X_train.copy(), X_test.copy()
-        
+        X_train = X_train.copy()
         X_train['_label'] = y_train
-        X_test['_label']  = y_test
         
-        def row2example(row):
-            return {
-                "text_a" : row[self.columns[0]],
-                "text_b" : row[self.columns[1]],
-                "label"  : int(row['_label']),
-            }
-            
-        train_examples = list(X_train.apply(row2example, axis=1))
-        test_examples  = list(X_test.apply(row2example, axis=1))
+        train_examples = list(X_train.apply(self._row2example, axis=1))
         
-        label_list      = list(set(X_train._label.astype(str)))
-        self.num_labels = len(label_list)
+        self.label_list = list(set(X_train._label.astype(str)))
+        self.num_labels = len(self.label_list)
         num_train_steps = int(len(train_examples) / self.batch_size * float(self.epochs))
         
         q_lens = X_train.question.apply(lambda x: len(self.tokenizer.tokenize(x)))
         s_lens = X_train.sentence.apply(lambda x: len(self.tokenizer.tokenize(x)))
-        max_seq_len = int(np.percentile(q_lens + s_lens, 99) + 1)
+        self.max_seq_len = int(np.percentile(q_lens + s_lens, 99) + 1)
         
-        train_dataset = examples2dataset(train_examples, label_list, max_seq_len, self.tokenizer)
-        test_dataset  = examples2dataset(test_examples, label_list, max_seq_len, self.tokenizer)
+        train_dataset = examples2dataset(train_examples, self.label_list, self.max_seq_len, self.tokenizer)
+        
         dataloaders = {
             "train" : DataLoader(
                 dataset=train_dataset, 
@@ -186,30 +182,19 @@ class BERTPairClassification:
                 batch_size=self.batch_size,
                 num_workers=4,
             ),
-            "test" : list(DataLoader(
-                dataset=test_dataset, 
-                shuffle=False,
-                batch_size=self.batch_size * 4,
-                num_workers=4,
-            )),
         }
         
         # --
         # Define model
         
-        print('BERTPairClassification: define model', file=sys.stderr)
-        
-        device = torch.device("cuda")
         self.model = QAModel.from_pretrained(
             self.bert_model,
             num_labels=self.num_labels,
             # weights=[0.1, 1],
-        ).to(device)
+        ).to(self.device)
         
         # --
         # Optimizer
-        
-        print('BERTPairClassification: define optimizer', file=sys.stderr)
         
         params         = list(self.model.named_parameters())
         no_decay       = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
@@ -228,70 +213,67 @@ class BERTPairClassification:
         # --
         # Train
         
-        print('BERTPairClassification: start training', file=sys.stderr)
-        
-        global_step = 0
-        t = time()
+        train_step = 0
+        _ = self.model.train()
         for epoch_idx in tqdm(range(self.epochs), desc="Epoch"):
             
-            # --
-            # Train epoch
-            
-            _ = self.model.train()
-            all_train_loss = []
+            train_loss_hist = []
             gen = tqdm(dataloaders['train'], desc="train iter")
             for step, batch in enumerate(gen):
-                input_ids, input_mask, segment_ids, label_ids = tuple(t.to(device) for t in batch)
+                input_ids, input_mask, segment_ids, label_ids = tuple(t.to(self.device) for t in batch)
                 
                 _, loss = self.model(input_ids, segment_ids, input_mask, label_ids)
                 loss.backward()
                 
-                all_train_loss.append(loss.item())
+                train_loss_hist.append(loss.item())
                 
-                self._set_lr(global_step / num_train_steps)
+                self._set_lr(train_step / num_train_steps)
                 
                 self.optimizer.step()
                 self.optimizer.zero_grad()
-                global_step += 1
+                train_step += 1
                 
                 gen.set_postfix(loss=loss.item())
-                
-                # if step > 10:
-                #     break
+        
+        self.train_loss_hist = train_loss_hist
+        
+        return self
+        
+    def predict(self, X):
+        
+        # --
+        # Prep
+        
+        X = X.copy()
+        X['_label'] = -1
+        
+        examples = list(X.apply(self._row2example, axis=1))
+        
+        dataset = examples2dataset(examples, self.label_list, self.max_seq_len, self.tokenizer)
+        dataloaders = {
+            "test" : list(DataLoader(
+                dataset=dataset, 
+                shuffle=False,
+                batch_size=self.batch_size,
+                num_workers=4,
+            )),
+        }
+        
+        # --
+        # Predict
+        
+        _ = self.model.eval()
+        all_logits = []
+        gen = tqdm(dataloaders['test'], desc="score iter")
+        for step, batch in enumerate(gen):
             
-            # --
-            # Eval epoch
+            input_ids, input_mask, segment_ids, _ = tuple(t.to(self.device) for t in batch)
             
-            _ = self.model.eval()
-            all_logits, all_labels, all_test_loss = [], [], []
-            gen = tqdm(dataloaders['test'], desc="test iter")
-            for step, batch in enumerate(gen):
-                
-                input_ids, input_mask, segment_ids, label_ids = tuple(t.to(device) for t in batch)
-                
-                with torch.no_grad():
-                    logits, test_loss = self.model(input_ids, segment_ids, input_mask, labels=label_ids)
-                
-                logits    = logits.detach().cpu().numpy()
-                label_ids = label_ids.cpu().numpy()
-                
-                all_logits.append(logits)
-                all_labels.append(label_ids)
-                all_test_loss.append(test_loss.mean().item())
-                
-                gen.set_postfix(loss=test_loss.item())
+            with torch.no_grad():
+                logits = self.model(input_ids, segment_ids, input_mask)
             
-            self.all_logits  = np.vstack(all_logits)
-            self.all_preds   = self.all_logits.argmax(axis=-1)
-            self.all_labels  = np.hstack(all_labels)
-            
-            print({
-                "test_fitness" : metrics[self.target_metric](self.all_labels, self.all_preds),
-            }, file=sys.stderr)
-            
-        return metrics[self.target_metric](self.all_labels, self.all_preds)
-
-
-# self = BERTPairClassification(target_metric='accuracy')
-# self.fit(X_train, X_test, y_train, y_test)
+            logits = logits.detach().cpu().numpy()
+            all_logits.append(logits)
+        
+        return np.vstack(all_logits).argmax(axis=-1)
 
