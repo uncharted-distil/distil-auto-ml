@@ -18,6 +18,7 @@ from pytorch_pretrained_bert.tokenization import BertTokenizer
 from pytorch_pretrained_bert.modeling import BertModel, PreTrainedBertModel, BertForSequenceClassification
 from pytorch_pretrained_bert.optimization import BertAdam
 
+from .base import EXLineBaseModel
 from .metrics import metrics, classification_metrics
 
 # --
@@ -118,7 +119,7 @@ class QAModel(PreTrainedBertModel):
 # --
 # Wrapper
 
-class BERTPairClassification:
+class BERTPairClassification(EXLineBaseModel):
     
     def __init__(self, target_metric, columns=['question', 'sentence'], 
         batch_size=32, learning_rate=5e-5, epochs=3, warmup_proportion=0.1, seed=123):

@@ -21,6 +21,7 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, \
 
 from sklearn.model_selection import ParameterGrid
 
+from .base import EXLineBaseModel
 from .metrics import metrics, classification_metrics, regression_metrics
 from .helpers import tiebreaking_vote, adjust_f1_macro
 from ..utils import parmap, maybe_subset
@@ -63,7 +64,7 @@ class AnyForest:
             return self.model.classes_[score_oob.argmax(axis=-1)] # could vote better
 
 
-class ForestCV:
+class ForestCV(EXLineBaseModel):
     default_param_grids = {
         "classification" : {
             "estimator"        : ["RandomForest"],

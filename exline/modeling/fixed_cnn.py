@@ -18,6 +18,7 @@ from torchvision.models import resnet18, resnet34, resnet50, resnet101, densenet
 
 from basenet import BaseNet
 
+from .base import EXLineBaseModel
 from .forest import ForestCV
 from .helpers import tiebreaking_vote
 from .metrics import metrics, classification_metrics, regression_metrics
@@ -69,7 +70,7 @@ class FixedCNNFeatureExtractor(BaseNet):
         return x
 
 
-class FixedCNNForest:
+class FixedCNNForest(EXLineBaseModel):
     
     def __init__(self, target_metric):
         

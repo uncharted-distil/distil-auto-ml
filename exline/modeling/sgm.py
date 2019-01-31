@@ -13,6 +13,7 @@ import pandas as pd
 import networkx as nx
 from scipy import sparse
 
+from .base import EXLineBaseModel
 from .metrics import metrics
 from sgm.backends.classic import ScipyJVClassicSGM
 
@@ -39,7 +40,7 @@ def pad_graphs(G1, G2):
     return G1, G2, n_nodes
 
 
-class SGMGraphMatcher:
+class SGMGraphMatcher(EXLineBaseModel):
     def __init__(self, target_metric, num_iters=20, tolerance=1, 
         verbose=True, unweighted=True):
         

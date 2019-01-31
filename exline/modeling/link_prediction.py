@@ -14,6 +14,7 @@ from sklearn.model_selection import KFold
 
 from rescal import rescal_als
 
+from .base import EXLineBaseModel
 from .metrics import metrics
 from ..utils import parmap
 
@@ -85,7 +86,7 @@ def cv_fold(edgelist, num_nodes, num_edge_types, train_idx, valid_idx, target_me
     }
 
 
-class RescalLinkPrediction:
+class RescalLinkPrediction(EXLineBaseModel):
     
     def __init__(self, target_metric):
         

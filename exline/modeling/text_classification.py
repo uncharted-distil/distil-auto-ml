@@ -12,9 +12,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+from .base import EXLineBaseModel
 from .metrics import metrics, classification_metrics, translate_d3m_metric
 
-class TextClassifierCV:
+class TextClassifierCV(EXLineBaseModel):
     
     param_grid = {
         "vect__ngram_range"  : [(1, 1), (1, 2)],

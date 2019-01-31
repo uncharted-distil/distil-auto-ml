@@ -84,12 +84,12 @@ y_train, y_test = prep_labels(y_train, y_test, target_metric=ll_metric)
 route, rparams = get_routing_info(X_train, X_test, y_train, y_test, ll_metric, d3mds)
 rparams.update(json.loads(args.rparams))
 
-print('-' * 50, file=sys.stderr)
-print('prob_name=%s' % args.prob_name, file=sys.stderr)
-print('target_metric=%s' % ll_metric, file=sys.stderr)
-print('router: %s' % route, file=sys.stderr)
-print('rparams: %s' % str(rparams), file=sys.stderr)
-print('-' * 50, file=sys.stderr)
+print('----------------------------------', file=sys.stderr)
+print('prob_name:     %s' % args.prob_name, file=sys.stderr)
+print('target_metric: %s' % ll_metric,      file=sys.stderr)
+print('router:        %s' % route,          file=sys.stderr)
+print('rparams:       %s' % str(rparams),   file=sys.stderr)
+print('----------------------------------', file=sys.stderr)
 
 _extra = {}
 if route not in ['timeseries', 'collaborative_filtering']:

@@ -1,1 +1,0 @@
-{"prob_name": "uu2_gp_hyperparameter_estimation_v2", "ll_metric": "rootMeanSquaredErrorAvg", "ll_score": 0.9370918399292338, "test_score": -0.5950053725651088, "elapsed": 38.62088871002197, "_extra": {}, "_misc": {"use_schema": false}}

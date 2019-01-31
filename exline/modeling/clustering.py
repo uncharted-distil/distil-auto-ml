@@ -4,11 +4,12 @@
     exline/modeling/clustering.py
 """
 
-from .metrics import metrics
-
 from sklearn.cluster import KMeans
 
-class ClusteringCV:
+from .base import EXLineBaseModel
+from .metrics import metrics
+
+class ClusteringCV(EXLineBaseModel):
     
     def __init__(self, target_metric, n_clusters, all_float):
         

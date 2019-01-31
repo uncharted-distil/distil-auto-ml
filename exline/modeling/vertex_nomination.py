@@ -10,11 +10,12 @@ import pandas as pd
 import networkx as nx
 from scipy.sparse import linalg
 
+from .base import EXLineBaseModel
 from .forest import ForestCV
 from .svm import SupportVectorCV
 from .metrics import metrics, classification_metrics
 
-class VertexNominationCV:
+class VertexNominationCV(EXLineBaseModel):
     
     def __init__(self, target_metric, num_components=8):
         self.target_metric  = target_metric

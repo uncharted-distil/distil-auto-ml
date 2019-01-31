@@ -16,6 +16,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from basenet import BaseNet, HPSchedule
 from basenet.helpers import to_numpy
 
+from .base import EXLineBaseModel
 from .metrics import metrics, classification_metrics, regression_metrics
 
 # --
@@ -112,7 +113,7 @@ def make_cf_model(
     return model
 
 
-class SGDCollaborativeFilter:
+class SGDCollaborativeFilter(EXLineBaseModel):
     
     def __init__(self, target_metric, emb_dims=[128, 256, 512, 1024], n_outputs=1,
         epochs=8, batch_size=512, device='cuda'):

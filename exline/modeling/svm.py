@@ -20,10 +20,11 @@ from sklearn.svm import SVC
 from sklearn.model_selection import ParameterGrid, RepeatedStratifiedKFold, \
     RandomizedSearchCV
 
+from .base import EXLineBaseModel
 from .metrics import metrics, classification_metrics, translate_d3m_metric
 from ..utils import parmap, maybe_subset
 
-class SupportVectorCV:
+class SupportVectorCV(EXLineBaseModel):
     classifier_param_grid = {
             "C"            : [float(xx) for xx in np.logspace(-3, 1, 1000)],
             "gamma"        : [float(xx) for xx in np.logspace(-2, 1, 1000)],

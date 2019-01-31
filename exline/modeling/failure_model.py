@@ -5,14 +5,16 @@
 """
 
 import numpy as np
+
+from .base import EXLineBaseModel
 from .metrics import metrics, classification_metrics, regression_metrics
 
-class FailureModel:
+class FailureModel(EXLineBaseModel):
     
     def __init__(self, target_metric):
         self.target_metric = target_metric
     
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, U_train=None):
         self._X_train = X_train
         self._y_train = y_train
         return self

@@ -17,6 +17,7 @@ from sklearn.model_selection import ParameterGrid
 from scipy.spatial.distance import pdist, cdist, squareform
 from scipy.sparse.linalg import eigsh
 
+from .base import EXLineBaseModel
 from .metrics import metrics, regression_metrics, classification_metrics
 from .forest import ForestCV
 from .helpers import tiebreaking_vote
@@ -158,7 +159,7 @@ def diffusion_cv(sim, y_train, param_grid, target_metric, verbose=10, ens_size=1
 # --
 # Neighbors
 
-class NeighborsCV:
+class NeighborsCV(EXLineBaseModel):
     
     def __init__(self, target_metric, metrics, diffusion=True, forest=True, whitens=[True, False], 
         ensemble_size=3, diffusion_ensemble_size=3, verbose=True):

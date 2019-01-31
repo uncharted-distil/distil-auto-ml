@@ -7,9 +7,10 @@
 import sys
 import numpy as np
 
+from .base import EXLineBaseModel
 from .metrics import metrics
 
-class CommunityDetection:
+class CommunityDetection(EXLineBaseModel):
     
     def __init__(self, target_metric, overlapping):
         self.target_metric = target_metric

@@ -23,9 +23,11 @@ import vggish_postprocess
 import vggish_slim
 import tensorflow as tf
 
-from ..utils import parmap
+from .base import EXLineBaseModel
 from .forest import ForestCV
 from .metrics import metrics
+from ..utils import parmap
+
 
 # --
 # Helpers
@@ -52,7 +54,7 @@ def audio2vec(X):
 # --
 # Model
 
-class AudiosetModel:
+class AudiosetModel(EXLineBaseModel):
     
     def __init__(self, target_metric):
         self.target_metric = target_metric
