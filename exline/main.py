@@ -81,7 +81,7 @@ y_train, y_test = prep_labels(y_train, y_test, target_metric=ll_metric)
 # Run model
 
 # try:
-route, rparams = get_routing_info(X_train, X_test, y_train, y_test, ll_metric, ll_score, d3mds)
+route, rparams = get_routing_info(X_train, X_test, y_train, y_test, ll_metric, d3mds)
 rparams.update(json.loads(args.rparams))
 
 print('-' * 50, file=sys.stderr)
@@ -98,8 +98,8 @@ if route not in ['timeseries', 'collaborative_filtering']:
         "table"               : ForestCV,
         "multitable"          : ForestCV,
         "question_answering"  : BERTPairClassification,
-        "text"                : TextClassifierCV
-        "audio"               : AudiosetModel,
+        "text"                : TextClassifierCV,
+        # "audio"               : AudiosetModel,
         "graph_matching"      : SGMGraphMatcher,
         "vertex_nomination"   : VertexNominationCV,
         "link_prediction"     : RescalLinkPrediction,
@@ -114,7 +114,7 @@ if route not in ['timeseries', 'collaborative_filtering']:
     if route in ['table']:
         Xf_train, Xf_test = DataFrameMapper(target_metric=ll_metric).pipeline(X_train, X_test, y_train)
     
-    elif route in ['multitable']
+    elif route in ['multitable']:
         Xf_train, Xf_test, _ = load_ragged_collection(X_train, X_test, d3mds, collection_type=route)
         Xf_train, Xf_test = set2hist(Xf_train, Xf_test)
     
@@ -153,7 +153,7 @@ if route not in ['timeseries', 'collaborative_filtering']:
     pred_test  = model.predict(Xf_test)
     test_score = metrics[ll_metric](y_test, pred_test)
 
-    _extra.extend(model.details)
+    _extra.update(model.details)
 
 elif route in ['collaborative_filtering']:
     model      = SGDCollaborativeFilter(target_metric=ll_metric, **rparams)
