@@ -14,8 +14,6 @@ from exline.io import (
     load_and_join,
 )
 
-from exline.router import get_routing_info
-
 from exline.preprocessing.utils import prep_labels
 from exline.preprocessing.featurization import DataFrameMapper
 from exline.preprocessing.transformers import run_lengths_hist, set2hist, cf_remap_graphs
@@ -33,8 +31,6 @@ from exline.modeling.clustering import ClusteringCV
 from exline.modeling.fixed_cnn import FixedCNNForest
 from exline.modeling.bert_models import BERTPairClassification
 from exline.modeling.failure_model import FailureModel
-
-from exline.modeling.metrics import metrics, classification_metrics, regression_metrics
 
 class PreprocessorFunctions:
     """
@@ -111,6 +107,7 @@ class PreprocessorFunctions:
         Xf_train, Xf_test, n_users, n_items = cf_remap_graphs(X_train, X_test)
         hparams.update({"n_users" : n_users, "n_items" : n_items})
         Xf_train, Xf_test, None, hparams
+
 
 model_lookup = {
     "table"                   : ForestCV,
