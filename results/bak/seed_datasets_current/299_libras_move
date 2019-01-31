@@ -1,0 +1,1 @@
+{"prob_name": "299_libras_move", "ll_metric": "meanSquaredError", "ll_score": 17.25374017962886, "test_score": -4.53215278114144, "elapsed": 12.793293952941895, "_extra": {"cv_score": -4.923590887307838, "best_params": {"bootstrap": true, "estimator": "ExtraTrees", "min_samples_leaf": 2, "n_estimators": 256, "oob_score": true, "n_jobs": 64}}, "_misc": {"use_schema": false}}

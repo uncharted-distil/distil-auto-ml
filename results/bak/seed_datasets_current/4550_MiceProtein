@@ -1,0 +1,1 @@
+{"prob_name": "4550_MiceProtein", "ll_metric": "f1Macro", "ll_score": 1.0, "test_score": 1.0, "elapsed": 50.787137269973755, "_extra": {"cv_score": 1.0, "best_params": {"class_weight": "balanced", "estimator": "RandomForest", "min_samples_leaf": 32, "n_estimators": 2048, "oob_score": true, "n_jobs": 64}, "num_fits": 5}, "_misc": {"use_schema": false}}

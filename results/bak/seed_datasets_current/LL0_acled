@@ -1,0 +1,1 @@
+{"prob_name": "LL0_acled", "ll_metric": "accuracy", "ll_score": 0.8480766560199973, "test_score": 0.9258436328287738, "elapsed": 43.5104718208313, "_extra": {"cv_score": 0.9524526408229833, "best_params": {"class_weight": "balanced", "estimator": "RandomForest", "min_samples_leaf": 1, "n_estimators": 2048}, "num_fits": 1}}

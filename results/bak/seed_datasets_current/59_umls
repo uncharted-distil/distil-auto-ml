@@ -1,0 +1,1 @@
+{"prob_name": "59_umls", "ll_metric": "accuracy", "ll_score": 0.8031680844822529, "test_score": 0.9425051334702259, "elapsed": 1.871241807937622, "_extra": {}, "_misc": {"use_schema": false}}

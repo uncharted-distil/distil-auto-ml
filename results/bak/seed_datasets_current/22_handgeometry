@@ -1,0 +1,1 @@
+{"prob_name": "22_handgeometry", "ll_metric": "meanSquaredError", "ll_score": 0.1451339896838553, "test_score": -0.20368676610303715, "elapsed": 254.52342796325684, "_extra": {}, "_misc": {"use_schema": false}}

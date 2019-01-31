@@ -1,0 +1,1 @@
+{"prob_name": "196_autoMpg", "ll_metric": "meanSquaredError", "ll_score": 7.370767716106942, "test_score": -5.956202485440214, "elapsed": 17.84516453742981, "_extra": {"cv_score": -8.43164698265255, "best_params": {"bootstrap": true, "estimator": "RandomForest", "min_samples_leaf": 2, "n_estimators": 2048}, "num_fits": 5}}
