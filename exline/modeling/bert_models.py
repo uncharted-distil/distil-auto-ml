@@ -157,6 +157,9 @@ class BERTPairClassification:
     
     def fit(self, X_train, y_train):
         
+        assert 'question' in X_train.columns
+        assert 'sentence' in X_train.columns
+        
         # --
         # Prep
         
