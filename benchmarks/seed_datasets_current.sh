@@ -91,7 +91,7 @@ python -m exline.main --prob-name LL1_736_stock_market
 # python -m exline.main --prob-name uu2_gp_hyperparameter_estimation_v2
  
 # audio classification
-python -m exline.main --prob-name 31_urbansound
+CUDA_VISIBLE_DEVICES=6 python -m exline.main --prob-name 31_urbansound
 
 # sparse timeseries
 # python -m exline.main --prob-name uu1_datasmash
@@ -99,7 +99,7 @@ python -m exline.main --prob-name 31_urbansound
 # text classification
 # python -m exline.main --prob-name 30_personae
 
-CUDA_VISIBLE_DEVICES=6 python -m exline.main --prob-name 22_handgeometry
+# CUDA_VISIBLE_DEVICES=6 python -m exline.main --prob-name 22_handgeometry
 
 # --
 # No support

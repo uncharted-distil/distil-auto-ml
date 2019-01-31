@@ -70,7 +70,7 @@ class AudiosetModel(EXLineBaseModel):
         self.model = self.model.fit(vec_maxpool, y_train)
         return self
     
-    def predict(self, X, y):
+    def predict(self, X):
         vec_maxpool = self._featurize(X)
         return self.model.predict(vec_maxpool)
 

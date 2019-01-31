@@ -1,0 +1,1 @@
+{"prob_name": "LL0_186_braziltourism", "ll_metric": "f1Macro", "ll_score": 0.11205936920222637, "test_score": 0.21030864197530863, "elapsed": 22.977545738220215, "model_details": {"cv_score": 0.20759811616954477, "best_params": {"class_weight": null, "estimator": "RandomForest", "min_samples_leaf": 1, "n_estimators": 2048}, "num_fits": 5}}

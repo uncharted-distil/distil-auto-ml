@@ -1,0 +1,1 @@
+{"prob_name": "LL1_726_TIDY_GPS_carpool_bus_service_rating_prediction", "ll_metric": "f1Macro", "ll_score": 0.6071428571428572, "test_score": 0.5974025974025975, "elapsed": 17.47933840751648, "model_details": {"cv_score": 0.5486322188449848, "best_params": {"class_weight": "balanced", "estimator": "RandomForest", "min_samples_leaf": 4, "n_estimators": 512}, "num_fits": 5}}
