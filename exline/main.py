@@ -132,7 +132,7 @@ elif route in ['text']:
     
     Xf_train, Xf_test, _ = load_ragged_collection(X_train, X_test, d3mds, collection_type='text')
     
-    model      = TextClassifierCV(target_metric=ll_metric)
+    model      = TextClassifierCV(target_metric=ll_metric, **rparams)
     model      = model.fit(Xf_train, y_train)
     pred_test  = model.predict(Xf_test)
     test_score = metrics[ll_metric](y_test, pred_test)
@@ -186,7 +186,7 @@ elif route in ['audio']:
     
     Xf_train, Xf_test = load_audio(X_train, X_test, d3mds)
     
-    model      = AudiosetModel(target_metric=ll_metric)
+    model      = AudiosetModel(target_metric=ll_metric, **rparams)
     model      = model.fit(Xf_train, y_train)
     pred_test  = model.predict(Xf_test)
     test_score = metrics[ll_metric](y_test, pred_test)
@@ -196,7 +196,7 @@ elif route in ['graph_matching']:
     graphs = load_graphs(d3mds)
     assert len(graphs) == 2
     
-    model      = SGMGraphMatcher(target_metric=ll_metric)
+    model      = SGMGraphMatcher(target_metric=ll_metric, **rparams)
     model      = model.fit(graphs, X_train, y_train)
     pred_test  = model.predict(X_test)
     test_score = metrics[ll_metric](y_test, pred_test)
@@ -212,14 +212,14 @@ elif route in ['vertex_nomination']:
     assert len(graphs) == 1
     graph = list(graphs.values())[0]
     
-    model      = VertexNominationCV(target_metric=ll_metric)
+    model      = VertexNominationCV(target_metric=ll_metric, **rparams)
     model      = model.fit(graph, X_train, y_train)
     pred_test  = model.predict(X_test)
     test_score = metrics[ll_metric](y_test, pred_test)
     
 elif route in ['collaborative_filtering']:
     
-    model      = SGDCollaborativeFilter(target_metric=ll_metric)
+    model      = SGDCollaborativeFilter(target_metric=ll_metric, **rparams)
     test_score = model.fit_score(X_train, X_test, y_train, y_test)
     
 elif route in ['link_prediction']:
@@ -228,7 +228,7 @@ elif route in ['link_prediction']:
     assert len(graphs) == 1
     graph = list(graphs.values())[0]
     
-    model      = RescalLinkPrediction(target_metric=ll_metric)
+    model      = RescalLinkPrediction(target_metric=ll_metric, **rparams)
     model      = model.fit(graph, X_train, y_train)
     pred_test  = model.predict(X_test)
     test_score = metrics[ll_metric](y_test, pred_test)
