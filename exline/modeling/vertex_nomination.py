@@ -22,7 +22,8 @@ class VertexNominationCV:
         
         self.feats = None
     
-    def fit(self, graph, X_train, y_train):
+    def fit(self, X_train, y_train, U_train=None):
+        graph = U_train['graph']
         X_train = X_train.copy()
         assert X_train.shape[1] == 1
         

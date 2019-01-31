@@ -62,7 +62,7 @@ class AudiosetModel:
         vec_feats = audio2vec(mel_feats)
         return np.vstack([f.max(axis=0) for f in vec_feats])
     
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, U_train=None):
         vec_maxpool = self._featurize(X_train)
         self.model = ForestCV(target_metric=self.target_metric)
         self.model = self.model.fit(vec_maxpool, y_train)

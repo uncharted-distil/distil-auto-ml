@@ -180,7 +180,9 @@ class NeighborsCV:
         
         self._y_train = None
     
-    def fit(self, X_train, X_test, y_train, y_test):
+    def fit(self, X_train, X_test, U_train):
+        X_test, y_test = U_train['X_test'], U_train['y_test']
+        
         self._y_train = y_train
         
         # KNN models

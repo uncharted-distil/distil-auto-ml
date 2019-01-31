@@ -15,6 +15,7 @@ from time import time
 from exline.io import (
     load_problem,
     load_ragged_collection,
+    load_graph,
     load_graphs,
     load_audio,
     maybe_truncate,
@@ -92,74 +93,67 @@ print('-' * 50, file=sys.stderr)
 
 _extra = {}
 if route not in ['timeseries', 'collaborative_filtering']:
+    
+    model_lookup = {
+        "table"               : ForestCV,
+        "multitable"          : ForestCV,
+        "question_answering"  : BERTPairClassification,
+        "text"                : TextClassifierCV
+        "audio"               : AudiosetModel,
+        "graph_matching"      : SGMGraphMatcher,
+        "vertex_nomination"   : VertexNominationCV,
+        "link_prediction"     : RescalLinkPrediction,
+        "community_detection" : CommunityDetection,
+        "clustering"          : ClusteringCV,
+        "image"               : FixedCNNForest,
+    }
+    
+    model_cls = model_lookup[route]
+    
+    U_train = None
     if route in ['table']:
-        df_mapper = DataFrameMapper(target_metric=ll_metric)
-        Xf_train, Xf_test, y_train, y_test = df_mapper.pipeline(X_train, X_test, y_train, y_test)
-        model_cls = ForestCV
+        Xf_train, Xf_test = DataFrameMapper(target_metric=ll_metric).pipeline(X_train, X_test, y_train)
     
     elif route in ['multitable']
-        Xf_train, Xf_test, meta_cols = load_ragged_collection(X_train, X_test, d3mds, collection_type='table')
+        Xf_train, Xf_test, _ = load_ragged_collection(X_train, X_test, d3mds, collection_type=route)
         Xf_train, Xf_test = set2hist(Xf_train, Xf_test)
-        model_cls = ForestCV
     
     elif route in ['question_answering']:
-        Xf_train, Xf_test, meta_cols = load_and_join(X_train, X_test, d3mds)
-        model_cls = BERTPairClassification
+        Xf_train, Xf_test, _ = load_and_join(X_train, X_test, d3mds)
     
     elif route in ['text']:
-        Xf_train, Xf_test, _ = load_ragged_collection(X_train, X_test, d3mds, collection_type='text')
-        model_cls = TextClassifierCV
+        Xf_train, Xf_test, _ = load_ragged_collection(X_train, X_test, d3mds, collection_type=route)
     
     elif route in ['audio']:
         from exline.modeling.pretrained_audio import AudiosetModel
         Xf_train, Xf_test = load_audio(X_train, X_test, d3mds)
-        model_cls = AudiosetModel
+    
+    elif route in ['clustering']:
+        # !! Need better preprocessing
+        Xf_train, Xf_test = X_train, X_test
+    
+    elif route in ['image']:
+        Xf_train, Xf_test, _ = prep_image_collection(X_train, X_test, d3mds)
     
     elif route in ['graph_matching']:
+        Xf_train, Xf_test = X_train, X_test
+        U_train = {
+            "graphs" : load_graphs(d3mds, n=2)
+        }
     
-        graphs = load_graphs(d3mds)
-        assert len(graphs) == 2
-        model_cls = SGMGraphMatcher
-        
-    elif route in ['vertex_nomination']:
-        
-        graphs = load_graphs(d3mds)
-        assert len(graphs) == 1
-        graph = list(graphs.values())[0]
-        
-        model_cls = VertexNominationCV
+    elif route in ['vertex_nomination', 'link_prediction', 'community_detection']:
+        Xf_train, Xf_test = X_train, X_test
+        U_train = {
+            "graph" : load_graph(d3mds)
+        }
     
-    elif route in ['link_prediction']:
-        graphs = load_graphs(d3mds)
-        assert len(graphs) == 1
-        graph = list(graphs.values())[0]
-        
-        model_cls = RescalLinkPrediction
-    
-    # model      = ForestCV(target_metric=ll_metric, **rparams)
-    # model      = model.fit(Xf_train, y_train)
-    # pred_test  = model.predict(Xf_test)
-    # test_score = metrics[ll_metric](y_test, pred_test)
+    # Fit model
+    model      = model_cls(target_metric=ll_metric, **rparams)
+    model      = model.fit(Xf_train, y_train, U_train=U_train)
+    pred_test  = model.predict(Xf_test)
+    test_score = metrics[ll_metric](y_test, pred_test)
 
-# sgm
-    _extra = {
-        "train_acc"      : model.sgm_train_acc,
-        "null_train_acc" : model.null_train_acc,
-    }
-
-# random forest
-    _extra = {
-        "cv_score"    : model.best_fitness,
-        "best_params" : model.best_params,
-        "num_fits"    : rparams["num_fits"],
-    }
-
-# text
-    _extra = {
-        "best_params"  : model.best_params,
-        "best_fitness" : model.best_fitness,
-    }
-
+    _extra.extend(model.details)
 
 elif route in ['collaborative_filtering']:
     model      = SGDCollaborativeFilter(target_metric=ll_metric, **rparams)
@@ -168,7 +162,7 @@ elif route in ['collaborative_filtering']:
 elif route in ['timeseries']:
     # !! More annoying to convert to fit/predict -- semi-supervised AND ensemble
     
-    Xf_train, Xf_test, meta_cols = load_ragged_collection(X_train, X_test, d3mds, collection_type='timeseries')
+    Xf_train, Xf_test, meta_cols = load_ragged_collection(X_train, X_test, d3mds, collection_type=route)
     
     # Detect and and handle sparse timeseries
     if (np.hstack(Xf_train) == 0).mean() > 0.5:
@@ -204,39 +198,6 @@ elif route in ['timeseries']:
     #         }
     #     })
     
-    
-elif route in ['community_detection']:
-    
-    graphs = load_graphs(d3mds)
-    assert len(graphs) == 1
-    graph = list(graphs.values())[0]
-    
-    model      = CommunityDetection(target_metric=ll_metric, **rparams)
-    model      = model.fit(graph, X_train, y_train)
-    pred_test  = model.predict(X_test)
-    test_score = metrics[ll_metric](y_test, pred_test)
-    
-    _extra = {
-        "null_model" : True
-    }
-    
-elif route in ['clustering']:
-    # !! Should do preprocessing
-    
-    model      = ClusteringCV(target_metric=ll_metric, **rparams)
-    model      = model.fit(X_train, y_train)
-    pred_test  = model.predict(X_test)
-    test_score = metrics[ll_metric](y_test, pred_test)
-    
-elif route in ['image']:
-    
-    Xf_train, Xf_test, meta_cols = prep_image_collection(X_train, X_test, d3mds)
-    
-    model      = FixedCNNForest(target_metric=ll_metric, **rparams)
-    model      = model.fit(Xf_train, y_train)
-    pred_test  = model.predict(Xf_test)
-    test_score = metrics[ll_metric](y_test, pred_test)
-    
 else:
     raise Exception('no route triggered')
 
@@ -265,9 +226,6 @@ res = {
     "elapsed" : time() - t,
     
     "_extra" : _extra,
-    "_misc"  : {
-        "use_schema" : args.use_schema,
-    }
 }
 if not args.no_print_results:
     print(json.dumps(res))

@@ -46,9 +46,7 @@ def rescal_link_prediction(adj, rank=100, lambda_A=10, lambda_R=10, conv=1e-3, m
     )
     
     adj_lr = np.stack([(A @ R[k] @ A.T) for k in range(num_edge_types)], axis=-1)
-    
     adj_lr /= (np.linalg.norm(adj_lr, axis=-1, keepdims=True) + 1e-10) # Normalize by link type
-    
     return adj_lr
 
 
@@ -94,8 +92,10 @@ class RescalLinkPrediction:
         self.target_metric = target_metric
         self.adj_lr = None
     
-    def fit(self, graph, X_train, y_train):
+    def fit(self, X_train, y_train, U_train):
         global _cv_fold
+        
+        graph = U_train['graph']
         
         edgelist = nx2edgelist(graph)
         

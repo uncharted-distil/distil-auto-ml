@@ -155,7 +155,7 @@ class BERTPairClassification:
             "label"  : int(row['_label']),
         }
     
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, U_train=None):
         
         assert 'question' in X_train.columns
         assert 'sentence' in X_train.columns

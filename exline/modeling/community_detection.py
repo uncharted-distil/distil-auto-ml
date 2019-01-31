@@ -15,9 +15,15 @@ class CommunityDetection:
         self.target_metric = target_metric
         self.overlapping   = overlapping
     
-    def fit(self, graph, X_train, y_train):
+    def fit(self, X_train, y_train, U_train=None):
         print('!! CommunityDetection: using null model', file=sys.stderr)
         return self
     
     def predict(self, X):
         return -np.arange(X.shape[0])
+    
+    @property
+    def details(self):
+        return {
+            "null_model" : True
+        }

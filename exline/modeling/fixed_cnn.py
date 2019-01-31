@@ -96,7 +96,7 @@ class FixedCNNForest:
         
         return feats
     
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, U_train=None):
         self._y_train = y_train
         
         dataloaders = {

@@ -12,8 +12,8 @@ import numpy as np
 import pandas as pd
 import networkx as nx
 from scipy import sparse
-from sklearn import metrics
 
+from .metrics import metrics
 from sgm.backends.classic import ScipyJVClassicSGM
 
 # --
@@ -64,7 +64,9 @@ class SGMGraphMatcher:
         
         return make_preds(self.P, X)
     
-    def fit(self, graphs, X_train, y_train):
+    def fit(self, X_train, y_train, U_train):
+        graphs = U_train['graphs']
+        
         assert list(graphs.keys()) == ['0', '1']
         assert X_train.shape[1] == 2
         
@@ -85,7 +87,6 @@ class SGMGraphMatcher:
         
         X_train['num_id1'] = X_train['orig_id1'].apply(lambda x: self.G1_lookup[x])
         X_train['num_id2'] = X_train['orig_id2'].apply(lambda x: self.G2_lookup[x])
-        
         
         # --
         # Convert to matrix
@@ -116,13 +117,19 @@ class SGMGraphMatcher:
         
         P_eye = sparse.eye(P.shape[0]).tocsr()
         
-        self.sgm_train_acc  = metrics.accuracy_score(y_train, make_preds(P_out, X_train))
-        self.null_train_acc = metrics.accuracy_score(y_train, make_preds(P_eye, X_train))
+        self.sgm_train_acc  = metrics[self.target_metric](y_train, make_preds(P_out, X_train))
+        self.null_train_acc = metrics[self.target_metric](y_train, make_preds(P_eye, X_train))
         
         if self.null_train_acc > self.sgm_train_acc:
             self.P = P_eye
         else:
             self.P = P_out
-            
+        
         return self
-
+    
+    @property
+    def details(self):
+        return {
+            "train_acc"      : self.sgm_train_acc,
+            "null_train_acc" : self.null_train_acc,
+        }

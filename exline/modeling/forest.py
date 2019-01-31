@@ -73,7 +73,7 @@ class ForestCV:
         self._models  = []
         self._y_train = None
     
-    def fit(self, Xf_train, y_train, param_grid=None):
+    def fit(self, Xf_train, y_train, U_train=None):
         self._y_train = y_train
         if self.is_classification:
             
@@ -174,3 +174,11 @@ class ForestCV:
         self.best_params['n_jobs'] = self.outer_jobs
         X, y = maybe_subset(Xf_train, y_train, n=self.final_subset)
         return EitherForestRegressor(**self.best_params).fit(X, y)
+    
+    @property
+    def details(self):
+        return {
+            "cv_score"    : self.best_fitness,
+            "best_params" : self.best_params,
+            "num_fits"    : self.num_fits,
+        }

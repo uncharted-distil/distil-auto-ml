@@ -298,14 +298,21 @@ def load_audio(X_train, X_test, d3mds):
 # --
 # Graphs
 
-def load_graphs(d3mds):
-    Gs = {}
+def load_graphs(d3mds, n=None):
+    graphs = {}
     for resource in d3mds.dataset.dsDoc['dataResources']:
         if resource['resType'] == 'graph':
             assert 'text/gml' in resource['resFormat']
-            Gs[resource['resID']] = nx.read_gml(os.path.join(d3mds.dataset.dsHome, resource['resPath']))
-            
-    return Gs
+            graphs[resource['resID']] = nx.read_gml(os.path.join(d3mds.dataset.dsHome, resource['resPath']))
+    
+    if n is not None:
+        assert len(graphs) == n
+    
+    return graphs
+
+def load_graph(d3mds):
+    graphs = load_graphs(d3mds, n=1)
+    return list(graphs.values())[0]
 
 # --
 # Images

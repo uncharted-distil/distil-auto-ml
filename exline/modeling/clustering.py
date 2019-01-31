@@ -17,7 +17,7 @@ class ClusteringCV:
         self.all_float     = all_float
         self.n_init        = 100
     
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, U_train=None):
         assert X_train.shape[0] == 0
         assert self.all_float
         
