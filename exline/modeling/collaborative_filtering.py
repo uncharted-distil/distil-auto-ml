@@ -20,36 +20,6 @@ from .base import EXLineBaseModel
 from .metrics import metrics, classification_metrics, regression_metrics
 
 # --
-# Helpers
-
-def prep_cf(X_train, X_test):
-    
-    assert X_train.shape[1] == 2
-    assert X_test.shape[1] == 2
-    
-    X_train = X_train.copy()
-    X_test  = X_test.copy()
-    
-    X_train.columns = ('user', 'item')
-    X_test.columns  = ('user', 'item')
-    
-    uusers       = np.unique(np.hstack([X_train.user, X_test.user]))
-    user_lookup  = dict(zip(uusers, range(len(uusers))))
-    X_train.user = X_train.user.apply(user_lookup.get)
-    X_test.user  = X_test.user.apply(user_lookup.get)
-    
-    uitems       = np.unique(np.hstack([X_train.item, X_test.item]))
-    item_lookup  = dict(zip(uitems, range(len(uitems))))
-    X_train.item = X_train.item.apply(item_lookup.get)
-    X_test.item  = X_test.item.apply(item_lookup.get)
-    
-    n_users = len(uusers)
-    n_items = len(uitems)
-    
-    return X_train, X_test, n_users, n_items
-
-
-# --
 # Models
 
 class CFModel(BaseNet):
@@ -82,69 +52,47 @@ class CFModel(BaseNet):
         return self.score(emb) + self.user_bias(users) + self.item_bias(items)
 
 
-def make_cf_model(
-        loss_fn,
-        n_users,
-        n_items,
-        emb_dim,
-        n_outputs,
-        lr_max=2e-3,
-        epochs=8,
-        verbose=False,
-    ):
-    
-    model = CFModel(
-        loss_fn=loss_fn,
-        n_users=n_users,
-        n_items=n_items,
-        emb_dim=emb_dim,
-        n_outputs=n_outputs,
-    )
-    
-    model.verbose = verbose
-    
-    lr_scheduler = HPSchedule.linear(hp_max=lr_max, epochs=epochs)
-    model.init_optimizer(
-        opt=torch.optim.Adam,
-        params=model.parameters(),
-        hp_scheduler={"lr" : lr_scheduler},
-    )
-    
-    return model
-
-
 class SGDCollaborativeFilter(EXLineBaseModel):
     
-    def __init__(self, target_metric, emb_dims=[128, 256, 512, 1024], n_outputs=1,
-        epochs=8, batch_size=512, device='cuda'):
+    def __init__(self, n_users, n_items, target_metric, emb_dims=[128, 256, 512, 1024], n_outputs=1,
+        epochs=8, batch_size=512, lr_max=2e-3, device='cuda'):
         
         if target_metric == 'meanAbsoluteError':
             self.loss_fn = F.l1_loss
-        elif target_metric == 'accuracy':
-            self.loss_fn = F.binary_cross_entropy_with_logits
+        # elif target_metric == 'accuracy':
+            # self.loss_fn = F.binary_cross_entropy_with_logits
         else:
-            raise Exception
+            raise Exception('SGDCollaborativeFilter: unknown metric')
         
+        self.n_users       = n_users
+        self.n_items       = n_items
         self.target_metric = target_metric
         self.emb_dims      = emb_dims
         self.n_outputs     = n_outputs
         self.epochs        = epochs
         self.batch_size    = batch_size
         self.device        = device
-    
-    def fit_score(self, X_train, X_test, y_train, y_test):
+        self.lr_max        = lr_max
         
-        X_train, X_test, n_users, n_items = prep_cf(X_train, X_test)
+    def _make_model(self, emb_dim):
         
-        self.models = [
-            make_cf_model(
-                loss_fn=self.loss_fn,
-                n_users=n_users,
-                n_items=n_items,
-                emb_dim=emb_dim,
-                n_outputs=self.n_outputs,
-            ) for emb_dim in self.emb_dims
-        ]
+        model = CFModel(
+            emb_dim=emb_dim,
+            loss_fn=self.loss_fn,
+            n_users=self.n_users,
+            n_items=self.n_items,
+            n_outputs=self.n_outputs,
+        )
+        
+        model.init_optimizer(
+            opt=torch.optim.Adam,
+            params=model.parameters(),
+            hp_scheduler={"lr" : HPSchedule.linear(hp_max=self.lr_max, epochs=self.epochs)},
+        )
+        
+        return model
+        
+    def fit(self, X_train, y_train, U_train=None):
         
         dataloaders = {
             "train" : DataLoader(
@@ -155,20 +103,14 @@ class SGDCollaborativeFilter(EXLineBaseModel):
                 shuffle=True,
                 batch_size=self.batch_size,
             ),
-            "test" : DataLoader(
-                TensorDataset(
-                    torch.LongTensor(X_test.values),
-                    torch.FloatTensor(y_test).view(-1, 1),
-                ),
-                shuffle=False,
-                batch_size=self.batch_size,
-            )
         }
         
         # --
         # Train
         
-        for i, model in enumerate(self.models):
+        self._models = [self._make_model(emb_dim=emb_dim) for emb_dim in self.emb_dims]
+        
+        for i, model in enumerate(self._models):
             print('model=%d' % i, file=sys.stderr)
             model = model.to(self.device)
             
@@ -180,12 +122,25 @@ class SGDCollaborativeFilter(EXLineBaseModel):
                 }, file=sys.stderr)
             
             model = model.to('cpu')
+    
+    def predict(self, X):
+        
+        dataloaders = {
+            "test" : DataLoader(
+                TensorDataset(
+                    torch.LongTensor(X.values),
+                    torch.FloatTensor(np.zeros(X.shape[0]) - 1).view(-1, 1),
+                ),
+                shuffle=False,
+                batch_size=self.batch_size,
+            )
+        }
         
         # --
         # Test
         
         all_preds = []
-        for model in self.models:
+        for model in self._models:
             model = model.to(self.device)
             
             preds, _ = model.predict(dataloaders, mode='test')
@@ -193,14 +148,4 @@ class SGDCollaborativeFilter(EXLineBaseModel):
             
             model = model.to('cpu')
         
-        self.all_scores = [metrics[self.target_metric](y_test, p) for p in all_preds]
-        
-        ens_pred  = np.vstack(all_preds).mean(axis=0)
-        if self.target_metric in regression_metrics:
-            ens_score = metrics[self.target_metric](y_test, ens_pred)
-        elif self.target_metric in classification_metrics:
-            raise NotImplemented
-        else:
-            raise Exception
-        
-        return ens_score
+        return np.vstack(all_preds).mean(axis=0)

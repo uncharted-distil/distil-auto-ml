@@ -166,3 +166,31 @@ def set2hist(S_train, S_test, n_clusters=64, n_jobs=32, kmeans_sample=100000, ba
     
     return H_train, H_test
 
+# --
+# Graphs
+
+def cf_remap_graphs(X_train, X_test):
+    
+    assert X_train.shape[1] == 2
+    assert X_test.shape[1] == 2
+    
+    X_train = X_train.copy()
+    X_test  = X_test.copy()
+    
+    X_train.columns = ('user', 'item')
+    X_test.columns  = ('user', 'item')
+    
+    uusers       = np.unique(np.hstack([X_train.user, X_test.user]))
+    user_lookup  = dict(zip(uusers, range(len(uusers))))
+    X_train.user = X_train.user.apply(user_lookup.get)
+    X_test.user  = X_test.user.apply(user_lookup.get)
+    
+    uitems       = np.unique(np.hstack([X_train.item, X_test.item]))
+    item_lookup  = dict(zip(uitems, range(len(uitems))))
+    X_train.item = X_train.item.apply(item_lookup.get)
+    X_test.item  = X_test.item.apply(item_lookup.get)
+    
+    n_users = len(uusers)
+    n_items = len(uitems)
+    
+    return X_train, X_test, n_users, n_items

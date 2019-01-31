@@ -29,7 +29,7 @@ from .external import D3MDS
 #         self.metric = self.d3mds.problem.get_performance_metrics()[0]['metric']
 
 
-def load_problem(prob_name, base_path, return_d3mds=False, use_schema=False, strict=True):
+def load_problem(prob_name, base_path, return_d3mds=True, use_schema=False, strict=True):
     d3mds = D3MDS(
         os.path.join(base_path, prob_name, '%s_dataset' % prob_name),
         os.path.join(base_path, prob_name, '%s_problem' % prob_name),

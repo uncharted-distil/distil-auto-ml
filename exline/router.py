@@ -72,7 +72,7 @@ def is_text(d3mds):
 # --
 # Routing
 
-def get_routing_info(X_train, X_test, y_train, y_test, metric, d3mds):
+def get_routing_info(X_train, X_test, y_train, metric, d3mds):
     
     # Shouldn't evaluate these in serial -- should do in parallel, then check for
     # conflicts

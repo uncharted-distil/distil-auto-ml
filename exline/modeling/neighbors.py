@@ -44,9 +44,9 @@ def distance_matrix(X, metric):
     return dist
 
 
-def whiten(T_train, T_test):
-    pca = PCA(whiten=True).fit(np.vstack([T_train, T_test]))
-    return pca.transform(T_train), pca.transform(T_test)
+def whiten(X_train, X_test):
+    pca = PCA(whiten=True).fit(np.vstack([X_train, X_test]))
+    return pca.transform(X_train), pca.transform(X_test)
 
 
 def precomputed_knn1_cv(train_dist, test_dist, y_train, y_test, target_metric):
@@ -65,12 +65,12 @@ def precomputed_knn1_cv(train_dist, test_dist, y_train, y_test, target_metric):
     }
 
 
-def knn1_cv(T_train, T_test, y_train, y_test, target_metric, metric, whitened, dists=None):
+def knn1_cv(X_train, X_test, y_train, y_test, target_metric, metric, whitened, dists=None):
     if whitened:
-        T_train, T_test = whiten(T_train, T_test)
+        X_train, X_test = whiten(X_train, X_test)
     
-    train_dist = cdist(T_train, T_train, metric=metric)
-    test_dist  = cdist(T_test, T_train, metric=metric)
+    train_dist = cdist(X_train, X_train, metric=metric)
+    test_dist  = cdist(X_test, X_train, metric=metric)
     return precomputed_knn1_cv(train_dist, test_dist, y_train, y_test, target_metric=target_metric)
 
 
@@ -181,7 +181,7 @@ class NeighborsCV(EXLineBaseModel):
         
         self._y_train = None
     
-    def fit(self, X_train, X_test, U_train):
+    def fit(self, X_train, y_train, U_train):
         X_test, y_test = U_train['X_test'], U_train['y_test']
         
         self._y_train = y_train
@@ -201,7 +201,7 @@ class NeighborsCV(EXLineBaseModel):
         
         return self
     
-    def score(self, T_test, y_test):
+    def score(self, X_test):
         # Ensembles K best models.  Handles ties correctly.
         # Shouldn't be ensembling when some of the models are absolute garbage
         # Should maybe drop models that do worse than chance.
@@ -220,16 +220,18 @@ class NeighborsCV(EXLineBaseModel):
         else:
             ens_pred = ens_scores.mean(axis=0) # Might linear regression be better?
         
-        return metrics[self.target_metric](y_test, ens_pred)
+        return ens_pred
     
-    def _fit_knn(self, T_train, T_test, y_train, y_test):
+    def _fit_knn(self, X_train, X_test, y_train, y_test):
         # Fit a series of KNN models
         
         global _dtw_dist_row_train
         
-        T_all   = np.vstack([T_train, T_test])
-        n_train = T_train.shape[0]
-        n_test  = T_test.shape[0]
+        print(X_train.shape, X_test.shape)
+        
+        X_all   = np.vstack([X_train, X_test])
+        n_train = X_train.shape[0]
+        n_test  = X_test.shape[0]
         
         knn_settings = list(product(self.metrics, self.whitens))
         
@@ -240,7 +242,7 @@ class NeighborsCV(EXLineBaseModel):
             metric, whitened = knn_setting
             if metric != 'dtw':
                 pred, scores = knn1_cv(
-                    T_train, T_test, y_train, y_test, 
+                    X_train, X_test, y_train, y_test, 
                     target_metric=self.target_metric,
                     metric=metric,
                     whitened=whitened
@@ -248,9 +250,9 @@ class NeighborsCV(EXLineBaseModel):
                 
             else:
                 def _dtw_dist_row_train(t):
-                    return [_fastdtw_metric(t, tt) for tt in T_train] # !! Don't compute distance between test obs
+                    return [_fastdtw_metric(t, tt) for tt in X_train] # !! Don't compute distance between test obs
                 
-                full_dist = np.vstack(parmap(_dtw_dist_row_train, list(T_all), verbose=1))
+                full_dist = np.vstack(parmap(_dtw_dist_row_train, list(X_all), verbose=1))
                 train_dist, test_dist = full_dist[:n_train], full_dist[n_train:]
                 pred, scores = precomputed_knn1_cv(train_dist, test_dist, y_train, y_test, target_metric=self.target_metric)
             
@@ -260,19 +262,19 @@ class NeighborsCV(EXLineBaseModel):
             if self.verbose:
                 print(knn_setting, self.fitness[knn_setting], file=sys.stderr)
     
-    def _fit_diffusion(self, T_train, T_test, y_train, y_test, metric, whitened):
+    def _fit_diffusion(self, X_train, X_test, y_train, y_test, metric, whitened):
         # Fit a diffusion model
         
         global _dtw_dist_row_all
         
-        T_all   = np.vstack([T_train, T_test])
-        n_train = T_train.shape[0]
-        n_test  = T_test.shape[0]
+        X_all   = np.vstack([X_train, X_test])
+        n_train = X_train.shape[0]
+        n_test  = X_test.shape[0]
         
         if whitened:
-            T_all = PCA(whiten=True).fit_transform(T_all) # !! Could be slow
+            X_all = PCA(whiten=True).fit_transform(X_all) # !! Could be slow
         
-        dist = distance_matrix(T_all, metric=metric)
+        dist = distance_matrix(X_all, metric=metric)
         sim  = 1 - dist / dist.max()
         
         param_grid = {
@@ -297,12 +299,12 @@ class NeighborsCV(EXLineBaseModel):
         if self.verbose:
             print(('diff', metric, whitened), self.fitness[('diff', metric, whitened)], file=sys.stderr)
     
-    def _fit_rf(self, T_train, T_test, y_train, y_test):
+    def _fit_rf(self, X_train, X_test, y_train, y_test):
         # Fit a RandomForest model
         
         forest    = ForestCV(target_metric=self.target_metric)
-        forest    = forest.fit(T_train, y_train)
-        pred_test = forest.predict(T_test)
+        forest    = forest.fit(X_train, y_train)
+        pred_test = forest.predict(X_test)
         
         self.preds['rf']   = pred_test
         self.fitness['rf'] = {
@@ -312,3 +314,9 @@ class NeighborsCV(EXLineBaseModel):
         
         if self.verbose:
             print('rf', self.fitness['rf'], file=sys.stderr)
+    
+    @property
+    def details(self):
+        return {
+            "neighbors_fitness" : dict([(str(k), v) for k, v in self.fitness.items()])
+        }
