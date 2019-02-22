@@ -7,12 +7,12 @@ from d3m.primitive_interfaces import base, transformer
 import pandas as pd
 import numpy as np
 
-from sklearn_pandas import CategoricalImputer
+from preprocessing.transformers import BinaryEncoder
 
 from preprocessing.utils import MISSING_VALUE_INDICATOR
 
 
-__all__ = ('CategoricalImputerPrimitive',)
+__all__ = ('BinaryEncoderPrimitive',)
 
 class Hyperparams(hyperparams.Hyperparams):
     use_columns = hyperparams.Set(
@@ -22,22 +22,22 @@ class Hyperparams(hyperparams.Hyperparams):
         description="A set of column indices to force primitive to operate on. If any specified column cannot be parsed, it is skipped.",
     )
 
-class CategoricalImputerPrimitive(transformer.TransformerPrimitiveBase[container.ndarray, container.ndarray, Hyperparams]):
+class BinaryEncoderPrimitive(transformer.TransformerPrimitiveBase[container.ndarray, container.ndarray, Hyperparams]):
     """
-    A primitive that imputes categoricals.
+    A primitive that encodes binaries.
     """
 
     metadata = metadata_base.PrimitiveMetadata(
         {
-            'id': '0a9936f3-7784-4697-82f0-2a5fcc744c16',
+            'id': 'd38e2e28-9b18-4ce4-b07c-9d809cd8b915',
             'version': '0.1.0',
-            'name': "Categorical imputer",
-            'python_path': 'd3m.primitives.data_transformation.imputer.ExlineCategoricalImputer',
+            'name': "Binary encoder",
+            'python_path': 'd3m.primitives.data_transformation.encoder.ExlineBinaryEncoder',
             'source': {
                 'name': 'exline',
                 'contact': 'mailto:cbethune@uncharted.software',
                 'uris': [
-                    'https://github.com/cdbethune/d3m-exline/primitives/categorical_imputer.py',
+                    'https://github.com/cdbethune/d3m-exline/primitives/simple_imputer.py',
                     'https://github.com/cdbethune/d3m-exline',
                 ],
             },
@@ -54,10 +54,13 @@ class CategoricalImputerPrimitive(transformer.TransformerPrimitiveBase[container
         },
     )
 
+
+
     def produce(self, *, inputs: container.ndarray, timeout: float = None, iterations: int = None) -> base.CallResult[container.ndarray]:
         cols = self.hyperparams['use_columns']
+        categories = self.hyperparams['categories']
         categorical_inputs = inputs[:,cols]
-        imputer = CategoricalImputer(strategy='constant', fill_value=MISSING_VALUE_INDICATOR)
-        imputer.fit(categorical_inputs)
-        result = container.ndarray(imputer.transform(inputs))
+        encoder = BinaryEncoder()
+        encoder.fit(categorical_inputs)
+        result = container.ndarray(encoder.transform(inputs))
         return base.CallResult(result)

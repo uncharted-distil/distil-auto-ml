@@ -10,6 +10,8 @@ import json
 import argparse
 import numpy as np
 from time import time
+from typing import Dict
+
 
 from d3m import container
 from d3m.container import dataset
@@ -18,6 +20,7 @@ from exline.io import load_problem
 from exline.router import get_routing_info
 from exline.d3m_util import PreprocessorFunctions, model_lookup
 from exline.modeling.metrics import metrics
+from exline.external import D3MDataset
 
 from primitives import tabular_pipeline
 
@@ -43,11 +46,27 @@ np.random.seed(args.seed)
 t = time()
 
 def load_stuff(base_path: str, problem_name: str) -> None:
-    # Load dataset and create d3m pipeline
+    # Load dataset in the same way the d3m runtime will
     dataset_doc_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
-        args.base_path, args.prob_name, 'TRAIN', 'dataset_TRAIN', 'datasetDoc.json'))
-    ds = dataset.Dataset.load('file://{dataset_doc_path}'.format(dataset_doc_path=dataset_doc_path))
-    pipeline = tabular_pipeline.create_pipeline(ds[0], 0, 'f1macro')
+        args.base_path, args.prob_name, 'TRAIN', 'dataset_TRAIN'))
+    ds = dataset.Dataset.load('file://{dataset_doc_path}/datasetDoc.json'.format(dataset_doc_path=dataset_doc_path))
+
+    # Temp hack to avoid metdata for now -
+    column_info = D3MDataset(dataset_doc_path).get_learning_data_columns()
+    column_types: Dict[int, type] = {}
+    for c in column_info:
+        col_idx = c['colIndex']
+        col_type = c['colType']
+        if col_type == 'boolean':
+            column_types[col_idx] = bool
+        elif col_type == 'real':
+            column_types[col_idx] = float
+        elif col_type == 'integer':
+            column_types[col_idx] = int
+        else:
+            column_types[col_idx] = str
+
+    pipeline = tabular_pipeline.create_pipeline(ds['0'], column_types, 0, 'f1macro')
 
 
 

@@ -45,7 +45,7 @@ class EnrichDatesPrimitive(transformer.TransformerPrimitiveBase[container.DataFr
         },
     )
 
-    def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.dataframe_deserializer]:
+    def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
         outputs = self._enrich_dates(inputs)
         return base.CallResult(outputs)
 

@@ -5,7 +5,7 @@ from copy import deepcopy
 from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base, hyperparams, params
 from d3m.primitive_interfaces import base, transformer
-from d3m.primitive_interfaces.supervised_learning import SupervisedLearnerPrimitiveBase
+from d3m.primitive_interfaces.supervised_learning import PrimitiveBase
 from d3m.primitive_interfaces.base import CallResult
 
 from modeling.base import EXLineBaseModel
@@ -62,20 +62,20 @@ class AnyForest:
             return self.model.classes_[score_oob.argmax(axis=-1)] # could vote better
 
 class Hyperparams(hyperparams.Hyperparams):
-    metric = hyperparams.Constant[str](
+    metric = hyperparams.Hyperparameter[str](
         default='',
-        semantic_types=['https://metadata.datadrivendiscovery.org/types/TuningParameter']
+        semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
 
-    target_idx = hyperparams.Constant[int](
+    target_idx = hyperparams.Hyperparameter[int](
         default=0,
-        semantic_types=['https://metadata.datadrivendiscovery.org/types/TuningParameter']
+        semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
 
 class Params(params.Params):
     pass
 
-class EnsembleForestPrimitive(SupervisedLearnerPrimitiveBase[container.ndarray, container.ndarray, Params, Hyperparams]):
+class EnsembleForestPrimitive(PrimitiveBase[container.ndarray, container.ndarray, Params, Hyperparams]):
     """
     A primitive that forests.
     """
@@ -89,7 +89,7 @@ class EnsembleForestPrimitive(SupervisedLearnerPrimitiveBase[container.ndarray, 
                 'name': 'exline',
                 'contact': 'mailto:cbethune@uncharted.software',
                 'uris': [
-                    'https://github.com/cdbethune/d3m-exline/primitives/categorical_imputer.py',
+                    'https://github.com/cdbethune/d3m-exline/primitives/ensemble_forest.py',
                     'https://github.com/cdbethune/d3m-exline',
                 ],
             },
@@ -106,7 +106,7 @@ class EnsembleForestPrimitive(SupervisedLearnerPrimitiveBase[container.ndarray, 
         },
     )
 
-    default_param_grids = {
+    _default_param_grids = {
         "classification" : {
             "estimator"        : ["RandomForest"],
             "n_estimators"     : [32, 64, 128, 256, 512, 1024, 2048],
@@ -121,30 +121,27 @@ class EnsembleForestPrimitive(SupervisedLearnerPrimitiveBase[container.ndarray, 
         }
     }
 
-    def __init__(self,target_metric: Set[str], subset: int = 100000, final_subset: int = 1500000,
-        verbose: int = 10, num_fits: int = 1, inner_jobs: int = 1,
-        param_grid: Optional[Dict[str, Any]]=None) -> None:
+    def __init__(self, *,
+                 hyperparams: Hyperparams,
+                 random_seed: int = 0) -> None:
 
-        self.target_metric = target_metric
+        self.target_metric = hyperparams['metric']
 
-        if target_metric in classification_metrics:
+        if self.target_metric in classification_metrics:
             self.mode = 'classification'
-        elif target_metric in regression_metrics:
+        elif self.target_metric in regression_metrics:
             self.mode = 'regression'
         else:
             raise Exception('ForestCV: unknown metric')
 
-        self.subset       = subset
-        self.final_subset = final_subset
-        self.verbose      = verbose
-        self.num_fits     = num_fits
-        self.inner_jobs   = inner_jobs
+        # were in constructor - can move to hyperparams as needed
+        self.subset       = 100000
+        self.final_subset = 1500000
+        self.verbose      = 10
+        self.num_fits     = 1
+        self.inner_jobs   = 1
         self.outer_jobs   = 64
-
-        if param_grid is not None:
-            self.param_grid = param_grid
-        else:
-            self.param_grid = deepcopy(self.default_param_grids[self.mode])
+        self.param_grid = deepcopy(self._default_param_grids[self.mode])
 
         self._models: List[AnyForest]  = []
         self._y_train: Optional[np.ndarray] = None
@@ -203,8 +200,15 @@ class EnsembleForestPrimitive(SupervisedLearnerPrimitiveBase[container.ndarray, 
 
         return model
 
+    def get_params(self) -> Params:
+        return self.params
+
+    def set_params(self, *, params: Params) -> Params:
+        self.params = params
+        return params
+
     @property
-    def details(self) -> Dict[str, Any]:
+    def _details(self) -> Dict[str, Any]:
         return {
             "cv_score"    : self.best_fitness,
             "best_params" : self.best_params,
