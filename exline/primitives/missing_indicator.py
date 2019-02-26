@@ -1,6 +1,4 @@
 import os
-from typing import List, Set, Any
-
 
 from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base, hyperparams
@@ -9,11 +7,12 @@ from d3m.primitive_interfaces import base, transformer
 import pandas as pd
 import numpy as np
 
-from sklearn import preprocessing
-from sklearn import compose
+from sklearn.impute import MissingIndicator
+
+from preprocessing.utils import MISSING_VALUE_INDICATOR
 
 
-__all__ = ('OneHotEncoderPrimitive',)
+__all__ = ('MissingIndicatorPrimitive',)
 
 class Hyperparams(hyperparams.Hyperparams):
     use_columns = hyperparams.Set(
@@ -23,17 +22,18 @@ class Hyperparams(hyperparams.Hyperparams):
         description="A set of column indices to force primitive to operate on. If any specified column cannot be parsed, it is skipped.",
     )
 
-class OneHotEncoderPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
+
+class MissingIndicatorPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
     """
-    A primitive that encodes one hots.
+    A primitive that scales standards.
     """
 
     metadata = metadata_base.PrimitiveMetadata(
         {
-            'id': 'd3d421cb-9601-43f0-83d9-91a9c4199a06',
+            'id': '15587104-0e81-4970-add3-668da63be95b',
             'version': '0.1.0',
-            'name': "One-hot encoder",
-            'python_path': 'd3m.primitives.data_transformation.one_hot_encoder.ExlineOneHotEncoder',
+            'name': "Standard scaler",
+            'python_path': 'd3m.primitives.data_transformation.missing_indicator.ExlineMissingIndicator',
             'source': {
                 'name': 'exline',
                 'contact': 'mailto:cbethune@uncharted.software',
@@ -55,19 +55,14 @@ class OneHotEncoderPrimitive(transformer.TransformerPrimitiveBase[container.Data
         },
     )
 
-
-
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
-        print('>> ONE HOT ENCODER START')
         cols = self.hyperparams['use_columns']
-        input_cols = inputs.iloc[:,cols]
+        numerical_inputs = inputs[:,cols]
 
-        encoder = preprocessing.OneHotEncoder(sparse=False, handle_unknown='ignore')
-        encoder.fit(input_cols)
-        result = container.DataFrame(encoder.transform(input_cols), generate_metadata=False)
-        result = pd.concat([inputs, result], axis=1)
+        missing_indicator = MissingIndicator()
+        missing_indicator.fit(numerical_inputs)
 
-        print(result)
-        print(result.dtypes)
-        print('<< ONE HOT ENCODER END')
+        result = container.DataFrame(missing_indicator.transform(numerical_inputs), generate_metadata=False)
+        result = pd.concatenate([inputs, result], axis=1)
+
         return base.CallResult(result)

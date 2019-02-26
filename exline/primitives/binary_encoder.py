@@ -9,8 +9,6 @@ import numpy as np
 
 from preprocessing.transformers import BinaryEncoder
 
-from preprocessing.utils import MISSING_VALUE_INDICATOR
-
 
 __all__ = ('BinaryEncoderPrimitive',)
 
@@ -22,7 +20,7 @@ class Hyperparams(hyperparams.Hyperparams):
         description="A set of column indices to force primitive to operate on. If any specified column cannot be parsed, it is skipped.",
     )
 
-class BinaryEncoderPrimitive(transformer.TransformerPrimitiveBase[container.ndarray, container.ndarray, Hyperparams]):
+class BinaryEncoderPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
     """
     A primitive that encodes binaries.
     """
@@ -56,11 +54,17 @@ class BinaryEncoderPrimitive(transformer.TransformerPrimitiveBase[container.ndar
 
 
 
-    def produce(self, *, inputs: container.ndarray, timeout: float = None, iterations: int = None) -> base.CallResult[container.ndarray]:
+    def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
+        print('>> BINARY ENCODER START')
         cols = self.hyperparams['use_columns']
-        categories = self.hyperparams['categories']
-        categorical_inputs = inputs[:,cols]
         encoder = BinaryEncoder()
-        encoder.fit(categorical_inputs)
-        result = container.ndarray(encoder.transform(inputs))
+        # Binary encoder works on series
+        for c in cols:
+            categorical_inputs = inputs.iloc[:,c]
+            encoder.fit(categorical_inputs)
+            result = container.DataFrame(encoder.transform(categorical_inputs), generate_metadata=False)
+            result = pd.concat([inputs, result], axis=1)
+        print(result)
+        print(result.dtypes)
+        print('<< BINARY ENCODER END')
         return base.CallResult(result)

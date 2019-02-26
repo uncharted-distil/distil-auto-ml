@@ -1,44 +1,36 @@
 import os
-from typing import List, Set, Any
-
-
+from typing import List
 from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base, hyperparams
 from d3m.primitive_interfaces import base, transformer
 
 import pandas as pd
-import numpy as np
 
-from sklearn import preprocessing
-from sklearn import compose
-
-
-__all__ = ('OneHotEncoderPrimitive',)
+__all__ = ('SimpleColumnParserPrimitive',)
 
 class Hyperparams(hyperparams.Hyperparams):
-    use_columns = hyperparams.Set(
-        elements=hyperparams.Hyperparameter[int](-1),
-        default=(),
+    column_types = hyperparams.Hyperparameter[List[type]](
+        default=[],
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
-        description="A set of column indices to force primitive to operate on. If any specified column cannot be parsed, it is skipped.",
+        description="Schema type of each column in order they stored in the input dataframe",
     )
 
-class OneHotEncoderPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
+class SimpleColumnParserPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
     """
-    A primitive that encodes one hots.
+    A primitive that imputes simples.
     """
 
     metadata = metadata_base.PrimitiveMetadata(
         {
-            'id': 'd3d421cb-9601-43f0-83d9-91a9c4199a06',
+            'id': '7b67eef9-f14e-4219-bf0c-5222880eac78',
             'version': '0.1.0',
-            'name': "One-hot encoder",
-            'python_path': 'd3m.primitives.data_transformation.one_hot_encoder.ExlineOneHotEncoder',
+            'name': "Simple column parser",
+            'python_path': 'd3m.primitives.data_transformation.column_parser.ExlineSimpleColumnParser',
             'source': {
                 'name': 'exline',
                 'contact': 'mailto:cbethune@uncharted.software',
                 'uris': [
-                    'https://github.com/cdbethune/d3m-exline/primitives/simple_imputer.py',
+                    'https://github.com/cdbethune/d3m-exline/primitives/simple_column_parser.py',
                     'https://github.com/cdbethune/d3m-exline',
                 ],
             },
@@ -55,19 +47,15 @@ class OneHotEncoderPrimitive(transformer.TransformerPrimitiveBase[container.Data
         },
     )
 
-
-
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
-        print('>> ONE HOT ENCODER START')
-        cols = self.hyperparams['use_columns']
-        input_cols = inputs.iloc[:,cols]
-
-        encoder = preprocessing.OneHotEncoder(sparse=False, handle_unknown='ignore')
-        encoder.fit(input_cols)
-        result = container.DataFrame(encoder.transform(input_cols), generate_metadata=False)
-        result = pd.concat([inputs, result], axis=1)
-
-        print(result)
-        print(result.dtypes)
-        print('<< ONE HOT ENCODER END')
-        return base.CallResult(result)
+        print('>> SIMPLE COLUMN PARSER START')
+        column_types = self.hyperparams['column_types']
+        for i, col_type in enumerate(column_types):
+            if col_type is int or col_type is float:
+                inputs.iloc[:,i] = pd.to_numeric(inputs.iloc[:,i])
+            elif col_type is bool:
+                inputs.iloc[:,i] = inputs.iloc[:,i].astype('bool')
+        print(inputs)
+        print(inputs.dtypes)
+        print('<< SIMPLE COLUMN PARSER END')
+        return base.CallResult(inputs)

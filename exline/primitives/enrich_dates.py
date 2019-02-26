@@ -46,7 +46,11 @@ class EnrichDatesPrimitive(transformer.TransformerPrimitiveBase[container.DataFr
     )
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
+        print('>> ENRICH_DATES START')
         outputs = self._enrich_dates(inputs)
+        print(outputs)
+        print(outputs.dtypes)
+        print('<< ENRICH_DATES END')
         return base.CallResult(outputs)
 
     @classmethod
@@ -72,4 +76,4 @@ class EnrichDatesPrimitive(transformer.TransformerPrimitiveBase[container.DataFr
                 sec_std  = inputs_seconds.std()
 
                 inputs['%s__seconds' % c] = (inputs_seconds - sec_mean) / sec_std
-        return container.DataFrame(inputs)
+        return container.DataFrame(inputs, generate_metadata=False, check=False)

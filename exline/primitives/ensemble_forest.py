@@ -75,7 +75,7 @@ class Hyperparams(hyperparams.Hyperparams):
 class Params(params.Params):
     pass
 
-class EnsembleForestPrimitive(PrimitiveBase[container.ndarray, container.ndarray, Params, Hyperparams]):
+class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataFrame, Params, Hyperparams]):
     """
     A primitive that forests.
     """
@@ -148,16 +148,16 @@ class EnsembleForestPrimitive(PrimitiveBase[container.ndarray, container.ndarray
 
         self._target_idx = self.hyperparams['target_idx']
 
-    def set_training_data(self, *, inputs: container.ndarray, outputs: container.ndarray) -> None:
-        self._inputs = inputs
-        self._outputs = outputs[:, self._target_idx]
+    def set_training_data(self, *, inputs: container.DataFrame, outputs: container.DataFrame) -> None:
+        self._inputs = inputs.values
+        self._outputs = outputs.values[:, self._target_idx]
 
     def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
         self._models  = [self._fit(self._inputs, self._outputs) for _ in range(self.num_fits)]
         return CallResult(None)
 
-    def produce(self, *, inputs: container.ndarray, timeout: float = None, iterations: int = None) -> CallResult[container.ndarray]:
-        preds = [model.predict(inputs) for model in self._models]
+    def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> CallResult[container.DataFrame]:
+        preds = [model.predict(inputs.values) for model in self._models]
 
         if self.mode == 'classification':
             result = tiebreaking_vote(np.vstack(preds), self._y_train)
@@ -166,10 +166,10 @@ class EnsembleForestPrimitive(PrimitiveBase[container.ndarray, container.ndarray
         else:
             result = preds
 
-        return base.CallResult(container.ndarray(result))
+        return base.CallResult(container.DataFrame(result, generate_metadata=False, check=False))
 
 
-    def _fit(self, Xf_train: container.ndarray, y_train: container.ndarray, param_grid: Optional[Dict[str, Any]]=None) -> AnyForest:
+    def _fit(self, Xf_train: np.ndarray, y_train: np.ndarray, param_grid: Optional[Dict[str, Any]]=None) -> AnyForest:
         global _eval_grid_point
 
         X, y = maybe_subset(Xf_train, y_train, n=self.subset)

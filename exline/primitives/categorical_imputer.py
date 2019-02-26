@@ -1,5 +1,4 @@
 import os
-
 from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base, hyperparams
 from d3m.primitive_interfaces import base, transformer
@@ -8,6 +7,7 @@ import pandas as pd
 import numpy as np
 
 from sklearn_pandas import CategoricalImputer
+from sklearn import compose
 
 from preprocessing.utils import MISSING_VALUE_INDICATOR
 
@@ -22,7 +22,7 @@ class Hyperparams(hyperparams.Hyperparams):
         description="A set of column indices to force primitive to operate on. If any specified column cannot be parsed, it is skipped.",
     )
 
-class CategoricalImputerPrimitive(transformer.TransformerPrimitiveBase[container.ndarray, container.ndarray, Hyperparams]):
+class CategoricalImputerPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
     """
     A primitive that imputes categoricals.
     """
@@ -54,10 +54,18 @@ class CategoricalImputerPrimitive(transformer.TransformerPrimitiveBase[container
         },
     )
 
-    def produce(self, *, inputs: container.ndarray, timeout: float = None, iterations: int = None) -> base.CallResult[container.ndarray]:
+    def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
+        print('>> CATEGORICAL IMPUTER START')
         cols = self.hyperparams['use_columns']
-        categorical_inputs = inputs[:,cols]
+        input_cols = inputs.iloc[:,cols]
         imputer = CategoricalImputer(strategy='constant', fill_value=MISSING_VALUE_INDICATOR)
-        imputer.fit(categorical_inputs)
-        result = container.ndarray(imputer.transform(inputs))
-        return base.CallResult(result)
+        imputer.fit(input_cols)
+        result = imputer.transform(input_cols)
+        print(result)
+        for idx, col_idx in enumerate(cols):
+            inputs.iloc[:,col_idx] = result[:,idx]
+
+        print(inputs)
+        print(inputs.dtypes)
+        print('<< CATEGORICAL IMPUTER END')
+        return base.CallResult(inputs)

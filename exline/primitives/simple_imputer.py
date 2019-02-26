@@ -9,9 +9,6 @@ import numpy as np
 
 from sklearn.impute import SimpleImputer
 
-from preprocessing.utils import MISSING_VALUE_INDICATOR
-
-
 __all__ = ('SimpleImputerPrimitive',)
 
 class Hyperparams(hyperparams.Hyperparams):
@@ -23,7 +20,7 @@ class Hyperparams(hyperparams.Hyperparams):
     )
 
 
-class SimpleImputerPrimitive(transformer.TransformerPrimitiveBase[container.ndarray, container.ndarray, Hyperparams]):
+class SimpleImputerPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
     """
     A primitive that imputes simples.
     """
@@ -57,10 +54,20 @@ class SimpleImputerPrimitive(transformer.TransformerPrimitiveBase[container.ndar
 
 
 
-    def produce(self, *, inputs: container.ndarray, timeout: float = None, iterations: int = None) -> base.CallResult[container.ndarray]:
+    def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
+        print('>> SIMPLE IMPUTER START')
         cols = self.hyperparams['use_columns']
-        numerical_inputs = inputs[:,cols]
+        numerical_inputs = inputs.iloc[:,cols]
+
         imputer = SimpleImputer()
         imputer.fit(numerical_inputs)
-        result = container.ndarray(imputer.transform(inputs))
-        return base.CallResult(result)
+        result = container.DataFrame(imputer.transform(numerical_inputs), generate_metadata=False)
+
+        for i, c in enumerate(cols):
+            inputs.iloc[:, c] = result[i]
+
+        print(inputs)
+        print(inputs.dtypes)
+        print('<< SIMPLE IMPUTER END')
+
+        return base.CallResult(inputs)

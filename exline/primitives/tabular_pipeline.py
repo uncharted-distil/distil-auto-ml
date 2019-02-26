@@ -1,6 +1,6 @@
 import sys
 from typing import List, Dict, Any, Tuple, Set
-
+import logging
 import numpy as np
 import pandas as pd
 
@@ -17,8 +17,10 @@ from primitives.replace_singletons import ReplaceSingletonsPrimitive
 from primitives.one_hot_encoder import OneHotEncoderPrimitive
 from primitives.binary_encoder import BinaryEncoderPrimitive
 from primitives.enrich_dates import EnrichDatesPrimitive
-from sklearn_wrap.SKMissingIndicator import SKMissingIndicator
-from common_primitives.column_parser import ColumnParserPrimitive
+from primitives.missing_indicator import MissingIndicatorPrimitive
+from primitives.simple_column_parser import SimpleColumnParserPrimitive
+from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
+from common_primitives.remove_columns import RemoveColumnsPrimitive
 
 from preprocessing.utils import MISSING_VALUE_INDICATOR
 
@@ -26,7 +28,7 @@ PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1
 
 # CDB: Totally unoptimized.
 def create_pipeline(inputs: container.DataFrame,
-                    column_types: Dict[int, str],
+                    column_types: List[type],
                     target_idx: int,
                     metric: str,
                     cat_mode: str = 'one_hot',
@@ -40,19 +42,30 @@ def create_pipeline(inputs: container.DataFrame,
     tabular_pipeline = Pipeline(context=PipelineContext.TESTING)
     tabular_pipeline.add_input(name='inputs')
 
-    # append column parser
-    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
+    # step 0 - extract dataframe from dataset
+    step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
     tabular_pipeline.add_step(step)
 
-    # append date enricher
+    # step 1 - Append column parser.  D3M dataset loader creates a dataframe with all columns set to 'object', this pipeline is
+    # designed to work with string/object, int, float, boolean so we restrict parsing accordingly.  If the Categorical type
+    # parsed it gets replaced with hash values which breaks the original pipeline logic.
+    step = PrimitiveStep(primitive_description=SimpleColumnParserPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    step.add_hyperparameter('column_types', ArgumentType.VALUE, column_types)
+    tabular_pipeline.add_step(step)
+    previous_step += 1
+
+    # step 2 - append date enricher
     step = PrimitiveStep(primitive_description=EnrichDatesPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     tabular_pipeline.add_step(step)
+    previous_step += 1
 
-    # append singleton replacer
+    # step 3 - append singleton replacer
     step = PrimitiveStep(primitive_description=ReplaceSingletonsPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
@@ -60,7 +73,7 @@ def create_pipeline(inputs: container.DataFrame,
     previous_step += 1
 
     # map of operations to apply to each column
-    categorical_imputer_cols: Dict[int, Set[Any]] = {}
+    categorical_imputer_cols: List[int] = []
     svm_text_cols: List[int] = []
     one_hot_cols: List[int] = []
     binary_cols: List[int] = []
@@ -78,13 +91,12 @@ def create_pipeline(inputs: container.DataFrame,
                 print('%s has 1 level -> skipping' % c, file=sys.stderr)
                 continue
 
-            uvals.add(MISSING_VALUE_INDICATOR)
-
             # map encoders to column number
-            categorical_imputer_cols[i] = uvals
+            categorical_imputer_cols.append(i)
             if detect_text(inputs[c]):
                 svm_text_cols.append(i)
-            elif (cat_mode == 'one_hot') and (len(uvals) < max_one_hot):
+            elif (cat_mode == 'one_hot') and (len(uvals) + 1 < max_one_hot): # add 1 for MISSING_VALUE_INDICATOR
+                print(c)
                 one_hot_cols.append(i)
             else:
                 binary_cols.append(i)
@@ -100,7 +112,9 @@ def create_pipeline(inputs: container.DataFrame,
         else:
             raise NotImplemented
 
-    # append categorical imputer
+    print(inputs)
+
+    # step 4 - append categorical imputer
     if len(categorical_imputer_cols) > 0:
         step = PrimitiveStep(primitive_description=CategoricalImputerPrimitive.metadata.query())
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
@@ -109,21 +123,21 @@ def create_pipeline(inputs: container.DataFrame,
         tabular_pipeline.add_step(step)
         previous_step += 1
 
-    # append one hot encoder for categoricals of low cardinality
+    # step 5 - a append one hot encoder for categoricals of low cardinality
     if len(one_hot_cols) > 0:
         step = PrimitiveStep(primitive_description=OneHotEncoderPrimitive.metadata.query())
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
         step.add_output('produce')
         step.add_hyperparameter('use_columns', ArgumentType.VALUE, [c for c in one_hot_cols])
-        step.add_hyperparameter('categories', ArgumentType.VALUE, [categorical_imputer_cols[c] for c in one_hot_cols])
         tabular_pipeline.add_step(step)
         previous_step += 1
+
 
     # skip text encoders for now
     if len(svm_text_cols) > 0:
         raise NotImplemented
 
-    # append a binary encoder for categoricals of high cardinality
+    # step 6 - append a binary encoder for categoricals of high cardinality
     if len(binary_cols) > 0:
         step = PrimitiveStep(primitive_description=BinaryEncoderPrimitive.metadata.query())
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
@@ -132,7 +146,7 @@ def create_pipeline(inputs: container.DataFrame,
         tabular_pipeline.add_step(step)
         previous_step += 1
 
-    # append simple imputer for numerics
+    # # step 7 - append simple imputer for numerics
     if len(simple_imputer_cols) > 0:
         step = PrimitiveStep(primitive_description=SimpleImputerPrimitive.metadata.query())
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
@@ -141,7 +155,7 @@ def create_pipeline(inputs: container.DataFrame,
         tabular_pipeline.add_step(step)
         previous_step += 1
 
-    # append the standard scalar for numerics
+    # step 8 - append the standard scalar for numerics
     if len(standard_scalar_cols) > 0:
         step = PrimitiveStep(primitive_description=StandardScalerPrimitive.metadata.query())
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
@@ -150,24 +164,32 @@ def create_pipeline(inputs: container.DataFrame,
         tabular_pipeline.add_step(step)
         previous_step += 1
 
-    # append missing indicator if necessary
+    # step 9 - append missing indicator if necessary
     if len(missing_indicator_cols) > 0:
-        step = PrimitiveStep(primitive_description=SKMissingIndicator.metadata.query())
+        step = PrimitiveStep(primitive_description=MissingIndicatorPrimitive.metadata.query())
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
         step.add_output('produce')
         step.add_hyperparameter('use_columns', ArgumentType.VALUE, missing_indicator_cols)
         tabular_pipeline.add_step(step)
         previous_step += 1
 
-    # run a random forest ensemble
-    step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
+    # step 10 - drop encoded columns.  Defer until now so that column indices are still valid.
+    step = PrimitiveStep(primitive_description=RemoveColumnsPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
-    step.add_hyperparameter('target_idx', ArgumentType.VALUE, target_idx)
-    step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
+    step.add_hyperparameter('columns', ArgumentType.VALUE, one_hot_cols + binary_cols + svm_text_cols + missing_indicator_cols)
     tabular_pipeline.add_step(step)
     previous_step += 1
+
+    # step 10 - run a random forest ensemble
+    # step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
+    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    # step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    # step.add_output('produce')
+    # step.add_hyperparameter('target_idx', ArgumentType.VALUE, target_idx)
+    # step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
+    # tabular_pipeline.add_step(step)
+    # previous_step += 1
 
     # Adding output step to the pipeline
     tabular_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))

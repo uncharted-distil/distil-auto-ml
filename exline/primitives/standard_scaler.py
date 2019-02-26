@@ -23,7 +23,7 @@ class Hyperparams(hyperparams.Hyperparams):
     )
 
 
-class StandardScalerPrimitive(transformer.TransformerPrimitiveBase[container.ndarray, container.ndarray, Hyperparams]):
+class StandardScalerPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
     """
     A primitive that scales standards.
     """
@@ -55,10 +55,15 @@ class StandardScalerPrimitive(transformer.TransformerPrimitiveBase[container.nda
         },
     )
 
-    def produce(self, *, inputs: container.ndarray, timeout: float = None, iterations: int = None) -> base.CallResult[container.ndarray]:
+    def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
         cols = self.hyperparams['use_columns']
         numerical_inputs = inputs[:,cols]
+
         scaler = StandardScaler()
         scaler.fit(numerical_inputs)
-        result = container.ndarray(scaler.transform(inputs))
+        result = container.DataFrame(scaler.transform(numerical_inputs), generate_metadata=False)
+
+        for i, c in enumerate(cols):
+            inputs.iloc[:, c] = result[i]
+
         return base.CallResult(result)

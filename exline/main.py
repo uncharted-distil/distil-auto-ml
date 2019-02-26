@@ -10,11 +10,13 @@ import json
 import argparse
 import numpy as np
 from time import time
-from typing import Dict
-
+from typing import Dict, List
+import logging
 
 from d3m import container
 from d3m.container import dataset
+from d3m.metadata import base as metadata_base, problem
+from d3m import runtime
 
 from exline.io import load_problem
 from exline.router import get_routing_info
@@ -41,6 +43,8 @@ def parse_args():
     return args
 
 
+logging.basicConfig(level=logging.DEBUG)
+
 args = parse_args()
 np.random.seed(args.seed)
 t = time()
@@ -49,11 +53,11 @@ def load_stuff(base_path: str, problem_name: str) -> None:
     # Load dataset in the same way the d3m runtime will
     dataset_doc_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
         args.base_path, args.prob_name, 'TRAIN', 'dataset_TRAIN'))
-    ds = dataset.Dataset.load('file://{dataset_doc_path}/datasetDoc.json'.format(dataset_doc_path=dataset_doc_path))
+    train_dataset = dataset.Dataset.load('file://{dataset_doc_path}/datasetDoc.json'.format(dataset_doc_path=dataset_doc_path))
 
     # Temp hack to avoid metdata for now -
     column_info = D3MDataset(dataset_doc_path).get_learning_data_columns()
-    column_types: Dict[int, type] = {}
+    column_types: List[type] = [str]*len(column_info)
     for c in column_info:
         col_idx = c['colIndex']
         col_type = c['colType']
@@ -66,9 +70,27 @@ def load_stuff(base_path: str, problem_name: str) -> None:
         else:
             column_types[col_idx] = str
 
-    pipeline = tabular_pipeline.create_pipeline(ds['0'], column_types, 0, 'f1macro')
+    problem_doc_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
+        args.base_path, args.prob_name, 'TRAIN', 'problem_TRAIN'))
+    train_problem = problem.parse_problem_description('{problem_doc_path}/problemDoc.json'.format(problem_doc_path=problem_doc_path))
 
+    pipeline = tabular_pipeline.create_pipeline(train_dataset['0'], column_types, 0, 'f1macro')
 
+    inputs = [train_dataset]
+    hyperparams = None
+    random_seed = 0
+    volumes_dir = None
+
+    print('Fitting...')
+    fitted_pipeline, predictions, fit_pipeline_run = runtime.fit(
+        pipeline, train_problem, inputs, hyperparams=hyperparams, random_seed=random_seed,
+        volumes_dir=volumes_dir, context=metadata_base.Context.TESTING,
+        runtime_environment=None
+    )
+
+    print('Producing...')
+    outputs = runtime.produce(fitted_pipeline, inputs)
+    print(outputs)
 
 # --
 # Load problem

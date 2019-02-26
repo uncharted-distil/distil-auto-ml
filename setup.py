@@ -21,7 +21,9 @@ setup(
             'learner.random_forest.ExlineEnsembleForest = primitives.ensemble_forest:EnsembleForestPrimitive',
             'data_transformation.standard_scaler.ExlineStandardScaler = primitives.standard_scalar:StandardScalerPrimitive',
             'data_transformation.one_hot_encoder.ExlineOneHotEncoder = primitives.one_hot_encoder:OneHotEncoderPrimitive',
-            'data_transformation.encoder.ExlineBinaryEncoder = primitives.binary_encoder:BinaryEncoderPrimitive'
+            'data_transformation.encoder.ExlineBinaryEncoder = primitives.binary_encoder:BinaryEncoderPrimitive',
+            'data_transformation.column_parser.ExlineSimpleColumnParser = primitives.simple_column_parser:SimpleColumnParserPrimitive',
+            'data_transformation.missing_indicator.ExlineMissingIndicator = primitives.missing_indicator:MissingIndicatorPrimitive'
         ]
     }
 )

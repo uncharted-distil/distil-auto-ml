@@ -52,16 +52,21 @@ class ReplaceSingletonsPrimitive(transformer.TransformerPrimitiveBase[container.
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
         """ set values that only occur once to a special token """
-
+        print('>> REPLACE SINGLETONS START')
         cols: typing.List[container.DataFrame] = list(inputs.columns)
         for c in cols:
-            if inputs[c].dtype == np.object_:
+            if inputs[c].dtype == object:
                 if not self.hyperparams['keep_text'] or not self._detect_text(inputs[c]):
                     vcs = pd.value_counts(list(inputs[c]))
                     singletons = set(vcs[vcs == 1].index)
                     if singletons:
                         inputs[c][inputs[c].isin(singletons)] = SINGLETON_INDICATOR
-        return base.CallResult(container.DataFrame(inputs))
+
+        result = container.DataFrame(inputs, generate_metadata=False)
+        print(result)
+        print(result.dtypes)
+        print('<< REPLACE SINGLETONS END')
+        return base.CallResult(result)
 
     @classmethod
     def _detect_text(cls, X: container.DataFrame, thresh: int = 8) -> bool:
