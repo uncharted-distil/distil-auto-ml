@@ -60,13 +60,14 @@ class BinaryEncoderPrimitive(transformer.TransformerPrimitiveBase[container.Data
         encoder = BinaryEncoder()
 
         # Binary encoder works on series
+        outputs = inputs.copy()
         for i, c in enumerate(cols):
-            categorical_inputs = inputs.iloc[:,c]
+            categorical_inputs = outputs.iloc[:,c]
             encoder.fit(categorical_inputs)
             result = encoder.transform(categorical_inputs)
-            inputs[('__binary_' + str(i))] = result[:,0]
+            outputs[('__binary_' + str(i))] = result[:,0]
 
-        print(inputs)
-        print(inputs.dtypes)
+        print(outputs)
+        print(outputs.dtypes)
         print('<< BINARY ENCODER END')
-        return base.CallResult(inputs)
+        return base.CallResult(outputs)

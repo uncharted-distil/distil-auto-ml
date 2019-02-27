@@ -63,11 +63,12 @@ class SimpleImputerPrimitive(transformer.TransformerPrimitiveBase[container.Data
         imputer.fit(numerical_inputs)
         result = imputer.transform(numerical_inputs)
 
+        outputs = inputs.copy()
         for i, c in enumerate(cols):
-            inputs.iloc[:, c] = result[:,i]
+            outputs.iloc[:, c] = result[:,i]
 
-        print(inputs)
-        print(inputs.dtypes)
+        print(outputs)
+        print(outputs.dtypes)
         print('<< SIMPLE IMPUTER END')
 
         return base.CallResult(inputs)

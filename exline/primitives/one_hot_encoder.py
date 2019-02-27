@@ -67,10 +67,11 @@ class OneHotEncoderPrimitive(transformer.TransformerPrimitiveBase[container.Data
 
         result = encoder.transform(input_cols)
 
+        outputs = inputs.copy()
         for i in range(result.shape[1]):
-            inputs[('__onehot_' + str(i))] = result[:,i]
+            outputs[('__onehot_' + str(i))] = result[:,i]
 
-        print(inputs)
-        print(inputs.dtypes)
+        print(outputs)
+        print(outputs.dtypes)
         print('<< ONE HOT ENCODER END')
-        return base.CallResult(inputs)
+        return base.CallResult(outputs)

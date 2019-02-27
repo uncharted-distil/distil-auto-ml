@@ -49,17 +49,19 @@ class SimpleColumnParserPrimitive(transformer.TransformerPrimitiveBase[container
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
         print('>> SIMPLE COLUMN PARSER START')
+        outputs = inputs.copy()
+
         # retype from object to int, float, bool or string
         column_types = self.hyperparams['column_types']
         for i, col_type in enumerate(column_types):
             if col_type is int or col_type is float:
-                inputs.iloc[:,i] = pd.to_numeric(inputs.iloc[:,i])
+                outputs.iloc[:,i] = pd.to_numeric(outputs.iloc[:,i])
             elif col_type is bool:
-                inputs.iloc[:,i] = inputs.iloc[:,i].astype('bool')
+                outputs.iloc[:,i] = outputs.iloc[:,i].astype('bool')
         # flip the d3mIndex to be the df index
-        inputs = inputs.set_index('d3mIndex')
+        outputs = outputs.set_index('d3mIndex')
 
-        print(inputs)
-        print(inputs.dtypes)
+        print(outputs)
+        print(outputs.dtypes)
         print('<< SIMPLE COLUMN PARSER END')
-        return base.CallResult(inputs)
+        return base.CallResult(outputs)

@@ -63,7 +63,8 @@ class MissingIndicatorPrimitive(transformer.TransformerPrimitiveBase[container.D
         missing_indicator.fit(numerical_inputs)
         result = missing_indicator.transform(numerical_inputs)
 
+        outputs = inputs.copy()
         for i, c in enumerate(cols):
-            inputs.iloc[:, c] = result[:, i]
+            outputs.iloc[:, c] = result[:, i]
 
-        return base.CallResult(inputs)
+        return base.CallResult(outputs)

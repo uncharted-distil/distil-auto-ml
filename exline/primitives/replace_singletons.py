@@ -54,19 +54,19 @@ class ReplaceSingletonsPrimitive(transformer.TransformerPrimitiveBase[container.
         """ set values that only occur once to a special token """
         print('>> REPLACE SINGLETONS START')
         cols: typing.List[container.DataFrame] = list(inputs.columns)
+        outputs = inputs.copy()
         for c in cols:
             if inputs[c].dtype == object:
                 if not self.hyperparams['keep_text'] or not self._detect_text(inputs[c]):
                     vcs = pd.value_counts(list(inputs[c]))
                     singletons = set(vcs[vcs == 1].index)
                     if singletons:
-                        inputs[c][inputs[c].isin(singletons)] = SINGLETON_INDICATOR
+                        outputs[c][outputs[c].isin(singletons)] = SINGLETON_INDICATOR
 
-        result = container.DataFrame(inputs, generate_metadata=False)
-        print(result)
-        print(result.dtypes)
+        print(outputs)
+        print(outputs.dtypes)
         print('<< REPLACE SINGLETONS END')
-        return base.CallResult(result)
+        return base.CallResult(outputs)
 
     @classmethod
     def _detect_text(cls, X: container.DataFrame, thresh: int = 8) -> bool:

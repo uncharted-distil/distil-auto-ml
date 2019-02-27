@@ -63,10 +63,11 @@ class CategoricalImputerPrimitive(transformer.TransformerPrimitiveBase[container
         imputer.fit(input_cols)
         result = imputer.transform(input_cols)
 
+        outputs = inputs.copy()
         for idx, col_idx in enumerate(cols):
-            inputs.iloc[:,col_idx] = result[:,idx]
+            outputs.iloc[:,col_idx] = result[:,idx]
 
-        print(inputs)
-        print(inputs.dtypes)
+        print(outputs)
+        print(outputs.dtypes)
         print('<< CATEGORICAL IMPUTER END')
-        return base.CallResult(inputs)
+        return base.CallResult(outputs)

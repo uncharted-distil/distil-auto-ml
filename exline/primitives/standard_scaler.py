@@ -63,7 +63,8 @@ class StandardScalerPrimitive(transformer.TransformerPrimitiveBase[container.Dat
         scaler.fit(numerical_inputs)
         result = scaler.transform(numerical_inputs)
 
+        outputs = inputs.copy()
         for i, c in enumerate(cols):
-            inputs.iloc[:, c] = result[:, i]
+            outputs.iloc[:, c] = result[:, i]
 
-        return base.CallResult(inputs)
+        return base.CallResult(outputs)
