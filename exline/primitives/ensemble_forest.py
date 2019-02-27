@@ -67,8 +67,8 @@ class Hyperparams(hyperparams.Hyperparams):
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
 
-    target_idx = hyperparams.Hyperparameter[int](
-        default=0,
+    target = hyperparams.Hyperparameter[str](
+        default='',
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
 
@@ -125,6 +125,8 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
                  hyperparams: Hyperparams,
                  random_seed: int = 0) -> None:
 
+        PrimitiveBase.__init__(self, hyperparams=hyperparams, random_seed=random_seed)
+
         self.target_metric = hyperparams['metric']
 
         if self.target_metric in classification_metrics:
@@ -132,7 +134,7 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         elif self.target_metric in regression_metrics:
             self.mode = 'regression'
         else:
-            raise Exception('ForestCV: unknown metric')
+            raise Exception('ForestCV: unknown metric ' + self.target_metric)
 
         # were in constructor - can move to hyperparams as needed
         self.subset       = 100000
@@ -146,11 +148,12 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         self._models: List[AnyForest]  = []
         self._y_train: Optional[np.ndarray] = None
 
-        self._target_idx = self.hyperparams['target_idx']
+        self._target = self.hyperparams['target']
 
     def set_training_data(self, *, inputs: container.DataFrame, outputs: container.DataFrame) -> None:
         self._inputs = inputs.values
-        self._outputs = outputs.values[:, self._target_idx]
+        print(outputs.columns)
+        self._outputs = outputs[self._target].values
 
     def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
         self._models  = [self._fit(self._inputs, self._outputs) for _ in range(self.num_fits)]

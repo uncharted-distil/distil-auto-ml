@@ -61,8 +61,9 @@ class MissingIndicatorPrimitive(transformer.TransformerPrimitiveBase[container.D
 
         missing_indicator = MissingIndicator()
         missing_indicator.fit(numerical_inputs)
+        result = missing_indicator.transform(numerical_inputs)
 
-        result = container.DataFrame(missing_indicator.transform(numerical_inputs), generate_metadata=False)
-        result = pd.concatenate([inputs, result], axis=1)
+        for i, c in enumerate(cols):
+            inputs.iloc[:, c] = result[:, i]
 
-        return base.CallResult(result)
+        return base.CallResult(inputs)

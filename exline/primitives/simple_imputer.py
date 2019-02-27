@@ -61,10 +61,10 @@ class SimpleImputerPrimitive(transformer.TransformerPrimitiveBase[container.Data
 
         imputer = SimpleImputer()
         imputer.fit(numerical_inputs)
-        result = container.DataFrame(imputer.transform(numerical_inputs), generate_metadata=False)
+        result = imputer.transform(numerical_inputs)
 
         for i, c in enumerate(cols):
-            inputs.iloc[:, c] = result[i]
+            inputs.iloc[:, c] = result[:,i]
 
         print(inputs)
         print(inputs.dtypes)

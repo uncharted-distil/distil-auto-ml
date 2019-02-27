@@ -58,10 +58,11 @@ class CategoricalImputerPrimitive(transformer.TransformerPrimitiveBase[container
         print('>> CATEGORICAL IMPUTER START')
         cols = self.hyperparams['use_columns']
         input_cols = inputs.iloc[:,cols]
+
         imputer = CategoricalImputer(strategy='constant', fill_value=MISSING_VALUE_INDICATOR)
         imputer.fit(input_cols)
         result = imputer.transform(input_cols)
-        print(result)
+
         for idx, col_idx in enumerate(cols):
             inputs.iloc[:,col_idx] = result[:,idx]
 

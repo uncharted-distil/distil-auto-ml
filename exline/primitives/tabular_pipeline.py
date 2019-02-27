@@ -28,12 +28,20 @@ PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1
 
 # CDB: Totally unoptimized.
 def create_pipeline(inputs: container.DataFrame,
-                    column_types: List[type],
-                    target_idx: int,
+                    column_types: Dict[str, type],
+                    target: str,
                     metric: str,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False) -> Pipeline:
+
+    # generate a list of the column types sorted by index
+    column_indices = [(inputs.columns.get_loc(k), v) for k, v in column_types.items()]
+    column_indices.sort()
+    col_type_list = [t[1] for t in column_indices]
+
+    # shift d3m index locally - this will also be done by the column parser at pipeline
+    inputs = inputs.set_index('d3mIndex')
 
     previous_step = 0
     input_val = 'steps.{}.produce'
@@ -49,12 +57,11 @@ def create_pipeline(inputs: container.DataFrame,
     tabular_pipeline.add_step(step)
 
     # step 1 - Append column parser.  D3M dataset loader creates a dataframe with all columns set to 'object', this pipeline is
-    # designed to work with string/object, int, float, boolean so we restrict parsing accordingly.  If the Categorical type
-    # parsed it gets replaced with hash values which breaks the original pipeline logic.
+    # designed to work with string/object, int, float, boolean.  This also shifts the d3mIndex to be the dataframe index.
     step = PrimitiveStep(primitive_description=SimpleColumnParserPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
-    step.add_hyperparameter('column_types', ArgumentType.VALUE, column_types)
+    step.add_hyperparameter('column_types', ArgumentType.VALUE, col_type_list)
     tabular_pipeline.add_step(step)
     previous_step += 1
 
@@ -84,31 +91,33 @@ def create_pipeline(inputs: container.DataFrame,
 
     # loop over dataset columns and determine which primitives are needed, and which columns
     # they should each be applied to
-    for i, c in enumerate(inputs.columns):
-        if column_types[i] is str:
+    for c in inputs.columns:
+        col_idx = inputs.columns.get_loc(c)
+        if column_types[c] is str:
             uvals = set(inputs[c])
             if len(uvals) == 1:
                 print('%s has 1 level -> skipping' % c, file=sys.stderr)
                 continue
 
+
             # map encoders to column number
-            categorical_imputer_cols.append(i)
+            categorical_imputer_cols.append(col_idx)
             if detect_text(inputs[c]):
-                svm_text_cols.append(i)
+                svm_text_cols.append(col_idx)
             elif (cat_mode == 'one_hot') and (len(uvals) + 1 < max_one_hot): # add 1 for MISSING_VALUE_INDICATOR
                 print(c)
-                one_hot_cols.append(i)
+                one_hot_cols.append(col_idx)
             else:
-                binary_cols.append(i)
+                binary_cols.append(col_idx)
 
-        elif column_types[i] in [float, int, bool]:
-            simple_imputer_cols.append(i)
+        elif column_types[c] in [float, int, bool]:
+            simple_imputer_cols.append(col_idx)
             if scale:
                 raise Exception
-                standard_scalar_cols.append(i)
+                standard_scalar_cols.append(col_idx)
 
             if inputs[c].isnull().any():
-                missing_indicator_cols.append(i)
+                missing_indicator_cols.append(col_idx)
         else:
             raise NotImplemented
 
@@ -173,7 +182,7 @@ def create_pipeline(inputs: container.DataFrame,
         tabular_pipeline.add_step(step)
         previous_step += 1
 
-    # step 10 - drop encoded columns.  Defer until now so that column indices are still valid.
+    # step 10 - drop columns that were encoded
     step = PrimitiveStep(primitive_description=RemoveColumnsPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
@@ -182,14 +191,14 @@ def create_pipeline(inputs: container.DataFrame,
     previous_step += 1
 
     # step 10 - run a random forest ensemble
-    # step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
-    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    # step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    # step.add_output('produce')
-    # step.add_hyperparameter('target_idx', ArgumentType.VALUE, target_idx)
-    # step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
-    # tabular_pipeline.add_step(step)
-    # previous_step += 1
+    step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    step.add_hyperparameter('target', ArgumentType.VALUE, target)
+    step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
+    tabular_pipeline.add_step(step)
+    previous_step += 1
 
     # Adding output step to the pipeline
     tabular_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))

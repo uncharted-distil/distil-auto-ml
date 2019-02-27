@@ -57,24 +57,24 @@ def load_stuff(base_path: str, problem_name: str) -> None:
 
     # Temp hack to avoid metdata for now -
     column_info = D3MDataset(dataset_doc_path).get_learning_data_columns()
-    column_types: List[type] = [str]*len(column_info)
+    column_types: Dict[str, type] = {}
     for c in column_info:
-        col_idx = c['colIndex']
+        col_name = c['colName']
         col_type = c['colType']
         if col_type == 'boolean':
-            column_types[col_idx] = bool
+            column_types[col_name] = bool
         elif col_type == 'real':
-            column_types[col_idx] = float
+            column_types[col_name] = float
         elif col_type == 'integer':
-            column_types[col_idx] = int
+            column_types[col_name] = int
         else:
-            column_types[col_idx] = str
+            column_types[col_name] = str
 
     problem_doc_path = os.path.abspath(os.path.join(os.path.dirname(__file__),
         args.base_path, args.prob_name, 'TRAIN', 'problem_TRAIN'))
     train_problem = problem.parse_problem_description('{problem_doc_path}/problemDoc.json'.format(problem_doc_path=problem_doc_path))
 
-    pipeline = tabular_pipeline.create_pipeline(train_dataset['0'], column_types, 0, 'f1macro')
+    pipeline = tabular_pipeline.create_pipeline(train_dataset['0'], column_types, 'Hall_of_fame', 'f1Macro')
 
     inputs = [train_dataset]
     hyperparams = None

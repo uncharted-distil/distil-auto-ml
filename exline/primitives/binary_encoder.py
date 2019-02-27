@@ -58,13 +58,15 @@ class BinaryEncoderPrimitive(transformer.TransformerPrimitiveBase[container.Data
         print('>> BINARY ENCODER START')
         cols = self.hyperparams['use_columns']
         encoder = BinaryEncoder()
+
         # Binary encoder works on series
-        for c in cols:
+        for i, c in enumerate(cols):
             categorical_inputs = inputs.iloc[:,c]
             encoder.fit(categorical_inputs)
-            result = container.DataFrame(encoder.transform(categorical_inputs), generate_metadata=False)
-            result = pd.concat([inputs, result], axis=1)
-        print(result)
-        print(result.dtypes)
+            result = encoder.transform(categorical_inputs)
+            inputs[('__binary_' + str(i))] = result[:,0]
+
+        print(inputs)
+        print(inputs.dtypes)
         print('<< BINARY ENCODER END')
-        return base.CallResult(result)
+        return base.CallResult(inputs)

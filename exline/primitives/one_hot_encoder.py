@@ -64,10 +64,13 @@ class OneHotEncoderPrimitive(transformer.TransformerPrimitiveBase[container.Data
 
         encoder = preprocessing.OneHotEncoder(sparse=False, handle_unknown='ignore')
         encoder.fit(input_cols)
-        result = container.DataFrame(encoder.transform(input_cols), generate_metadata=False)
-        result = pd.concat([inputs, result], axis=1)
 
-        print(result)
-        print(result.dtypes)
+        result = encoder.transform(input_cols)
+
+        for i in range(result.shape[1]):
+            inputs[('__onehot_' + str(i))] = result[:,i]
+
+        print(inputs)
+        print(inputs.dtypes)
         print('<< ONE HOT ENCODER END')
-        return base.CallResult(result)
+        return base.CallResult(inputs)

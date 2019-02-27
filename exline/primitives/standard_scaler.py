@@ -61,9 +61,9 @@ class StandardScalerPrimitive(transformer.TransformerPrimitiveBase[container.Dat
 
         scaler = StandardScaler()
         scaler.fit(numerical_inputs)
-        result = container.DataFrame(scaler.transform(numerical_inputs), generate_metadata=False)
+        result = scaler.transform(numerical_inputs)
 
         for i, c in enumerate(cols):
-            inputs.iloc[:, c] = result[i]
+            inputs.iloc[:, c] = result[:, i]
 
-        return base.CallResult(result)
+        return base.CallResult(inputs)
