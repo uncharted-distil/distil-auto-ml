@@ -3,7 +3,7 @@ import os
 from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base, hyperparams
 from d3m.primitive_interfaces import base, transformer
-from preprocessing.utils import SINGLETON_INDICATOR
+from exline.preprocessing.utils import SINGLETON_INDICATOR
 
 import typing
 import numpy as np

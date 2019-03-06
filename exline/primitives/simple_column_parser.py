@@ -9,6 +9,11 @@ import pandas as pd
 __all__ = ('SimpleColumnParserPrimitive',)
 
 class Hyperparams(hyperparams.Hyperparams):
+    target = hyperparams.Hyperparameter[str](
+        default='',
+        semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
+        description="Name of target column"
+    )
     column_types = hyperparams.Hyperparameter[List[type]](
         default=[],
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
@@ -17,7 +22,7 @@ class Hyperparams(hyperparams.Hyperparams):
 
 class SimpleColumnParserPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
     """
-    A primitive that imputes simples.
+    A primitive that parses simple columns.
     """
 
     metadata = metadata_base.PrimitiveMetadata(
@@ -61,7 +66,14 @@ class SimpleColumnParserPrimitive(transformer.TransformerPrimitiveBase[container
         # flip the d3mIndex to be the df index
         outputs = outputs.set_index('d3mIndex')
 
+        # drop the targets
+        outputs = outputs.drop(self.hyperparams['target'], axis=1)
+
         print(outputs)
         print(outputs.dtypes)
         print('<< SIMPLE COLUMN PARSER END')
+        #return base.CallResult(outputs)
         return base.CallResult(outputs)
+
+    def produce_target(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
+        return base.CallResult(inputs[self.hyperparams['target']]) 

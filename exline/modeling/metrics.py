@@ -9,7 +9,7 @@
 import sys
 import numpy as np
 from sklearn import metrics as sklearn_metrics
-from external import objectDetectionAP
+#from external import objectDetectionAP
 
 metrics = {
 
@@ -28,7 +28,7 @@ metrics = {
     'normalizedMutualInformation' : sklearn_metrics.normalized_mutual_info_score,
 
     # object detection
-    'objectDetectionAP' : lambda act, pred: objectDetectionAP(act, pred)[-1],
+    #'objectDetectionAP' : lambda act, pred: objectDetectionAP(act, pred)[-1],
 }
 
 classification_metrics = set([

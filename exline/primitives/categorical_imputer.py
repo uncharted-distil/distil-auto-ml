@@ -9,7 +9,7 @@ import numpy as np
 from sklearn_pandas import CategoricalImputer
 from sklearn import compose
 
-from preprocessing.utils import MISSING_VALUE_INDICATOR
+from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
 
 
 __all__ = ('CategoricalImputerPrimitive',)

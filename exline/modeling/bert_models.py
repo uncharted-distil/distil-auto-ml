@@ -14,9 +14,11 @@ import torch
 from torch import nn
 from torch.utils.data import TensorDataset, DataLoader
 
+"""
 from pytorch_pretrained_bert.tokenization import BertTokenizer
 from pytorch_pretrained_bert.modeling import BertModel, PreTrainedBertModel, BertForSequenceClassification
 from pytorch_pretrained_bert.optimization import BertAdam
+"""
 
 from .base import EXLineBaseModel
 from .metrics import metrics, classification_metrics
@@ -83,7 +85,7 @@ def warmup_linear(x, warmup=0.002):
     else:
         return 1.0 - x
 
-
+"""
 class QAModel(PreTrainedBertModel):
     def __init__(self, config, num_labels=2, weights=None):
         super().__init__(config)
@@ -115,7 +117,7 @@ class QAModel(PreTrainedBertModel):
             return logits, loss
         else:
             return logits
-
+"""
 # --
 # Wrapper
 

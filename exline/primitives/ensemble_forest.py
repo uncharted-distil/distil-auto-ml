@@ -8,10 +8,10 @@ from d3m.primitive_interfaces import base, transformer
 from d3m.primitive_interfaces.supervised_learning import PrimitiveBase
 from d3m.primitive_interfaces.base import CallResult
 
-from modeling.base import EXLineBaseModel
-from modeling.metrics import metrics, classification_metrics, regression_metrics
-from modeling.helpers import tiebreaking_vote, adjust_f1_macro
-from utils import parmap, maybe_subset
+from exline.modeling.base import EXLineBaseModel
+from exline.modeling.metrics import metrics, classification_metrics, regression_metrics
+from exline.modeling.helpers import tiebreaking_vote, adjust_f1_macro
+from exline.utils import parmap, maybe_subset
 
 import pandas as pd
 import numpy as np
@@ -67,10 +67,13 @@ class Hyperparams(hyperparams.Hyperparams):
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
 
+    """
+    outed as of 3/4
     target = hyperparams.Hyperparameter[str](
         default='',
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
+    """
 
 class Params(params.Params):
     pass
@@ -146,14 +149,14 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         self.param_grid = deepcopy(self._default_param_grids[self.mode])
 
         self._models: List[AnyForest]  = []
-        self._y_train: Optional[np.ndarray] = None
+        #self._y_train: Optional[np.ndarray] = None
 
-        self._target = self.hyperparams['target']
+        #self._target = self.hyperparams['target']
 
     def set_training_data(self, *, inputs: container.DataFrame, outputs: container.DataFrame) -> None:
         self._inputs = inputs.values
-        print(outputs.columns)
-        self._outputs = outputs[self._target].values
+        #print(outputs.columns)
+        #self._outputs = outputs[self._target].values
 
     def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
         self._models  = [self._fit(self._inputs, self._outputs) for _ in range(self.num_fits)]
@@ -163,13 +166,15 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         preds = [model.predict(inputs.values) for model in self._models]
 
         if self.mode == 'classification':
-            result = tiebreaking_vote(np.vstack(preds), self._y_train)
+            result = tiebreaking_vote(np.vstack(preds), self._outputs)
         elif self.mode == 'regression':
             result = np.stack(preds).mean(axis=0)
         else:
             result = preds
 
-        return base.CallResult(container.DataFrame(result, generate_metadata=False, check=False))
+        #return base.CallResult(container.DataFrame(result, generate_metadata=False, check=False))
+        result_df = container.DataFrame(preds)
+        return base.CallResult(result_df)
 
 
     def _fit(self, Xf_train: np.ndarray, y_train: np.ndarray, param_grid: Optional[Dict[str, Any]]=None) -> AnyForest:

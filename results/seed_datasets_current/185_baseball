@@ -1,1 +1,0 @@
-{"prob_name": "185_baseball", "ll_metric": "f1Macro", "ll_score": 0.691369766847508, "test_score": 0.7320861678004534, "elapsed": 28.2125985622406, "model_details": {"cv_score": 0.6883753588299042, "best_params": {"class_weight": "balanced", "estimator": "RandomForest", "min_samples_leaf": 4, "n_estimators": 256}, "num_fits": 5}}

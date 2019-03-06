@@ -1,1 +1,0 @@
-{"prob_name": "534_cps_85_wages", "ll_metric": "meanSquaredError", "ll_score": 19.74186226979633, "test_score": -20.07969868001908, "elapsed": 19.03258514404297, "model_details": {"cv_score": -19.482501868032056, "best_params": {"bootstrap": true, "estimator": "RandomForest", "min_samples_leaf": 16, "n_estimators": 64}, "num_fits": 5}}

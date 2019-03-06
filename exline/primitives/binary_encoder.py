@@ -7,7 +7,7 @@ from d3m.primitive_interfaces import base, transformer
 import pandas as pd
 import numpy as np
 
-from preprocessing.transformers import BinaryEncoder
+from exline.preprocessing.transformers import BinaryEncoder
 
 
 __all__ = ('BinaryEncoderPrimitive',)

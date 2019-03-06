@@ -1,1 +1,0 @@
-{"prob_name": "LL0_207_autoPrice", "ll_metric": "meanSquaredError", "ll_score": 6985715.523464004, "test_score": -4501472.099490798, "elapsed": 19.392576694488525, "model_details": {"cv_score": -7158683.429832463, "best_params": {"bootstrap": true, "estimator": "RandomForest", "min_samples_leaf": 2, "n_estimators": 2048}, "num_fits": 5}}

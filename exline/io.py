@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-
-"""
-    exline/io.py
-"""
-
 import os
 import sys
 import numpy as np
@@ -12,6 +6,8 @@ import networkx as nx
 from copy import deepcopy
 
 from .external import D3MDS
+
+#import soundfile as sf
 
 # class EXProblem:
 #     def __init__(self, prob_name, base_path):
@@ -214,7 +210,7 @@ def load_and_join(X_train, X_test, d3mds):
 # --
 # Audio
 
-import soundfile as sf
+
 
 class WavInput:
     def __init__(self, data, sample_rate):

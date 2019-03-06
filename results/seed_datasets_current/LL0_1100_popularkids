@@ -1,1 +1,0 @@
-{"prob_name": "LL0_1100_popularkids", "ll_metric": "f1Macro", "ll_score": 0.4142804770222768, "test_score": 0.44716513748771813, "elapsed": 30.76271414756775, "model_details": {"cv_score": 0.4853597914017085, "best_params": {"class_weight": "balanced", "estimator": "RandomForest", "min_samples_leaf": 2, "n_estimators": 32}, "num_fits": 5}}

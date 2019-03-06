@@ -1,0 +1,21 @@
+# for gracious death
+dumb-init==1.2.2
+
+# gRPC services and tools
+grpcio==1.11.0
+grpcio-tools==1.11.0
+
+# Testing
+pytest==3.6.1
+pytest-cov==2.5.1
+pytest-pythonpath==0.7.1
+pytest-timeout==1.3.0
+
+# API
+./api
+
+# DB
+sqlalchemy==1.2.7
+
+# Better joblib.dump
+dill==0.2.7.1

@@ -1,1 +1,0 @@
-{"prob_name": "49_facebook", "ll_metric": "accuracy", "ll_score": 0.9279801324503312, "test_score": 1.0, "elapsed": 1.7279691696166992, "model_details": {"train_acc": 0.8874172185430463, "null_train_acc": 1.0}}

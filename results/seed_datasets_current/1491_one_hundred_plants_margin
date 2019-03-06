@@ -1,1 +1,0 @@
-{"prob_name": "1491_one_hundred_plants_margin", "ll_metric": "f1Macro", "ll_score": 0.6937857142857143, "test_score": 0.8643809523809525, "elapsed": 115.3076479434967, "model_details": {"cv_score": 0.8501689113927413, "best_params": {"class_weight": null, "estimator": "RandomForest", "min_samples_leaf": 1, "n_estimators": 1024}, "num_fits": 5}}

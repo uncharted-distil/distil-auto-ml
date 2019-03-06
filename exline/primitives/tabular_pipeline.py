@@ -9,20 +9,25 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from primitives.simple_imputer import SimpleImputerPrimitive
-from primitives.categorical_imputer import CategoricalImputerPrimitive
-from primitives.standard_scaler import StandardScalerPrimitive
-from primitives.ensemble_forest import EnsembleForestPrimitive
-from primitives.replace_singletons import ReplaceSingletonsPrimitive
-from primitives.one_hot_encoder import OneHotEncoderPrimitive
-from primitives.binary_encoder import BinaryEncoderPrimitive
-from primitives.enrich_dates import EnrichDatesPrimitive
-from primitives.missing_indicator import MissingIndicatorPrimitive
-from primitives.simple_column_parser import SimpleColumnParserPrimitive
+from exline.primitives.simple_imputer import SimpleImputerPrimitive
+from exline.primitives.categorical_imputer import CategoricalImputerPrimitive
+from exline.primitives.standard_scaler import StandardScalerPrimitive
+from exline.primitives.ensemble_forest import EnsembleForestPrimitive
+from exline.primitives.replace_singletons import ReplaceSingletonsPrimitive
+from exline.primitives.one_hot_encoder import OneHotEncoderPrimitive
+from exline.primitives.binary_encoder import BinaryEncoderPrimitive
+from exline.primitives.enrich_dates import EnrichDatesPrimitive
+from exline.primitives.missing_indicator import MissingIndicatorPrimitive
+from exline.primitives.simple_column_parser import SimpleColumnParserPrimitive
+
+#import d3m.primitives.data_transformation.imputer.ExlineSimpleImputer as SimpleImputerPrimitive
+#import d3m.primitives.data_transformation.imputer.ExlineCategoricalImputer as CategoricalImputerPrimitive
+
+
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.remove_columns import RemoveColumnsPrimitive
 
-from preprocessing.utils import MISSING_VALUE_INDICATOR
+from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
@@ -40,8 +45,10 @@ def create_pipeline(inputs: container.DataFrame,
     column_indices.sort()
     col_type_list = [t[1] for t in column_indices]
 
-    # shift d3m index locally - this will also be done by the column parser at pipeline
+    # move d3m index to df index and drop the target - this will also be done by the column parser at pipeline
     inputs = inputs.set_index('d3mIndex')
+    print(inputs.columns)
+    inputs = inputs.drop(target, axis=1)
 
     previous_step = 0
     input_val = 'steps.{}.produce'
@@ -61,7 +68,9 @@ def create_pipeline(inputs: container.DataFrame,
     step = PrimitiveStep(primitive_description=SimpleColumnParserPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
+    step.add_output('produce_target')
     step.add_hyperparameter('column_types', ArgumentType.VALUE, col_type_list)
+    step.add_hyperparameter('target', ArgumentType.VALUE, target)
     tabular_pipeline.add_step(step)
     previous_step += 1
 
@@ -155,7 +164,16 @@ def create_pipeline(inputs: container.DataFrame,
         tabular_pipeline.add_step(step)
         previous_step += 1
 
-    # # step 7 - append simple imputer for numerics
+    # step 7 - append missing indicator if necessary
+    # if len(missing_indicator_cols) > 0:
+    #     step = PrimitiveStep(primitive_description=MissingIndicatorPrimitive.metadata.query())
+    #     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    #     step.add_output('produce')
+    #     step.add_hyperparameter('use_columns', ArgumentType.VALUE, missing_indicator_cols)
+    #     tabular_pipeline.add_step(step)
+    #     previous_step += 1
+
+    # # step 8 - append simple imputer for numerics
     if len(simple_imputer_cols) > 0:
         step = PrimitiveStep(primitive_description=SimpleImputerPrimitive.metadata.query())
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
@@ -164,21 +182,12 @@ def create_pipeline(inputs: container.DataFrame,
         tabular_pipeline.add_step(step)
         previous_step += 1
 
-    # step 8 - append the standard scalar for numerics
+    # step 9 - append the standard scalar for numerics
     if len(standard_scalar_cols) > 0:
         step = PrimitiveStep(primitive_description=StandardScalerPrimitive.metadata.query())
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
         step.add_output('produce')
         step.add_hyperparameter('use_columns', ArgumentType.VALUE, standard_scalar_cols)
-        tabular_pipeline.add_step(step)
-        previous_step += 1
-
-    # step 9 - append missing indicator if necessary
-    if len(missing_indicator_cols) > 0:
-        step = PrimitiveStep(primitive_description=MissingIndicatorPrimitive.metadata.query())
-        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-        step.add_output('produce')
-        step.add_hyperparameter('use_columns', ArgumentType.VALUE, missing_indicator_cols)
         tabular_pipeline.add_step(step)
         previous_step += 1
 
@@ -190,12 +199,11 @@ def create_pipeline(inputs: container.DataFrame,
     tabular_pipeline.add_step(step)
     previous_step += 1
 
-    # step 10 - run a random forest ensemble
+    # step 11 - run a random forest ensemble
     step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
     step.add_output('produce')
-    step.add_hyperparameter('target', ArgumentType.VALUE, target)
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     tabular_pipeline.add_step(step)
     previous_step += 1

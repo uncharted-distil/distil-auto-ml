@@ -9,7 +9,7 @@ import numpy as np
 
 from sklearn.impute import MissingIndicator
 
-from preprocessing.utils import MISSING_VALUE_INDICATOR
+from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
 
 
 __all__ = ('MissingIndicatorPrimitive',)

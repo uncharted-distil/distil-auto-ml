@@ -1,0 +1,16 @@
+version: "2"
+services:
+  exline:
+    build: .
+    volumes:
+      - ./datasets:/seed_datasets_current
+      - ./exline:/app/exline
+      - ./server:/app/server
+      - ./main.py:/app/main.py
+      - ./config.py:/app/config.py
+  dummy-ta3:
+    image: faketa3_faketa3_new:latest
+    links:
+      - exline:ta2
+    environment:
+      - MESSAGE_TIMEOUT_SEC=200

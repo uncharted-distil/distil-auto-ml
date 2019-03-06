@@ -1,1 +1,0 @@
-{"prob_name": "26_radon_seed", "ll_metric": "rootMeanSquaredError", "ll_score": 0.7653843891384775, "test_score": -0.045709074637685025, "elapsed": 45.97337770462036, "model_details": {"cv_score": -0.05116532461185372, "best_params": {"bootstrap": true, "estimator": "RandomForest", "min_samples_leaf": 2, "n_estimators": 2048}, "num_fits": 5}}

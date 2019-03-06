@@ -1,5 +1,7 @@
 import os
 
+import logging
+
 from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base, hyperparams
 from d3m.primitive_interfaces import base, transformer
@@ -71,4 +73,4 @@ class SimpleImputerPrimitive(transformer.TransformerPrimitiveBase[container.Data
         print(outputs.dtypes)
         print('<< SIMPLE IMPUTER END')
 
-        return base.CallResult(inputs)
+        return base.CallResult(outputs)

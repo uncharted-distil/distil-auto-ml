@@ -4,3 +4,4 @@ exline.egg-info/
 third_party/*
 .mypy_cache
 .history
+datasets

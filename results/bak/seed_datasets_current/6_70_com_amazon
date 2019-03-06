@@ -1,1 +1,0 @@
-{"prob_name": "6_70_com_amazon", "ll_metric": "normalizedMutualInformation", "ll_score": 0.8115389463447333, "test_score": 0.8503255421121115, "elapsed": 52.686593532562256, "_extra": {"null_model": true}, "_misc": {"use_schema": false}}

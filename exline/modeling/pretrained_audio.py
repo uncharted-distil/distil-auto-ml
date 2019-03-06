@@ -13,6 +13,7 @@ import sys
 import numpy as np
 from tqdm import tqdm
 
+"""
 BASE_PATH = './third_party/audioset'
 MODEL_PATH = os.path.join(BASE_PATH, 'vggish_model.ckpt')
 
@@ -22,12 +23,11 @@ import vggish_params
 import vggish_postprocess
 import vggish_slim
 import tensorflow as tf
-
+"""
 from .base import EXLineBaseModel
 from .forest import ForestCV
 from .metrics import metrics
 from ..utils import parmap
-
 
 # --
 # Helpers
