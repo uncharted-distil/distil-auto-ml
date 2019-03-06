@@ -14,6 +14,7 @@ from server.messages import Messaging
 from server.validation import RequestValidator
 
 from google.protobuf import json_format
+from api.utils import decode_problem_description
 
 class TaskManager():
     def __init__(self):
@@ -149,7 +150,7 @@ class TaskManager():
 
         #self.logger.info("Trying to decode problem")
         #prob_decoded = decode_problem_description(message.problem)
-        #self.logger.fatal(prob_decoded)
+        #self.logger.info(prob_decoded)
         prob = json_format.MessageToDict(message.problem)
         
         # Create search row in DB
@@ -157,9 +158,23 @@ class TaskManager():
         self.session.add(search)
         self.session.commit()
 
-        #prob = message.problem
-        
-        task = models.Tasks(problem=json.dumps(prob),
+        shit = {"problem": {
+                "id": "185_bl_problem_TRAIN", 
+                "version": "1.0", 
+                "name": "NULL", 
+                "taskType": "CLASSIFICATION", 
+                "taskSubtype": "MULTICLASS", 
+                "performanceMetrics": [{"metric": "F1_MACRO"}]
+                }, 
+                "inputs": [
+                    {"datasetId": "185_bl_dataset_TRAIN", "targets": [
+                        {"resourceId": "0", "columnIndex": 18, "columnName": "Hall_of_Fame"}]
+                }]}
+
+        prob = json.dumps(prob)
+        self.logger.info(prob)
+
+        task = models.Tasks(problem=prob,
                             type="EXLINE",
                             dataset_uri=dataset_uri,
                             id=self._generate_id(),

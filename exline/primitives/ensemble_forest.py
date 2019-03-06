@@ -155,6 +155,7 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
 
     def set_training_data(self, *, inputs: container.DataFrame, outputs: container.DataFrame) -> None:
         self._inputs = inputs.values
+        self._outputs = outputs.values
         #print(outputs.columns)
         #self._outputs = outputs[self._target].values
 

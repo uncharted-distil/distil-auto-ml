@@ -9,7 +9,7 @@ services:
       - ./main.py:/app/main.py
       - ./config.py:/app/config.py
   dummy-ta3:
-    image: faketa3_faketa3_new:latest
+    image: faketa3
     links:
       - exline:ta2
     environment:

@@ -52,7 +52,6 @@ RUN sh build.sh
 # TODO: not this
 RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.1.21
 
-COPY .git /.git
 # Barf
 COPY base.py /usr/local/lib/python3.6/dist-packages/d3m/metadata/base.py
 
@@ -70,6 +69,7 @@ RUN apt-get -qq update -qq \
 RUN pip3 install python-prctl
 
 # Put everything in
+COPY .git /.git
 COPY . .
 
 RUN pip3 install -e /app

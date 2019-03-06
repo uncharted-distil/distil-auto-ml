@@ -23,7 +23,9 @@ from exline.primitives import tabular_pipeline
 
 def exline_all(logger, dataset_doc_path: str, problem: dict) -> None:
     # Load dataset in the same way the d3m runtime will
-    train_dataset = dataset.Dataset.load(dataset_doc_path)    
+    train_dataset = dataset.Dataset.load(dataset_doc_path)
+
+    #problem = json.loads(problem) 
 
     # Temp hack to avoid metdata for now -
     modified_path = dataset_doc_path.replace("file://", "").replace("datasetDoc.json", "")
