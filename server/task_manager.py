@@ -196,7 +196,7 @@ class TaskManager():
 
     def GetSearchSolutionsResults(self, request):
         """
-        Searches for correctly exited VALIDATE tasks 
+        Searches for correctly exited EXLINE tasks 
         associated with given search id
         """
         search_id = self.validator.validate_get_search_solutions_results_request(request, self.session)
@@ -206,7 +206,7 @@ class TaskManager():
         while True:
             task = self.session.query(models.Tasks) \
                                .filter(models.Tasks.search_id==str(search_id)) \
-                               .filter(models.Tasks.type=="VALIDATE") \
+                               .filter(models.Tasks.type=="EXLINE") \
                                .filter(models.Tasks.ended==True) \
                                .filter(models.Tasks.error==False) \
                                .filter(~models.Tasks.id.in_(seen_ids)) \

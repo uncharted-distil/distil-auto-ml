@@ -95,7 +95,7 @@ class Tasks(Base):
     # Start -- PRODUCE specific --
     output_key = Column(String)
     # End -- PRODUCE specific --
-    DAG = Column(String)
+    pipeline = Column(String)
     problem = Column(String)
     created_at = Column(
         DateTime,

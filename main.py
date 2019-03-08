@@ -29,7 +29,7 @@ def exline_task(logger, session, task):
     try:
         logger.info('Starting exline task ID {}'.format(task.id))
         task.started_at = datetime.datetime.utcnow()
-        logger.info("DATASET_URI: {}".format(task.dataset_uri))
+        #logger.info("DATASET_URI: {}".format(task.dataset_uri))
         #logger.info("PROBLEM: {}".format(task.problem))
         prob = task.problem
         prob = json.loads(prob)
@@ -40,7 +40,8 @@ def exline_task(logger, session, task):
         prob['id'] = '__unset__'
         prob['digest'] = '__unset__'
         #logger.info(prob)
-        exline_all(logger, task.dataset_uri, prob)
+        pipeline_json = exline_all(logger, task.dataset_uri, prob)
+        task.pipeline = json.dumps(pipeline_json)
     except Exception as e:
         logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
         task.error = True

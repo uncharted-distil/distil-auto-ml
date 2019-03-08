@@ -26,9 +26,9 @@ __all__ = ('EnsembleForest',)
 
 class AnyForest:
     __possible_model_cls = {
-        ("regression",     "ExtraTrees")   : ExtraTreesRegressor,
+        #("regression",     "ExtraTrees")   : ExtraTreesRegressor,
         ("regression",     "RandomForest") : RandomForestRegressor,
-        ("classification", "ExtraTrees")   : ExtraTreesClassifier,
+        #("classification", "ExtraTrees")   : ExtraTreesClassifier,
         ("classification", "RandomForest") : RandomForestClassifier,
     }
 
