@@ -24,13 +24,14 @@ from exline.primitives import tabular_pipeline
 def exline_all(logger, dataset_doc_path: str, problem: dict) -> None:
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
+    logger.info(type(train_dataset))
+    logger.info(train_dataset.keys())
 
-    #problem = json.loads(problem) 
 
     # Temp hack to avoid metdata for now -
     modified_path = dataset_doc_path.replace("file://", "").replace("datasetDoc.json", "")
     column_info = D3MDataset(modified_path).get_learning_data_columns()
-    logger.info(column_info)
+    #logger.info(column_info)
     column_types: Dict[str, type] = {}
     for c in column_info:
         col_name = c['colName']
@@ -48,7 +49,7 @@ def exline_all(logger, dataset_doc_path: str, problem: dict) -> None:
     #    args.base_path, args.prob_name, 'TRAIN', 'problem_TRAIN'))
     #train_problem = problem.parse_problem_description('{problem_doc_path}/problemDoc.json'.format(problem_doc_path=problem_doc_path))
 
-    pipeline = tabular_pipeline.create_pipeline(train_dataset['0'], column_types, 'Hall_of_Fame', 'f1Macro')
+    pipeline = tabular_pipeline.create_pipeline(train_dataset['learningData'], column_types, 'Hall_of_Fame', 'f1Macro')
 
     inputs = [train_dataset]
     hyperparams = None
