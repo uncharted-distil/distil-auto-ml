@@ -20,9 +20,6 @@ from exline.primitives.enrich_dates import EnrichDatesPrimitive
 from exline.primitives.missing_indicator import MissingIndicatorPrimitive
 from exline.primitives.simple_column_parser import SimpleColumnParserPrimitive
 
-#import d3m.primitives.data_transformation.imputer.ExlineSimpleImputer as SimpleImputerPrimitive
-#import d3m.primitives.data_transformation.imputer.ExlineCategoricalImputer as CategoricalImputerPrimitive
-
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.remove_columns import RemoveColumnsPrimitive
 
@@ -46,7 +43,6 @@ def create_pipeline(inputs: container.DataFrame,
 
     # move d3m index to df index and drop the target - this will also be done by the column parser at pipeline
     inputs = inputs.set_index('d3mIndex')
-    print(inputs.columns)
     inputs = inputs.drop(target, axis=1)
 
     previous_step = 0
@@ -113,7 +109,6 @@ def create_pipeline(inputs: container.DataFrame,
             if detect_text(inputs[c]):
                 svm_text_cols.append(col_idx)
             elif (cat_mode == 'one_hot') and (len(uvals) + 1 < max_one_hot): # add 1 for MISSING_VALUE_INDICATOR
-                print(c)
                 one_hot_cols.append(col_idx)
             else:
                 binary_cols.append(col_idx)
@@ -127,9 +122,7 @@ def create_pipeline(inputs: container.DataFrame,
             if inputs[c].isnull().any():
                 missing_indicator_cols.append(col_idx)
         else:
-            raise NotImplemented
-
-    print(inputs)
+            raise NotImplementedError
 
     # step 4 - append categorical imputer
     if len(categorical_imputer_cols) > 0:
@@ -149,10 +142,9 @@ def create_pipeline(inputs: container.DataFrame,
         tabular_pipeline.add_step(step)
         previous_step += 1
 
-
     # skip text encoders for now
     if len(svm_text_cols) > 0:
-        raise NotImplemented
+        raise NotImplementedError
 
     # step 6 - append a binary encoder for categoricals of high cardinality
     if len(binary_cols) > 0:

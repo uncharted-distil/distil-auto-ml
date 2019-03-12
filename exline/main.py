@@ -21,7 +21,7 @@ from exline.external import D3MDataset
 from exline.primitives import tabular_pipeline
 
 
-def exline_all(logger, dataset_doc_path: str, problem: dict) -> None:
+def exline_all(logger, dataset_doc_path: str, problem: dict) -> dict:
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
 
@@ -42,6 +42,7 @@ def exline_all(logger, dataset_doc_path: str, problem: dict) -> None:
             column_types[col_name] = str
 
     df = train_dataset[list(train_dataset.keys()).pop()]
+    # TODO: set Target and Metric from request properly
     pipeline = tabular_pipeline.create_pipeline(df, column_types, 'Hall_of_Fame', 'f1Macro')
 
     inputs = [train_dataset]
@@ -50,18 +51,22 @@ def exline_all(logger, dataset_doc_path: str, problem: dict) -> None:
     volumes_dir = None
 
     logger.info('Fitting...')
-    fitted_pipeline, predictions, fit_pipeline_run = runtime.fit(
+    # fitted_pipeline, predictions, fit_pipeline_run = runtime.fit()
+    fitted_pipeline, _, _ = runtime.fit(
         pipeline, problem, inputs, hyperparams=hyperparams, random_seed=random_seed,
         volumes_dir=volumes_dir, context=metadata_base.Context.TESTING,
         runtime_environment=None
     )
 
-    logger.info(dir(fitted_pipeline))
-    logger.info(fitted_pipeline.pipeline.to_json())
+    pipeline_json = fitted_pipeline.pipeline.to_json()
+    from d3m.metadata.pipeline import Pipeline
+    from d3m import container, utils
+    PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
-    pipeline_json = {}
+    p = Pipeline(context=PipelineContext.TESTING).from_json(pipeline_json)
+    logger.info(dir(p))
 
     #logger.info('Producing...')
     #outputs = runtime.produce(fitted_pipeline, inputs)
     #print(outputs)
-    return pipeline_json
+    return pipeline_json, runtime

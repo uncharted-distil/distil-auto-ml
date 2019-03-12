@@ -6,12 +6,13 @@ import datetime
 
 import config
 
-import utils
+import main_utils as utils
 import models
 
 from server.server import Server
 
 from exline.main import exline_all
+from exline.scoring import Scorer
 
 import dill
 import pandas as pd
@@ -20,10 +21,38 @@ import pandas as pd
 # Configure output dir
 pathlib.Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
-def save_job(engine, task_id):
+def save_job(runtime, task_id):
     filepath = utils.make_job_fn(task_id)
     with open(filepath, 'wb') as f:
-        dill.dump(engine, f)
+        dill.dump(runtime, f)
+
+def score_task(logger, session, task):
+    try:
+        task.started_at = datetime.datetime.utcnow()
+        score_config = session.query(models.ScoreConfig) \
+                              .filter(models.ScoreConfig.id==task.score_config_id) \
+                              .first()
+
+        scorer = Scorer(logger, task, score_config)
+        score_values = scorer.run()
+        for score_value in score_values:
+            score = models.Scores(
+                solution_id=task.solution_id,
+                score_config_id=score_config.id,
+                value=score_value)
+            session.add(score)
+            session.commit()
+    except Exception as e:
+        logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
+        task.error = True
+        task.error_message = str(e)
+    finally:
+        # Update DB with task results
+        # and mark task 'ended' and when
+        task.ended = True
+        task.ended_at = datetime.datetime.utcnow()
+        session.commit()
+
 
 def exline_task(logger, session, task):
     try:
@@ -40,8 +69,10 @@ def exline_task(logger, session, task):
         prob['id'] = '__unset__'
         prob['digest'] = '__unset__'
         #logger.info(prob)
-        pipeline_json = exline_all(logger, task.dataset_uri, prob)
-        task.pipeline = json.dumps(pipeline_json)
+        pipeline_json, runtime = exline_all(logger, task.dataset_uri, prob)
+        save_me = {'runtime': runtime, 'pipeline': pipeline_json}
+        save_job(save_me, task.id)
+        task.pipeline = pipeline_json
     except Exception as e:
         logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
         task.error = True
@@ -67,6 +98,8 @@ def job_loop(logger, session):
     if task:
         if task.type == "EXLINE":
             exline_task(logger, session, task)
+        elif task.type == "SCORE":
+            score_task(logger, session, task)
     
 
 def main(once=False):
