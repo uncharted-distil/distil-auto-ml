@@ -17,6 +17,8 @@ from exline.scoring import Scorer
 import dill
 import pandas as pd
 
+QUATTO_LIVES = {}
+
 
 # Configure output dir
 pathlib.Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
@@ -28,12 +30,14 @@ def save_job(runtime, task_id):
 
 def score_task(logger, session, task):
     try:
+        logger.info('Starting score task ID {}'.format(task.id))
         task.started_at = datetime.datetime.utcnow()
         score_config = session.query(models.ScoreConfig) \
                               .filter(models.ScoreConfig.id==task.score_config_id) \
                               .first()
 
-        scorer = Scorer(logger, task, score_config)
+        dats = QUATTO_LIVES[task.solution_id]
+        scorer = Scorer(logger, task, score_config, dats)
         score_values = scorer.run()
         for score_value in score_values:
             score = models.Scores(
@@ -69,8 +73,10 @@ def exline_task(logger, session, task):
         prob['id'] = '__unset__'
         prob['digest'] = '__unset__'
         #logger.info(prob)
-        pipeline_json, runtime = exline_all(logger, task.dataset_uri, prob)
-        save_me = {'runtime': runtime, 'pipeline': pipeline_json}
+        pipeline, runtime = exline_all(logger, task.dataset_uri, prob)
+        pipeline_json = pipeline.pipeline.to_json()
+        save_me = {'runtime': runtime, 'pipeline': pipeline}
+        QUATTO_LIVES[task.id] = save_me
         save_job(save_me, task.id)
         task.pipeline = pipeline_json
     except Exception as e:

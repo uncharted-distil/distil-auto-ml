@@ -12,19 +12,21 @@ from sklearn.model_selection import (train_test_split,
 from d3m.container import dataset
 from d3m.metadata.pipeline import Pipeline
 
+from exline.external import D3MDataset
+
+from typing import List, Dict, Any, Tuple, Set
+
+
+from d3m import utils as dutils
+PipelineContext = dutils.Enum(value='PipelineContext', names=['TESTING'], start=1)
+
 
 class Scorer:
-    def __init__(self, logger, task, score_config):
+    def __init__(self, logger, task, score_config, dats):
         self.logger = logger
-        # Assign configurations
         self.solution_id = task.solution_id
-        # Attempt to load extant 'fit' solution
-        fit_fn = utils.make_job_fn(self.solution_id)
-        with open(fit_fn, 'rb') as f:
-            unpacked = dill.load(f)
-            self.fit_runtime = unpacked['runtime']
-            self.fitted_pipeline = unpacked['pipeline']
-            
+
+        # Assign configurations
         self.dataset_uri = task.dataset_uri
         self.method = score_config.method
         self.metric = score_config.metric
@@ -33,19 +35,27 @@ class Scorer:
         self.stratified = score_config.stratified
         self.num_folds = score_config.num_folds
         self.train_size = score_config.train_size
+        self.dats = dats
 
     def run(self):
 
+        # Attempt to load extant 'fit' solution
+        #fit_fn = utils.make_job_fn(self.solution_id)
+        #with open(fit_fn, 'rb') as f:
+        #    unpacked = dill.load(f)
+        #    runtime = unpacked['runtime']
+        #    fitted_pipeline = unpacked['pipeline']
+        runtime = self.dats['runtime']
+        fitted_pipeline = self.dats['pipeline']
+
         # Load the data to be testing with 
-        self.test_dataset = dataset.Dataset.load(self.dataset_uri)
-        o = self.fit_runtime.produce(self.fitted_pipeline, self.test_dataset)
-        self.logger.info(o.head)
-        return
-
-
-
-
-
+        test_dataset = dataset.Dataset.load(self.dataset_uri)
+        inputs = [test_dataset]
+        #self.logger.info('the vals')
+        #self.logger.info(list(test_dataset.keys()).pop())
+        #self.logger.info(test_dataset['learningData'].columns)
+        #o = runtime.produce(fitted_pipeline, inputs)
+        #self.logger.info(o)
 
         # TODO: actually accept new data
         if self.method == 'holdout':

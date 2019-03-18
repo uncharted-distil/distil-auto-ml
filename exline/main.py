@@ -58,15 +58,21 @@ def exline_all(logger, dataset_doc_path: str, problem: dict) -> dict:
         runtime_environment=None
     )
 
-    pipeline_json = fitted_pipeline.pipeline.to_json()
-    from d3m.metadata.pipeline import Pipeline
-    from d3m import container, utils
-    PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
+    """
+    logger.info('Producing...')
+    logger.info(list(train_dataset.keys()).pop())
+    import dill
+    with open('butt.dill', 'wb') as f:
+        save_me = {'runtime': runtime, 'pipeline': fitted_pipeline}
+        dill.dump(save_me, f)
 
-    p = Pipeline(context=PipelineContext.TESTING).from_json(pipeline_json)
-    logger.info(dir(p))
+    with open('butt.dill', 'rb') as f:
+        unpacked = dill.load(f)
+        new_runtime = unpacked['runtime']
+        new_fitted_pipeline = unpacked['pipeline']
 
-    #logger.info('Producing...')
-    #outputs = runtime.produce(fitted_pipeline, inputs)
-    #print(outputs)
-    return pipeline_json, runtime
+
+    outputs = new_runtime.produce(new_fitted_pipeline, inputs)
+    logger.info(outputs)
+    """
+    return fitted_pipeline, runtime

@@ -146,6 +146,9 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         self.num_fits     = 1
         self.inner_jobs   = 1
         self.outer_jobs   = 64
+
+        self.params = {}
+
         self.param_grid = deepcopy(self._default_param_grids[self.mode])
 
         self._models: List[AnyForest]  = []

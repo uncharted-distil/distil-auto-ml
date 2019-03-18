@@ -158,19 +158,6 @@ class TaskManager():
         self.session.add(search)
         self.session.commit()
 
-        shit = {"problem": {
-                "id": "185_bl_problem_TRAIN", 
-                "version": "1.0", 
-                "name": "NULL", 
-                "taskType": "CLASSIFICATION", 
-                "taskSubtype": "MULTICLASS", 
-                "performanceMetrics": [{"metric": "F1_MACRO"}]
-                }, 
-                "inputs": [
-                    {"datasetId": "185_bl_dataset_TRAIN", "targets": [
-                        {"resourceId": "0", "columnIndex": 18, "columnName": "Hall_of_Fame"}]
-                }]}
-
         prob = json.dumps(prob)
         self.logger.info(prob)
 
@@ -183,7 +170,6 @@ class TaskManager():
 
         # Add all to DB
         self.session.commit()
-        self.logger.info("Bout to commit")
         return search_id
 
     def _is_search_ended(self, search_id):

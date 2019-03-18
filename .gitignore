@@ -6,3 +6,4 @@ third_party/*
 .history
 datasets
 seed_datasets_current
+.DS_Store
