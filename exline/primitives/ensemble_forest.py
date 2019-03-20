@@ -10,7 +10,7 @@ from d3m.primitive_interfaces.base import CallResult
 
 from exline.modeling.base import EXLineBaseModel
 from exline.modeling.metrics import metrics, classification_metrics, regression_metrics
-from exline.modeling.helpers import tiebreaking_vote, adjust_f1_macro
+from exline.modeling.helpers import tiebreaking_vote_pre, adjust_f1_macro
 from exline.utils import parmap, maybe_subset
 
 import pandas as pd
@@ -110,17 +110,29 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
     )
 
     _default_param_grids = {
+        # "classification" : {
+        #     "estimator"        : ["RandomForest"],
+        #     "n_estimators"     : [32, 64, 128, 256, 512, 1024, 2048],
+        #     "min_samples_leaf" : [1, 2, 4, 8, 16, 32],
+        #     "class_weight"     : [None, "balanced"],
+        # },
+        # "regression" : {
+        #     "estimator"        : ["ExtraTrees", "RandomForest"],
+        #     "bootstrap"        : [True],
+        #     "n_estimators"     : [32, 64, 128, 256, 512, 1024, 2048],
+        #     "min_samples_leaf" : [2, 4, 8, 16, 32, 64],
+        # }
         "classification" : {
             "estimator"        : ["RandomForest"],
-            "n_estimators"     : [32, 64, 128, 256, 512, 1024, 2048],
-            "min_samples_leaf" : [1, 2, 4, 8, 16, 32],
-            "class_weight"     : [None, "balanced"],
+            "n_estimators"     : [32],
+            "min_samples_leaf" : [1],
+            "class_weight"     : [None],
         },
         "regression" : {
             "estimator"        : ["ExtraTrees", "RandomForest"],
             "bootstrap"        : [True],
-            "n_estimators"     : [32, 64, 128, 256, 512, 1024, 2048],
-            "min_samples_leaf" : [2, 4, 8, 16, 32, 64],
+            "n_estimators"     : [32],
+            "min_samples_leaf" : [2],
         }
     }
 
@@ -156,6 +168,17 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
 
         #self._target = self.hyperparams['target']
 
+    def __getstate__(self) -> dict:
+        state = PrimitiveBase.__getstate__(self)
+        state['models'] = self._models
+        state['labels'] = self._labels
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        PrimitiveBase.__setstate__(self, state)
+        self._models = state['models']
+        self._labels = state['labels']
+
     def set_training_data(self, *, inputs: container.DataFrame, outputs: container.DataFrame) -> None:
         self._inputs = inputs.values
         self._outputs = outputs.values
@@ -163,6 +186,7 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         #self._outputs = outputs[self._target].values
 
     def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
+        self._labels = pd.unique(self._outputs) # store the labels for tie breaking in produce
         self._models  = [self._fit(self._inputs, self._outputs) for _ in range(self.num_fits)]
         return CallResult(None)
 
@@ -170,7 +194,7 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         preds = [model.predict(inputs.values) for model in self._models]
 
         if self.mode == 'classification':
-            result = tiebreaking_vote(np.vstack(preds), self._outputs)
+            result = tiebreaking_vote_pre(np.vstack(preds), self._labels)
         elif self.mode == 'regression':
             result = np.stack(preds).mean(axis=0)
         else:
@@ -213,11 +237,10 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         return model
 
     def get_params(self) -> Params:
-        return self.params
+        return None
 
-    def set_params(self, *, params: Params) -> Params:
-        self.params = params
-        return params
+    def set_params(self, *, params: Params) -> None:
+        return
 
     @property
     def _details(self) -> Dict[str, Any]:
