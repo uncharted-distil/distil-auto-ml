@@ -64,3 +64,16 @@ def translate_d3m_metric(metric):
     }
     assert metric in lookup, '%s not in lookup' % metric
     return lookup[metric]
+
+def translate_proto_metric(proto_metric):
+    lookup = {
+        'F1_MACRO': 'f1Macro',
+        'F1_MICRO': 'f1',
+        'ACCURACY': 'accuracy',
+        'MEAN_SQUARED_ERROR': 'meanSquaredError',
+        'ROOT_MEAN_SQUARED_ERROR': 'rootMeanSquaredError',
+        'ROOT_MEAN_SQUARED_ERROR_AVG': 'rootMeanSquaredErrorAvg',
+        'R_SQUARED': 'meanSquaredError' # mapped for now
+    }
+    assert proto_metric in lookup, '%s not in lookup' % proto_metric
+    return lookup[proto_metric]
