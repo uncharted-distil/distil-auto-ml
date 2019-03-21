@@ -6,9 +6,11 @@ services:
 variables:
   CURRENT_CONTAINER_IMAGE: $CI_REGISTRY_IMAGE:$CI_BUILD_REF
   CONTAINER_BRANCH_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_REF_NAME
+  INTEGRATION_IMAGE: registry.datadrivendiscovery.org/uncharted_qntfy/ta3ta2_integration/exlineta2:latest
 
 stages:
   - test
+  - release-master
 
 # Ensure we can access the d3m gitlab and update our submodules
 before_script:
@@ -28,3 +30,19 @@ test:
     # Tag and push with branch name
     - docker tag $CURRENT_CONTAINER_IMAGE $CONTAINER_BRANCH_IMAGE
     - docker push $CONTAINER_BRANCH_IMAGE
+
+# If master, push to D3M integration registry
+release-master:
+  stage: release-master
+  only:
+    refs:
+      - master
+  script:
+      # Build el docker container
+    - docker pull $CONTAINER_BRANCH_IMAGE || true
+    - docker build -t $CURRENT_CONTAINER_IMAGE --cache-from $CONTAINER_BRANCH_IMAGE . --build-arg BRANCH_NAME=$CI_COMMIT_REF_NAME
+    # Tag and push with branch name
+    - docker tag $CURRENT_CONTAINER_IMAGE $INTEGRATION_IMAGE
+    - docker push $INTEGRATION_IMAGE
+
+
