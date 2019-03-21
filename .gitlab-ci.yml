@@ -4,6 +4,7 @@ services:
   - docker:dind
 
 variables:
+  D3M_REGISTRY: registry.datadrivendiscovery.org
   CURRENT_CONTAINER_IMAGE: $CI_REGISTRY_IMAGE:$CI_BUILD_REF
   CONTAINER_BRANCH_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_REF_NAME
   INTEGRATION_IMAGE: registry.datadrivendiscovery.org/uncharted_qntfy/ta3ta2_integration/exlineta2:latest
@@ -20,6 +21,7 @@ before_script:
   - pip install awscli
   - git config --global http.sslVerify false
   - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+  - docker login -u gitlab-ci-token -p $D3M_REGISTRY_PUSH_TOKEN $D3M_REGISTRY 
 
 test:
   stage: test
