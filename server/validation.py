@@ -3,18 +3,22 @@ from google.protobuf import json_format
 import models
 from server.messages import Messaging
 
+import logging
+
+
 class RequestValidator:
     def __init__(self):
         self.msg = Messaging()
+        self.logger = logging.getLogger('exline.TaskManager')
 
-    def _validate_solution_id_exists(self, solution_id, session):
+    def _validate_solution_id_exists(self, solution_id, session, request):
         solution_id = str(solution_id)
         solution_id_record = session.query(models.Solutions) \
                                     .filter(models.Solutions.id==solution_id) \
                                     .first()
 
         if solution_id_record is None:
-            raise ValueError("Solution ID doesn't exist: {}".format(request))
+            raise ValueError("Solution ID does not exist: {}".format(request))
 
         return solution_id
 
@@ -26,17 +30,21 @@ class RequestValidator:
                                 .first()
 
         if request_record is None:
-            raise ValueError("Request ID doesn't exist: {}".format(request))
+            raise ValueError("Request ID does not exist: {}".format(request))
 
         return request_id
 
-    def validate_fitted_solution_id_exists(self, fitted_soln_id, session):
-        fitted_solution_id_record = session.query(models.FitSolution) \
-                                    .filter(models.FitSolution.id==fitted_soln_id) \
+    def validate_fitted_solution_id_exists(self, soln_id, session, request):
+        fit_solution_id_record = session.query(models.FitSolution) \
+                                    .filter(models.FitSolution.id==soln_id) \
                                     .first()
 
-        if fitted_solution_id_record is None:
-            raise ValueError("FittedSolution ID doesn't exist: {}".format(request))
+        solution_id_record = session.query(models.Solutions) \
+                                    .filter(models.Solutions.id==soln_id) \
+                                    .first()
+
+        if fit_solution_id_record is None and solution_id_record is None:
+            raise ValueError("Provided ID does not exist: {}".format(request))
 
         return fitted_soln_id
 
@@ -115,16 +123,17 @@ class RequestValidator:
         return solution_id
 
     def validate_solution_export_request(self, request):
-        fitted_solution_id = self.msg.get_fitted_solution_id(request)
+        self.logger.info(request)
+        solution_id = self.msg.get_solution_id(request)
         rank = self.msg.get_rank(request)
 
-        if not fitted_solution_id:
-            raise ValueError("Must pass a fitted solution_id: {}".format(request))
+        if not solution_id:
+            raise ValueError("Must pass a solution_id: {}".format(request))
         # default value of gRPC double field is 0
-        if rank == 0:
-            raise ValueError("Must specify a rank and rank must be >0: {}".format(request))
+        if rank < 0:
+            raise ValueError("Must specify a rank and rank must be >=0: {}".format(request))
 
-        return fitted_solution_id, rank
+        return solution_id, rank
 
     def validate_get_fit_solution_results_request(self, request, session):
         return self._validate_request_exists(request, session)

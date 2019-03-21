@@ -188,8 +188,6 @@ class Scorer:
         true_df = true_df[[self.dats['target_col_name']]]
 
         score = self._score(self.metric, true_df, result_df)
-        self.logger.info('SCORE')
-        self.logger.info(score)
         
         return [score]
 

@@ -501,13 +501,22 @@ class TaskManager():
         for the eval. You will notice the output folders are hardcoded, this is a known and intentional
         limitation.
         """
-        fitted_soln_id, rank = self.validator.validate_solution_export_request(request)
-        fitted_soln_id = self.validator.validate_fitted_solution_id_exists(fitted_soln_id, self.session)
+        self.logger.info("START")
+        solution_id, rank = self.validator.validate_solution_export_request(request)
+        self.logger.info("SOLUTION ID GOT")
+        #solution_id = self.validator.validate_fitted_solution_id_exists(fitted_soln_id, self.session, request)
 
+        """
         fit_solution, task = self.session.query(models.FitSolution, models.Tasks) \
                                          .filter(models.FitSolution.id==fitted_soln_id) \
                                          .filter(models.FitSolution.task_id==models.Tasks.id) \
                                          .first()
+        """
+        solution, task = self.session.query(models.Solutions, models.Tasks) \
+                                         .filter(models.Solutions.id==solution_id) \
+                                         .filter(models.Solutions.task_id==models.Tasks.id) \
+                                         .first()
+        self.logger.info("SOLUTION GOT")
 
-        export.export_dag(task.DAG, fitted_soln_id, rank)
-        export.export_executable(task.id, fitted_soln_id)
+        #export.export_dag(task.DAG, fitted_soln_id, rank)
+        #export.export_executable(task.id, fitted_soln_id)
