@@ -19,7 +19,7 @@ from api.utils import decode_problem_description
 class TaskManager():
     def __init__(self):
         self.session = models.get_session(config.DB_LOCATION)
-        self.logger = logging.getLogger('aretha.TaskManager')
+        self.logger = logging.getLogger('exline.TaskManager')
         self.logger.info('Initialized TaskManager')
         self.msg = Messaging()
         self.validator = RequestValidator()
@@ -159,7 +159,6 @@ class TaskManager():
         self.session.commit()
 
         prob = json.dumps(prob)
-        self.logger.info(prob)
 
         task = models.Tasks(problem=prob,
                             type="EXLINE",
@@ -310,7 +309,15 @@ class TaskManager():
 
             # TODO: make this a proper list of scores
             if scores:
-                score_msgs = [self.msg.make_score_message(m.value) for m in scores]
+                score_msgs = []
+                for m in scores:
+                    config = self.session.query(models.ScoreConfig) \
+                                         .filter(models.ScoreConfig.id==m.score_config_id) \
+                                         .first()
+                    self.logger.info(m)
+                    score_msgs.append(self.msg.make_score_message(config.metric, m.value))
+
+                #score_msgs = [self.msg.make_score_message(m. m.value) for m in scores]
                 progress_msg = self.msg.make_progress_msg("COMPLETED")
                 
                 yield self.msg.make_get_score_solution_results_response(score_msgs, progress_msg)

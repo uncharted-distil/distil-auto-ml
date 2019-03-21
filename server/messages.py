@@ -75,13 +75,19 @@ class Messaging:
                                                      progress=progess_msg)
         return m
 
-    def make_score_message(self, value):
+    def make_score_message(self, metric, value):
+        metric = metric.upper()
+        inner_metric = problem_pb2.PerformanceMetric.Value(metric)
+        metric = problem_pb2.ProblemPerformanceMetric(
+            metric=inner_metric
+        )
         # TODO: obviously way more
         raw = value_pb2.ValueRaw(
             double=value)
         val = value_pb2.Value(
             raw=raw)
         score = core_pb2.Score(
+            metric=metric,
             value=val) 
         return score
 

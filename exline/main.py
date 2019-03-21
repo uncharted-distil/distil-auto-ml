@@ -21,7 +21,7 @@ from exline.external import D3MDataset
 from exline.primitives import tabular_pipeline
 
 
-def exline_all(logger, dataset_doc_path: str, problem: dict) -> dict:
+def exline_all(logger, dataset_doc_path: str, problem: dict, target_col_name: str) -> dict:
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
 
@@ -42,8 +42,9 @@ def exline_all(logger, dataset_doc_path: str, problem: dict) -> dict:
             column_types[col_name] = str
 
     df = train_dataset[list(train_dataset.keys()).pop()]
-    # TODO: set Target and Metric from request properly
-    pipeline = tabular_pipeline.create_pipeline(df, column_types, 'Hall_of_Fame', 'f1Macro')
+    
+    # TODO: set Metric from request properly
+    pipeline = tabular_pipeline.create_pipeline(df, column_types, target_col_name, 'f1Macro')
 
     inputs = [train_dataset]
     hyperparams = None
@@ -57,22 +58,5 @@ def exline_all(logger, dataset_doc_path: str, problem: dict) -> dict:
         volumes_dir=volumes_dir, context=metadata_base.Context.TESTING,
         runtime_environment=None
     )
-
-    """
-    logger.info('Producing...')
-    logger.info(list(train_dataset.keys()).pop())
-    import dill
-    with open('butt.dill', 'wb') as f:
-        save_me = {'runtime': runtime, 'pipeline': fitted_pipeline}
-        dill.dump(save_me, f)
-
-    with open('butt.dill', 'rb') as f:
-        unpacked = dill.load(f)
-        new_runtime = unpacked['runtime']
-        new_fitted_pipeline = unpacked['pipeline']
-
-
-    outputs = new_runtime.produce(new_fitted_pipeline, inputs)
-    logger.info(outputs)
-    """
+    
     return fitted_pipeline, runtime

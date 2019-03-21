@@ -12,9 +12,9 @@ def generate_id():
     _id = str(uuid.uuid4())
     return _id
 
-def setup_logging(logging_level, log_file='aretha.log', system_version="UNSET"):
+def setup_logging(logging_level, log_file='exline.log', system_version="UNSET"):
     # Setup logger and handlers
-    logger = logging.getLogger('aretha')
+    logger = logging.getLogger('exline')
     # Don't propagate to any other loggers to dedupe logging due to d3m package
     logger.propagate = False
 

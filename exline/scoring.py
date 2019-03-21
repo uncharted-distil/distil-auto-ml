@@ -45,31 +45,31 @@ class Scorer:
         #    unpacked = dill.load(f)
         #    runtime = unpacked['runtime']
         #    fitted_pipeline = unpacked['pipeline']
-        runtime = self.dats['runtime']
-        fitted_pipeline = self.dats['pipeline']
+        self.runtime = self.dats['runtime']
+        self.fitted_pipeline = self.dats['pipeline']
 
-        # Load the data to be testing with 
-        test_dataset = dataset.Dataset.load(self.dataset_uri)
-        inputs = [test_dataset]
+        # Load the data to test
+        self.inputs = [dataset.Dataset.load(self.dataset_uri)]
         #self.logger.info('the vals')
         #self.logger.info(list(test_dataset.keys()).pop())
-        #self.logger.info(test_dataset['learningData'].columns)
+        #self.logger.info(test_dataset['learningData'])
         #o = runtime.produce(fitted_pipeline, inputs)
         #self.logger.info(o)
 
         # TODO: actually accept new data
         if self.method == 'holdout':
             return self.hold_out_score()
-        elif self.method == 'k_fold':
-            return self.k_fold_score()
+        #elif self.method == 'k_fold':
+        #    #return self.k_fold_score()
         else:
             raise ValueError('Cannot score {} type'.format(self.method))
 
+    """
     def _get_features_and_targets(self):
         features = self.engine.variables['features']
         targets = self.engine.variables['targets']
         return features, targets
-
+    """
     def _get_target_name(self):
         cleaned_target_names = False
         target_df = self.engine.variables.get('targets', False)
@@ -78,12 +78,16 @@ class Scorer:
             cleaned_target_names = [name for name in target_names if name != 'd3m_index']
         return cleaned_target_names
 
+
     def _get_pos_label(self):
         """Return pos_label if needed, False if not needed.
 
         sklearn binary scoring funcs run on indicator types just fine
         but will break on categorical w/o setting pos_label kwarg
         """
+        # TODO
+        return False
+
         # can safely assume there is only one target for now, will have to change in the future
         labels_series = self.engine.variables['targets'][self._get_target_name()[0]]
         labels_dtype = labels_series.dtype.name
@@ -172,28 +176,24 @@ class Scorer:
         return score
 
     def hold_out_score(self):
-        
-        features, targets = self._get_features_and_targets()
-        
-        labels = targets.values if self.stratified else None
 
-        X_train, X_test, y_train, y_test = train_test_split(features,
-                                                            targets,
-                                                            train_size=self.train_size,
-                                                            test_size=None,
-                                                            shuffle=self.shuffle,
-                                                            random_state=self.random_seed,
-                                                            stratify=labels)
+        # Predict on the test data
+        result_df, _ = self.runtime.produce(self.fitted_pipeline, 
+                                         self.inputs)
+        result_df = result_df.transpose()
+        result_df.rename(columns={0: self.dats['target_col_name']}, inplace=True)
 
-        self.engine.variables['features'] = X_train
-        self.engine.variables['targets'] = y_train
-        self.engine.refit()
+        # Create the TRUE dataframe
+        true_df = self.inputs[0][list(self.inputs[0].keys()).pop()]
+        true_df = true_df[[self.dats['target_col_name']]]
 
-        result = self.engine.model_produce(X_test)
-        score = self._score(self.metric, y_test, result)
+        score = self._score(self.metric, true_df, result_df)
+        self.logger.info('SCORE')
+        self.logger.info(score)
         
         return [score]
 
+    """
     def k_fold_score(self,):
         fold_scores = []
         kf = StratifiedKFold if self.stratified else KFold
@@ -214,3 +214,4 @@ class Scorer:
             fold_scores.append(score)
             
         return fold_scores
+    """

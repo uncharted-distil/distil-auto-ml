@@ -66,16 +66,21 @@ def exline_task(logger, session, task):
         #logger.info("PROBLEM: {}".format(task.problem))
         prob = task.problem
         prob = json.loads(prob)
+        target_col_name = False
         for target in prob['inputs'][0]['targets']:
             target['resource_id'] = target.pop('resourceId')
             target['column_index'] = target.pop('columnIndex')
             target['column_name'] = target.pop('columnName')
+            if not target_col_name:
+                target_col_name = target['column_name']
         prob['id'] = '__unset__'
         prob['digest'] = '__unset__'
         #logger.info(prob)
-        pipeline, runtime = exline_all(logger, task.dataset_uri, prob)
+        pipeline, runtime = exline_all(logger, task.dataset_uri, prob, target_col_name)
         pipeline_json = pipeline.pipeline.to_json()
-        save_me = {'runtime': runtime, 'pipeline': pipeline}
+        save_me = {'runtime': runtime, 
+                    'pipeline': pipeline, 
+                    'target_col_name': target_col_name}
         QUATTO_LIVES[task.id] = save_me
         save_job(save_me, task.id)
         task.pipeline = pipeline_json
