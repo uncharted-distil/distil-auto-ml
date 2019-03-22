@@ -44,7 +44,7 @@ release-master:
     - docker pull $CONTAINER_BRANCH_IMAGE || true
     - docker build -t $CURRENT_CONTAINER_IMAGE --cache-from $CONTAINER_BRANCH_IMAGE . --build-arg BRANCH_NAME=$CI_COMMIT_REF_NAME
     # Tag and push with branch name
-    - docker tag $CURRENT_CONTAINER_IMAGE $INTEGRATION_IMAGE
+    - docker tag $CONTAINER_BRANCH_IMAGE $INTEGRATION_IMAGE
     - docker push $INTEGRATION_IMAGE
 
 

@@ -6,7 +6,7 @@ ENV BRANCH_NAME=${BRANCH_NAME}
 ENV PYTHONPATH=$PYTHONPATH:/app
 ENV COMMON_PRIMITIVES_VERSION=v0.3.0
 
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -qq update -qq \
     && apt-get install -y -qq \
@@ -71,6 +71,11 @@ RUN pip3 install python-prctl
 # Put everything in
 COPY .git /.git
 COPY . .
+
+ENV D3M_BASE_IMAGE_NAME=_none_
+ENV D3M_BASE_IMAGE_DIGEST=_none_
+ENV D3M_IMAGE_NAME=_none_
+ENV D3M_IMAGE_DIGEST=_none_
 
 RUN pip3 install -e /app
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
