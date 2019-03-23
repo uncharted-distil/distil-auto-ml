@@ -3,7 +3,7 @@ from google.protobuf import json_format
 
 import config
 
-import core_pb2, problem_pb2, value_pb2, pipeline_pb2, primitive_pb2
+from api import core_pb2, problem_pb2, value_pb2, pipeline_pb2, primitive_pb2
 
 class Messaging:
 
