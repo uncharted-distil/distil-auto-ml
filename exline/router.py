@@ -72,27 +72,15 @@ def is_text(d3mds):
 # --
 # Routing
 
-def get_routing_info(X_train, X_test, y_train, y_test, ll_metric, ll_score, d3mds):
+def get_routing_info(X_train, X_test, y_train, metric, d3mds):
     
     # Shouldn't evaluate these in serial -- should do in parallel, then check for
     # conflicts
     
     if is_tabular(d3mds):
-        
-        num_fits = 5 if X_train.shape[0] < SMALL_DATASET_THRESH else 1
-        
-        if ll_metric in classification_metrics:
-            return 'table', {
-                "estimator" : ["RandomForest"],
-                "num_fits"  : num_fits,
-            }
-        elif ll_metric in regression_metrics:
-            return 'table', {
-                "estimator" : ["RandomForest", "ExtraTrees"],
-                "num_fits"  : num_fits,
-            } # !!
-        else:
-            raise Exception("unknown metric %s" % ll_metric)
+        return 'table', {
+            "num_fits"  : 5 if X_train.shape[0] < SMALL_DATASET_THRESH else 1,
+        }
     
     elif is_multitable(d3mds):
         
@@ -113,20 +101,9 @@ def get_routing_info(X_train, X_test, y_train, y_test, ll_metric, ll_score, d3md
                 ' falling back to table (eg. ignoring resources)'
             ), file=sys.stderr)
             
-            num_fits = 5 if X_train.shape[0] < SMALL_DATASET_THRESH else 1
-            
-            if ll_metric in classification_metrics:
-                return 'table', {
-                    "estimator" : ["RandomForest"],
-                    "num_fits"  : num_fits,
-                }
-            elif ll_metric in regression_metrics:
-                return 'table', {
-                    "estimator" : ["RandomForest", "ExtraTrees"],
-                    "num_fits"  : num_fits,
-                } # !!
-            else:
-                raise Exception("unknown metric %s" % ll_metric)
+            return 'table', {
+                "num_fits"  : 5 if X_train.shape[0] < SMALL_DATASET_THRESH else 1,
+            }
     
     elif is_question_answering(d3mds):
         return 'question_answering', {}
@@ -158,7 +135,7 @@ def get_routing_info(X_train, X_test, y_train, y_test, ll_metric, ll_score, d3md
     elif is_timeseries(d3mds):
         return 'timeseries', {
             "metrics"       : ['euclidean', 'cityblock', 'dtw'],
-            "diffusion"     : ll_metric in classification_metrics,
+            "diffusion"     : metric in classification_metrics,
             "forest"        : True,
             "ensemble_size" : 3,
         }

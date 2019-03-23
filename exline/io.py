@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-
-"""
-    exline/io.py
-"""
-
 import os
 import sys
 import numpy as np
@@ -13,7 +7,25 @@ from copy import deepcopy
 
 from .external import D3MDS
 
-def load_problem(prob_name, base_path, return_d3mds=False, use_schema=False, strict=True):
+#import soundfile as sf
+
+# class EXProblem:
+#     def __init__(self, prob_name, base_path):
+        
+#         self.d3mds = D3MDS(
+#             os.path.join(base_path, prob_name, '%s_dataset' % prob_name),
+#             os.path.join(base_path, prob_name, '%s_problem' % prob_name),
+#         )
+        
+#         self.X_train = self.d3mds.get_train_data()
+#         self.X_test  = self.d3mds.get_test_data()
+#         self.y_train = self.d3mds.get_train_targets().squeeze()
+#         self.y_test  = self.d3mds.get_test_targets().squeeze()
+        
+#         self.metric = self.d3mds.problem.get_performance_metrics()[0]['metric']
+
+
+def load_problem(prob_name, base_path, return_d3mds=True, use_schema=False, strict=True):
     d3mds = D3MDS(
         os.path.join(base_path, prob_name, '%s_dataset' % prob_name),
         os.path.join(base_path, prob_name, '%s_problem' % prob_name),
@@ -23,6 +35,7 @@ def load_problem(prob_name, base_path, return_d3mds=False, use_schema=False, str
     X_test  = d3mds.get_test_data()
     y_train = d3mds.get_train_targets().squeeze()
     y_test  = d3mds.get_test_targets().squeeze()
+    
     
     if use_schema:
         print("use_schema", file=sys.stderr)
@@ -197,7 +210,7 @@ def load_and_join(X_train, X_test, d3mds):
 # --
 # Audio
 
-import soundfile as sf
+
 
 class WavInput:
     def __init__(self, data, sample_rate):
@@ -281,14 +294,21 @@ def load_audio(X_train, X_test, d3mds):
 # --
 # Graphs
 
-def load_graphs(d3mds):
-    Gs = {}
+def load_graphs(d3mds, n=None):
+    graphs = {}
     for resource in d3mds.dataset.dsDoc['dataResources']:
         if resource['resType'] == 'graph':
             assert 'text/gml' in resource['resFormat']
-            Gs[resource['resID']] = nx.read_gml(os.path.join(d3mds.dataset.dsHome, resource['resPath']))
-            
-    return Gs
+            graphs[resource['resID']] = nx.read_gml(os.path.join(d3mds.dataset.dsHome, resource['resPath']))
+    
+    if n is not None:
+        assert len(graphs) == n
+    
+    return graphs
+
+def load_graph(d3mds):
+    graphs = load_graphs(d3mds, n=1)
+    return list(graphs.values())[0]
 
 # --
 # Images

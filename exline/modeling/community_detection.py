@@ -7,21 +7,24 @@
 import sys
 import numpy as np
 
+from .base import EXLineBaseModel
 from .metrics import metrics
 
-class CommunityDetection:
+class CommunityDetection(EXLineBaseModel):
     
     def __init__(self, target_metric, overlapping):
-        
         self.target_metric = target_metric
         self.overlapping   = overlapping
     
-    def fit_score(self, graph, X_train, X_test, y_train, y_test):
+    def fit(self, X_train, y_train, U_train=None):
         print('!! CommunityDetection: using null model', file=sys.stderr)
-        
-        # --
-        # Null model, because I don't understand the problem
-        
-        null_pred  = -np.arange(y_test.shape[0])
-        null_score = metrics[self.target_metric](y_test, null_pred)
-        return null_score
+        return self
+    
+    def predict(self, X):
+        return -np.arange(X.shape[0])
+    
+    @property
+    def details(self):
+        return {
+            "null_model" : True
+        }

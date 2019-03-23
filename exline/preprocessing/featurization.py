@@ -61,7 +61,7 @@ class DataFrameMapper:
         self._label_lookup = None
         self._mapper = None
     
-    def pipeline(self, X_train, X_test, y_train, y_test):
+    def pipeline(self, X_train, X_test, y_train):
         
         X_train, X_test = X_train.copy(), X_test.copy()
         
@@ -76,7 +76,7 @@ class DataFrameMapper:
         
         Xf_train, Xf_test = self.apply(X_train, X_test, y_train=y_train)
         
-        return Xf_train, Xf_test, y_train, y_test
+        return Xf_train, Xf_test
     
     def fit(self, X):
         maps = []

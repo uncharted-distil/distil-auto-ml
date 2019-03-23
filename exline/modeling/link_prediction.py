@@ -14,6 +14,7 @@ from sklearn.model_selection import KFold
 
 from rescal import rescal_als
 
+from .base import EXLineBaseModel
 from .metrics import metrics
 from ..utils import parmap
 
@@ -46,9 +47,7 @@ def rescal_link_prediction(adj, rank=100, lambda_A=10, lambda_R=10, conv=1e-3, m
     )
     
     adj_lr = np.stack([(A @ R[k] @ A.T) for k in range(num_edge_types)], axis=-1)
-    
     adj_lr /= (np.linalg.norm(adj_lr, axis=-1, keepdims=True) + 1e-10) # Normalize by link type
-    
     return adj_lr
 
 
@@ -87,15 +86,17 @@ def cv_fold(edgelist, num_nodes, num_edge_types, train_idx, valid_idx, target_me
     }
 
 
-class RescalLinkPrediction:
+class RescalLinkPrediction(EXLineBaseModel):
     
     def __init__(self, target_metric):
         
         self.target_metric = target_metric
-        
+        self.adj_lr = None
     
-    def fit_score(self, graph, X_train, X_test, y_train, y_test):
+    def fit(self, X_train, y_train, U_train):
         global _cv_fold
+        
+        graph = U_train['graph']
         
         edgelist = nx2edgelist(graph)
         
@@ -116,14 +117,14 @@ class RescalLinkPrediction:
         # --
         # Factorize whole matrix
         
-        adj    = edgelist2tensor(edgelist, num_nodes, num_edge_types)
-        adj_lr = rescal_link_prediction(adj)
+        adj         = edgelist2tensor(edgelist, num_nodes, num_edge_types)
+        self.adj_lr = rescal_link_prediction(adj)
         
-        scores = adj_lr[(
-            X_test.source_nodeID.values,
-            X_test.target_nodeID.values,
-            X_test.linkType.values,
-        )]
-        
-        test_score = metrics[self.target_metric](y_test, scores > self.opt_thresh)
-        return test_score
+        return self
+    
+    def predict(self, X):
+        return self.adj_lr[(
+            X.source_nodeID.values,
+            X.target_nodeID.values,
+            X.linkType.values,
+        )] > self.opt_thresh

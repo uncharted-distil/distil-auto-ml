@@ -12,9 +12,10 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import RandomizedSearchCV
 from sklearn.feature_extraction.text import TfidfVectorizer
 
+from .base import EXLineBaseModel
 from .metrics import metrics, classification_metrics, translate_d3m_metric
 
-class TextClassifierCV:
+class TextClassifierCV(EXLineBaseModel):
     
     param_grid = {
         "vect__ngram_range"  : [(1, 1), (1, 2)],
@@ -29,17 +30,21 @@ class TextClassifierCV:
         self.target_metric = target_metric
         self.scoring       = translate_d3m_metric(target_metric)
         self.n_jobs        = 32
+        
+        self.n_iter  = 256
+        self.n_folds = 5
+        self.n_runs  = 1
     
-    def fit(self, X_train, y_train, n_iter=256, n_folds=5, n_runs=1):
+    def fit(self, X_train, y_train, U_train=None):
         
         self.model = RandomizedSearchCV(
             Pipeline([
                 ('vect', TfidfVectorizer()),
                 ('cls', LinearSVC())
             ]),
-            n_iter=n_iter,
+            n_iter=self.n_iter,
             param_distributions=self.param_grid,
-            cv=RepeatedStratifiedKFold(n_splits=n_folds, n_repeats=n_runs),
+            cv=RepeatedStratifiedKFold(n_splits=self.n_folds, n_repeats=self.n_runs),
             scoring=self.scoring,
             iid=False,
             n_jobs=self.n_jobs,
@@ -56,5 +61,9 @@ class TextClassifierCV:
     def predict(self, X):
         return self.model.predict(X)
     
-    def score(self, X, y):
-        return metrics[self.target_metric](y, self.predict(X))
+    @property
+    def details(self):
+        return {
+            "best_params"  : self.best_params,
+            "best_fitness" : self.best_fitness,
+        }

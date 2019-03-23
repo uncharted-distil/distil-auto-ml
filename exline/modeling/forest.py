@@ -16,51 +16,81 @@ import sys
 import numpy as np
 from copy import deepcopy
 
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, ExtraTreesRegressor
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, \
+    ExtraTreesRegressor, ExtraTreesClassifier
+
 from sklearn.model_selection import ParameterGrid
 
-from .metrics import metrics, classification_metrics
+from .base import EXLineBaseModel
+from .metrics import metrics, classification_metrics, regression_metrics
 from .helpers import tiebreaking_vote, adjust_f1_macro
 from ..utils import parmap, maybe_subset
 
-def EitherForestClassifier(**kwargs):
-    kwargs = kwargs.copy()
-    estimator = kwargs.pop('estimator')
-    if estimator == 'ExtraTrees':
-        return ExtraTreesClassifier(**kwargs)
-    elif estimator == 'RandomForest':
-        return RandomForestClassifier(**kwargs)
-    else:
-        raise Exception
-
-def EitherForestRegressor(**kwargs):
-    kwargs = kwargs.copy()
-    estimator = kwargs.pop('estimator')
-    if estimator == 'ExtraTrees':
-        return ExtraTreesRegressor(**kwargs)
-    elif estimator == 'RandomForest':
-        return RandomForestRegressor(**kwargs)
-    else:
-        raise Exception
-
-
-class ForestCV:
-    classifier_param_grid = {
-        "n_estimators"     : [32, 64, 128, 256, 512, 1024, 2048],
-        "min_samples_leaf" : [1, 2, 4, 8, 16, 32],
-        "class_weight"     : [None, "balanced"],
+class AnyForest:
+    __possible_model_cls = {
+        ("regression",     "ExtraTrees")   : ExtraTreesRegressor,
+        ("regression",     "RandomForest") : RandomForestRegressor,
+        ("classification", "ExtraTrees")   : ExtraTreesClassifier,
+        ("classification", "RandomForest") : RandomForestClassifier,
     }
     
-    regression_param_grid = {
-        "bootstrap"        : [True],
-        "n_estimators"     : [32, 64, 128, 256, 512, 1024, 2048],
-        "min_samples_leaf" : [2, 4, 8, 16, 32, 64],
-    }
-    
-    def __init__(self, target_metric, subset=100000, final_subset=1500000, verbose=10, num_fits=1, inner_jobs=1, estimator=['RandomForest']):
+    def __init__(self, mode, estimator, **kwargs):
+        assert (mode, estimator) in self.__possible_model_cls
+        self.mode   = mode
         
-        self.target_metric     = target_metric
-        self.is_classification = target_metric in classification_metrics
+        self.params    = kwargs
+        self.model_cls = self.__possible_model_cls[(mode, estimator)]
+    
+    def fit(self, X, y):
+        # if self.mode == 'classification':
+        #     assert y.dtype == int
+        #     assert y.min() == 0, 'may need to remap_labels'
+        #     assert y.max() == len(set(y)) - 1, 'may need to remap_labels'
+            
+        self.model = self.model_cls(**self.params).fit(X, y)
+        return self
+    
+    def predict(self, X):
+        return self.model.predict(X)
+    
+    def predict_proba(self, X):
+        return self.model.predict_proba(X)
+    
+    def predict_oob(self):
+        if self.mode == 'regression':
+            return self.model.oob_prediction_
+        elif self.mode == 'classification':
+            score_oob = self.model.oob_decision_function_
+            return self.model.classes_[score_oob.argmax(axis=-1)] # could vote better
+
+
+class ForestCV(EXLineBaseModel):
+    default_param_grids = {
+        "classification" : {
+            "estimator"        : ["RandomForest"],
+            "n_estimators"     : [32, 64, 128, 256, 512, 1024, 2048],
+            "min_samples_leaf" : [1, 2, 4, 8, 16, 32],
+            "class_weight"     : [None, "balanced"],
+        },
+        "regression" : {
+            "estimator"        : ["ExtraTrees", "RandomForest"],
+            "bootstrap"        : [True],
+            "n_estimators"     : [32, 64, 128, 256, 512, 1024, 2048],
+            "min_samples_leaf" : [2, 4, 8, 16, 32, 64],
+        }
+    }
+    
+    def __init__(self, target_metric, subset=100000, final_subset=1500000, 
+        verbose=10, num_fits=1, inner_jobs=1, param_grid=None):
+        
+        self.target_metric = target_metric
+        
+        if target_metric in classification_metrics:
+            self.mode = 'classification'
+        elif target_metric in regression_metrics:
+            self.mode = 'regression'
+        else:
+            raise Exception('ForestCV: unknown metric')
         
         self.subset       = subset
         self.final_subset = final_subset
@@ -68,109 +98,67 @@ class ForestCV:
         self.num_fits     = num_fits
         self.inner_jobs   = inner_jobs
         self.outer_jobs   = 64
-        self.estimator    = estimator
+        
+        if param_grid is not None:
+            self.param_grid = param_grid
+        else:
+            self.param_grid = deepcopy(self.default_param_grids[self.mode])
         
         self._models  = []
         self._y_train = None
     
-    def fit(self, Xf_train, y_train, param_grid=None):
+    def fit(self, Xf_train, y_train, U_train=None):
         self._y_train = y_train
-        if self.is_classification:
-            
-            assert y_train.dtype == int
-            assert y_train.min() == 0, 'may need to remap_labels'
-            assert y_train.max() == len(set(y_train)) - 1, 'may need to remap_labels'
-            
-            print('ForestCV: self._fit_classifier', file=sys.stderr)
-            self._models = [self._fit_classifier(Xf_train, y_train, param_grid=param_grid) for _ in range(self.num_fits)]
-        else:
-            print('ForestCV: self._fit_regressor', file=sys.stderr)
-            self._models = [self._fit_regressor(Xf_train, y_train, param_grid=param_grid) for _ in range(self.num_fits)]
-        
+        self._models  = [self._fit(Xf_train, y_train) for _ in range(self.num_fits)]
         return self
     
-    def score(self, X, y):
-        # !! May want to adjust F1 score.  ... but need to figure out when and whether it's helping
-        return metrics[self.target_metric](y, self.predict(X))
+    # def score(self, X, y):
+    #     # !! May want to adjust F1 score.  ... but need to figure out when and whether it's helping
+    #     return metrics[self.target_metric](y, self.predict(X))
     
     def predict(self, X):
         preds = [model.predict(X) for model in self._models]
-        if self.is_classification:
+        
+        if self.mode == 'classification':
             return tiebreaking_vote(np.vstack(preds), self._y_train)
-        else:
+        elif self.mode == 'regression':
             return np.stack(preds).mean(axis=0)
     
-    def _fit_classifier(self, Xf_train, y_train, param_grid=None):
-        assert self.estimator == ['RandomForest'] # !! DOn't want to accidentally do this
-        
-        self._y_train = y_train
-        
+    def _fit(self, Xf_train, y_train, param_grid=None):
         global _eval_grid_point
-        
-        if param_grid is None:
-            param_grid = deepcopy(self.classifier_param_grid)
-        
-        param_grid.update({'estimator' : self.estimator}) # !!
         
         X, y = maybe_subset(Xf_train, y_train, n=self.subset)
         
         def _eval_grid_point(params):
-            params['oob_score'] = True
-            params['n_jobs']    = self.inner_jobs
-            
-            model     = EitherForestClassifier(**params).fit(X, y)
-            score_oob = model.oob_decision_function_
-            pred_oob  = model.classes_[score_oob.argmax(axis=-1)] # could vote better
-            oob_score = metrics[self.target_metric](y, pred_oob)
-            
-            return {
-                "params"  : params,
-                "fitness" : oob_score,
-            }
+            model = AnyForest(
+                mode=self.mode,
+                oob_score=True,
+                n_jobs=self.inner_jobs,
+                **params
+            )
+            model       = model.fit(X, y)
+            oob_fitness = metrics[self.target_metric](y, model.predict_oob())
+            return {"params" : params, "fitness" : oob_fitness}
         
         # Run grid search
-        self.results = parmap(_eval_grid_point, ParameterGrid(param_grid), verbose=self.verbose, n_jobs=self.outer_jobs)
+        self.results = parmap(_eval_grid_point, 
+            ParameterGrid(self.param_grid), verbose=self.verbose, n_jobs=self.outer_jobs)
         
         # Find best run
         best_run = sorted(self.results, key=lambda x: x['fitness'])[-1] # bigger is better
         self.best_params, self.best_fitness = best_run['params'], best_run['fitness']
         
         # Refit best model, possibly on more data
-        self.best_params['n_jobs'] = self.outer_jobs
-        X, y = maybe_subset(Xf_train, y_train, n=self.final_subset)
-        return EitherForestClassifier(**self.best_params).fit(X, y)
+        X, y  = maybe_subset(Xf_train, y_train, n=self.final_subset)
+        model = AnyForest(mode=self.mode, n_jobs=self.outer_jobs, **self.best_params)
+        model = model.fit(X, y)
+        
+        return model
     
-    def _fit_regressor(self, Xf_train, y_train, param_grid=None):
-        global _eval_grid_point
-        
-        if param_grid is None:
-            param_grid = deepcopy(self.regression_param_grid)
-        
-        param_grid.update({'estimator' : self.estimator}) # !!
-        
-        X, y = maybe_subset(Xf_train, y_train, n=self.subset)
-        
-        def _eval_grid_point(params):
-            params['oob_score'] = True
-            params['n_jobs']    = self.inner_jobs
-            
-            model     = EitherForestRegressor(**params).fit(X, y)
-            pred_oob  = model.oob_prediction_
-            oob_score = metrics[self.target_metric](y, pred_oob)
-            
-            return {
-                "params"  : params,
-                "fitness" : oob_score,
-            }
-        
-        # Run grid search
-        self.results = parmap(_eval_grid_point, ParameterGrid(param_grid), verbose=self.verbose, n_jobs=self.outer_jobs)
-        
-        # Find best run
-        best_run = sorted(self.results, key=lambda x: x['fitness'])[-1] # bigger is better
-        self.best_params, self.best_fitness = best_run['params'], best_run['fitness']
-        
-        # Refit best model, possibly on more data
-        self.best_params['n_jobs'] = self.outer_jobs
-        X, y = maybe_subset(Xf_train, y_train, n=self.final_subset)
-        return EitherForestRegressor(**self.best_params).fit(X, y)
+    @property
+    def details(self):
+        return {
+            "cv_score"    : self.best_fitness,
+            "best_params" : self.best_params,
+            "num_fits"    : self.num_fits,
+        }

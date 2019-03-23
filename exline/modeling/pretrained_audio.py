@@ -9,13 +9,12 @@
 """
 
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '0'
-
 import sys
 import numpy as np
 from tqdm import tqdm
 
-BASE_PATH = './third_party/models/research/audioset'
+"""
+BASE_PATH = './third_party/audioset'
 MODEL_PATH = os.path.join(BASE_PATH, 'vggish_model.ckpt')
 
 sys.path.append(BASE_PATH)
@@ -24,10 +23,11 @@ import vggish_params
 import vggish_postprocess
 import vggish_slim
 import tensorflow as tf
-
-from ..utils import parmap
+"""
+from .base import EXLineBaseModel
 from .forest import ForestCV
 from .metrics import metrics
+from ..utils import parmap
 
 # --
 # Helpers
@@ -54,7 +54,7 @@ def audio2vec(X):
 # --
 # Model
 
-class AudiosetModel:
+class AudiosetModel(EXLineBaseModel):
     
     def __init__(self, target_metric):
         self.target_metric = target_metric
@@ -64,14 +64,13 @@ class AudiosetModel:
         vec_feats = audio2vec(mel_feats)
         return np.vstack([f.max(axis=0) for f in vec_feats])
     
-    def fit(self, A_train, y_train):
-        vec_maxpool = self._featurize(A_train)
+    def fit(self, X_train, y_train, U_train=None):
+        vec_maxpool = self._featurize(X_train)
         self.model = ForestCV(target_metric=self.target_metric)
         self.model = self.model.fit(vec_maxpool, y_train)
         return self
     
-    def score(self, A, y):
-        vec_maxpool = self._featurize(A)
-        preds = self.model.predict(vec_maxpool)
-        return metrics[self.target_metric](y, preds)
+    def predict(self, X):
+        vec_maxpool = self._featurize(X)
+        return self.model.predict(vec_maxpool)
 

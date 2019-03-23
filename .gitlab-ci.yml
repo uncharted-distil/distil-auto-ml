@@ -1,0 +1,30 @@
+image: "docker:latest"
+
+services:
+  - docker:dind
+
+variables:
+  CURRENT_CONTAINER_IMAGE: $CI_REGISTRY_IMAGE:$CI_BUILD_REF
+  CONTAINER_BRANCH_IMAGE: $CI_REGISTRY/$CI_PROJECT_PATH:$CI_COMMIT_REF_NAME
+
+stages:
+  - test
+
+# Ensure we can access the d3m gitlab and update our submodules
+before_script:
+  - apk add --no-cache git make python3
+  # Enable s3 data pull
+  - python3 -m ensurepip && rm -r /usr/lib/python*/ensurepip && pip3 install --upgrade pip setuptools
+  - pip install awscli
+  - git config --global http.sslVerify false
+  - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
+
+test:
+  stage: test
+  script:
+    # Build el docker container
+    - docker pull $CONTAINER_BRANCH_IMAGE || true
+    - docker build -t $CURRENT_CONTAINER_IMAGE --cache-from $CONTAINER_BRANCH_IMAGE . --build-arg BRANCH_NAME=$CI_COMMIT_REF_NAME
+    # Tag and push with branch name
+    - docker tag $CURRENT_CONTAINER_IMAGE $CONTAINER_BRANCH_IMAGE
+    - docker push $CONTAINER_BRANCH_IMAGE

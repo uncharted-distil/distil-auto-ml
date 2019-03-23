@@ -1,1 +1,0 @@
-{"prob_name": "6_86_com_DBLP", "ll_metric": "normalizedMutualInformation", "ll_score": 0.6886483103478481, "test_score": 0.7223731552448532, "elapsed": 49.060879945755005, "_extra": {"null_model": true}, "_misc": {"use_schema": false}}
