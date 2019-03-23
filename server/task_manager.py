@@ -14,7 +14,9 @@ from server.messages import Messaging
 from server.validation import RequestValidator
 
 from google.protobuf import json_format
-from api.utils import decode_problem_description
+
+from api import utils as api_utils
+from d3m.metadata import pipeline
 
 class TaskManager():
     def __init__(self):
@@ -148,10 +150,13 @@ class TaskManager():
         # Generate search ID
         search_id = self._generate_id()
 
-        #self.logger.info("Trying to decode problem")
-        #prob_decoded = decode_problem_description(message.problem)
-        #self.logger.info(prob_decoded)
         prob = json_format.MessageToDict(message.problem)
+
+        # serialize the pipeline to a string for storage in db if one is provided
+        search_template: str = None
+        if message.HasField('template'):
+            search_template_obj = api_utils.decode_pipeline_description(message.template, pipeline.Resolver())
+            search_template = search_template_obj.to_json()
 
         # Create search row in DB
         search = models.Searches(id=search_id)
@@ -161,6 +166,7 @@ class TaskManager():
         prob = json.dumps(prob)
 
         task = models.Tasks(problem=prob,
+                            pipeline=search_template,
                             type="EXLINE",
                             dataset_uri=dataset_uri,
                             id=self._generate_id(),

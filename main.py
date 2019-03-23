@@ -11,11 +11,12 @@ import models
 
 from server.server import Server
 
-from exline.main import exline_all
+from exline import fit_tabular
 from exline.scoring import Scorer
 
-from d3m.container import dataset
 from d3m import runtime
+from d3m.container import dataset
+from d3m.metadata import pipeline
 
 import pickle
 import pandas as pd
@@ -43,8 +44,6 @@ def produce_task(logger, session, task):
         test_dataset = test_dataset['0']
         predictions_df = pd. DataFrame(test_dataset['d3mIndex'])
         predictions_df[dats['target_name']] = results
-
-        logger.info(results)
 
         preds_path = utils.make_preds_filename(task.id)
         predictions_df.to_csv(preds_path, index=False)
@@ -106,9 +105,13 @@ def exline_task(logger, session, task):
                 target_col_name = target['column_name']
         prob['id'] = '__unset__'
         prob['digest'] = '__unset__'
-        fitted_pipeline = exline_all(logger, task.dataset_uri, prob)
+
+        search_template = pipeline.Pipeline.from_json(task.pipeline)
+
+        fitted_pipeline = fit_tabular.fit(task.dataset_uri, prob, prepend=search_template)
         pipeline_json = fitted_pipeline.pipeline.to_json()
         save_me = {'pipeline': fitted_pipeline, 'target_name': target_col_name}
+
         QUATTO_LIVES[task.id] = save_me
         save_job(save_me, task.id)
         task.pipeline = pipeline_json

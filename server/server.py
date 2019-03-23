@@ -28,7 +28,7 @@ def _unary_unary_interceptor(servicer, method_name, context, request):
         servicer.logger.info("Request not properly formatted, aborting gRPC call: {}".format(e))
         context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(e))
     except Exception as e:
-        servicer.logger.error("Unexpected error occured, aborting gRPC call: {}".format(e))
+        servicer.logger.exception("Unexpected error occured, aborting gRPC call: {}".format(e))
         context.abort(grpc.StatusCode.INTERNAL, "Internal server error occurred")
     finally:
         manager.close()
@@ -57,7 +57,7 @@ def _unary_stream_interceptor(servicer, method_name, context, request):
         servicer.logger.info("Request not properly formatted, aborting gRPC call: {}".format(e))
         context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(e))
     except Exception as e:
-        servicer.logger.error("Unexpected error occured, aborting gRPC call: {}".format(e))
+        servicer.logger.exception("Unexpected error occured, aborting gRPC call: {}".format(e))
         context.abort(grpc.StatusCode.INTERNAL, "Internal server error occurred")
     finally:
         manager.close()
@@ -89,7 +89,7 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
         """
         self.logger.debug("GetSearchSolutionsResults: {}".format(request))
         yield from _unary_stream_interceptor(self, 'GetSearchSolutionsResults', context, request)
-                
+
     def EndSearchSolutions(self, request, context):
         # WONTFIX
         return core_pb2.EndSearchSolutionsResponse()
@@ -111,12 +111,12 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
     def GetScoreSolutionResults(self, request, context):
         self.logger.debug("GetScoreSolutionResults: {}".format(request))
         yield from _unary_stream_interceptor(self, 'GetScoreSolutionResults', context, request)
-        
+
     def FitSolution(self, request, context):
         self.logger.debug("FitSolution: {}".format(request))
         request_id = _unary_unary_interceptor(self, 'FitSolution', context, request)
         return self.msg.make_fit_solution_message(request_id)
-    
+
     def GetFitSolutionResults(self, request, context):
         self.logger.debug("GetFitSolutionResults: {}".format(request))
         yield from _unary_stream_interceptor(self, 'GetFitSolutionResults', context, request)
