@@ -46,7 +46,6 @@ class Scorer:
         #    unpacked = dill.load(f)
         #    runtime = unpacked['runtime']
         #    fitted_pipeline = unpacked['pipeline']
-        self.runtime = self.dats['runtime']
         self.fitted_pipeline = self.dats['pipeline']
 
         # Load the data to test
