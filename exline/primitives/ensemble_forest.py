@@ -26,9 +26,9 @@ __all__ = ('EnsembleForest',)
 
 class AnyForest:
     __possible_model_cls = {
-        #("regression",     "ExtraTrees")   : ExtraTreesRegressor,
+        ("regression",     "ExtraTrees")   : ExtraTreesRegressor,
         ("regression",     "RandomForest") : RandomForestRegressor,
-        #("classification", "ExtraTrees")   : ExtraTreesClassifier,
+        ("classification", "ExtraTrees")   : ExtraTreesClassifier,
         ("classification", "RandomForest") : RandomForestClassifier,
     }
 
@@ -66,14 +66,6 @@ class Hyperparams(hyperparams.Hyperparams):
         default='',
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
-
-    """
-    outed as of 3/4
-    target = hyperparams.Hyperparameter[str](
-        default='',
-        semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
-    )
-    """
 
 class Params(params.Params):
     pass
@@ -140,6 +132,7 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
                  hyperparams: Hyperparams,
                  random_seed: int = 0) -> None:
 
+
         PrimitiveBase.__init__(self, hyperparams=hyperparams, random_seed=random_seed)
 
         self.target_metric = hyperparams['metric']
@@ -158,8 +151,6 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         self.num_fits     = 1
         self.inner_jobs   = 1
         self.outer_jobs   = 64
-
-        self.params = {}
 
         self.param_grid = deepcopy(self._default_param_grids[self.mode])
 
@@ -182,8 +173,6 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
     def set_training_data(self, *, inputs: container.DataFrame, outputs: container.DataFrame) -> None:
         self._inputs = inputs.values
         self._outputs = outputs.values
-        #print(outputs.columns)
-        #self._outputs = outputs[self._target].values
 
     def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
         self._labels = pd.unique(self._outputs) # store the labels for tie breaking in produce
@@ -200,8 +189,7 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         else:
             result = preds
 
-        #return base.CallResult(container.DataFrame(result, generate_metadata=False, check=False))
-        result_df = container.DataFrame(preds)
+        result_df = container.DataFrame(result)
         return base.CallResult(result_df)
 
 

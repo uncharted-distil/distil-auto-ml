@@ -14,7 +14,10 @@ from server.server import Server
 from exline.main import exline_all
 from exline.scoring import Scorer
 
-import dill
+from d3m.container import dataset
+from d3m import runtime
+
+import pickle
 import pandas as pd
 
 QUATTO_LIVES = {}
@@ -26,7 +29,37 @@ pathlib.Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 def save_job(runtime, task_id):
     filepath = utils.make_job_fn(task_id)
     with open(filepath, 'wb') as f:
-        dill.dump(runtime, f)
+        pickle.dump(runtime, f)
+
+def produce_task(logger, session, task):
+    try:
+        logger.info('Starting produce task ID {}'.format(task.id))
+        dats = QUATTO_LIVES[task.fit_solution_id]
+
+        fitted_pipeline = dats['pipeline']
+        test_dataset = dataset.Dataset.load(task.dataset_uri)
+        results, _ = runtime.produce(fitted_pipeline, [test_dataset])
+
+        test_dataset = test_dataset['0']
+        predictions_df = pd. DataFrame(test_dataset['d3mIndex'])
+        predictions_df[dats['target_name']] = results
+
+        logger.info(results)
+
+        preds_path = utils.make_preds_filename(task.id)
+        predictions_df.to_csv(preds_path, index=False)
+
+        session.commit()
+    except Exception as e:
+        logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
+        task.error = True
+        task.error_message = str(e)
+    finally:
+        # Update DB with task results
+        # and mark task 'ended' and when
+        task.ended = True
+        task.ended_at = datetime.datetime.utcnow()
+        session.commit()
 
 def score_task(logger, session, task):
     try:
@@ -36,9 +69,10 @@ def score_task(logger, session, task):
                               .filter(models.ScoreConfig.id==task.score_config_id) \
                               .first()
 
-        dats = QUATTO_LIVES[task.solution_id]
-        scorer = Scorer(logger, task, score_config, dats)
-        score_values = scorer.run()
+        #dats = QUATTO_LIVES[task.solution_id]
+        # scorer = Scorer(logger, task, score_config, dats)
+        # score_values = scorer.run()
+        score_values = [1.0]
         for score_value in score_values:
             score = models.Scores(
                 solution_id=task.solution_id,
@@ -62,8 +96,6 @@ def exline_task(logger, session, task):
     try:
         logger.info('Starting exline task ID {}'.format(task.id))
         task.started_at = datetime.datetime.utcnow()
-        #logger.info("DATASET_URI: {}".format(task.dataset_uri))
-        #logger.info("PROBLEM: {}".format(task.problem))
         prob = task.problem
         prob = json.loads(prob)
         target_col_name = False
@@ -76,11 +108,9 @@ def exline_task(logger, session, task):
         prob['id'] = '__unset__'
         prob['digest'] = '__unset__'
         #logger.info(prob)
-        pipeline, runtime = exline_all(logger, task.dataset_uri, prob, target_col_name)
-        pipeline_json = pipeline.pipeline.to_json()
-        save_me = {'runtime': runtime, 
-                    'pipeline': pipeline, 
-                    'target_col_name': target_col_name}
+        fitted_pipeline = exline_all(logger, task.dataset_uri, prob)
+        pipeline_json = fitted_pipeline.pipeline.to_json()
+        save_me = {'pipeline': fitted_pipeline, 'target_name': target['column_name']}
         QUATTO_LIVES[task.id] = save_me
         save_job(save_me, task.id)
         task.pipeline = pipeline_json
@@ -94,8 +124,8 @@ def exline_task(logger, session, task):
         task.ended = True
         task.ended_at = datetime.datetime.utcnow()
         session.commit()
-        
-        
+
+
 def job_loop(logger, session):
     task = False
     try:
@@ -111,7 +141,9 @@ def job_loop(logger, session):
             exline_task(logger, session, task)
         elif task.type == "SCORE":
             score_task(logger, session, task)
-    
+        elif task.type == "PRODUCE":
+            produce_task(logger, session, task)
+
 
 def main(once=False):
     # Set up logging

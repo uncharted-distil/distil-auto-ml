@@ -15,13 +15,13 @@ from d3m import runtime
 from exline.io import load_problem
 from exline.router import get_routing_info
 from exline.d3m_util import PreprocessorFunctions, model_lookup
-from exline.modeling.metrics import metrics
+from exline.modeling.metrics import metrics, translate_proto_metric
 from exline.external import D3MDataset
 
 from exline.primitives import tabular_pipeline
 
 
-def exline_all(logger, dataset_doc_path: str, problem: dict, target_col_name: str) -> dict:
+def exline_all(logger, dataset_doc_path: str, problem: dict) -> runtime.Runtime:
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
 
@@ -42,9 +42,11 @@ def exline_all(logger, dataset_doc_path: str, problem: dict, target_col_name: st
             column_types[col_name] = str
 
     df = train_dataset[list(train_dataset.keys()).pop()]
-    
-    # TODO: set Metric from request properly
-    pipeline = tabular_pipeline.create_pipeline(df, column_types, target_col_name, 'f1Macro')
+    target = problem['inputs'][0]['targets'][0]['column_name']
+    protobuf_metric = problem['problem']['performanceMetrics'][0]['metric']
+    metric = translate_proto_metric(protobuf_metric)
+
+    pipeline = tabular_pipeline.create_pipeline(df, column_types, target, metric)
 
     inputs = [train_dataset]
     hyperparams = None
@@ -55,8 +57,7 @@ def exline_all(logger, dataset_doc_path: str, problem: dict, target_col_name: st
     # fitted_pipeline, predictions, fit_pipeline_run = runtime.fit()
     fitted_pipeline, _, _ = runtime.fit(
         pipeline, problem, inputs, hyperparams=hyperparams, random_seed=random_seed,
-        volumes_dir=volumes_dir, context=metadata_base.Context.TESTING,
-        runtime_environment=None
+        volumes_dir=volumes_dir, context=metadata_base.Context.TESTING
     )
-    
-    return fitted_pipeline, runtime
+
+    return fitted_pipeline

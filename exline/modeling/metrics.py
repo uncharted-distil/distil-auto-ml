@@ -15,6 +15,7 @@ metrics = {
 
     # classification
     'f1Macro'                     : lambda act, pred: sklearn_metrics.f1_score(act, pred, average='macro'),
+    'f1Micro'                     : lambda act, pred: sklearn_metrics.f1_score(act, pred, average='micro'),
     'f1'                          : lambda act, pred: sklearn_metrics.f1_score(act, pred),
     'accuracy'                    : lambda act, pred: sklearn_metrics.accuracy_score(act, pred),
 
@@ -33,6 +34,7 @@ metrics = {
 
 classification_metrics = set([
     'f1Macro',
+    'f1Micro',
     'f1',
     'accuracy',
 ])
@@ -55,6 +57,7 @@ def translate_d3m_metric(metric):
 
     lookup = {
         'f1Macro'              : 'f1_macro',
+        'f1Micro'              : 'f1_micro',
         'f1'                   : 'f1',
         'accuracy'             : 'accuracy',
 
@@ -64,3 +67,16 @@ def translate_d3m_metric(metric):
     }
     assert metric in lookup, '%s not in lookup' % metric
     return lookup[metric]
+
+def translate_proto_metric(proto_metric):
+    lookup = {
+        'F1_MACRO': 'f1Macro',
+        'F1_MICRO': 'f1Micro',
+        'ACCURACY': 'accuracy',
+        'MEAN_SQUARED_ERROR': 'meanSquaredError',
+        'ROOT_MEAN_SQUARED_ERROR': 'rootMeanSquaredError',
+        'ROOT_MEAN_SQUARED_ERROR_AVG': 'rootMeanSquaredErrorAvg',
+        'R_SQUARED': 'meanSquaredError' # mapped for now
+    }
+    assert proto_metric in lookup, '%s not in lookup' % proto_metric
+    return lookup[proto_metric]
