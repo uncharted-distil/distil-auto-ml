@@ -46,7 +46,7 @@ class RequestValidator:
         if fit_solution_id_record is None and solution_id_record is None:
             raise ValueError("Provided ID does not exist: {}".format(request))
 
-        return fitted_soln_id
+        return fitted_solution_id_record
 
 
     def validate_search_solutions_request(self, request):
@@ -123,7 +123,6 @@ class RequestValidator:
         return solution_id
 
     def validate_solution_export_request(self, request):
-        self.logger.info(request)
         solution_id = self.msg.get_solution_id(request)
         rank = self.msg.get_rank(request)
 

@@ -11,14 +11,15 @@ from sklearn.model_selection import (train_test_split,
 
 from d3m.container import dataset
 from d3m.metadata.pipeline import Pipeline
+from d3m import runtime
 
 from exline.external import D3MDataset
 
 from typing import List, Dict, Any, Tuple, Set
 
-
 from d3m import utils as dutils
 PipelineContext = dutils.Enum(value='PipelineContext', names=['TESTING'], start=1)
+
 
 
 class Scorer:
@@ -178,17 +179,16 @@ class Scorer:
     def hold_out_score(self):
 
         # Predict on the test data
-        result_df, _ = self.runtime.produce(self.fitted_pipeline, 
-                                         self.inputs)
-        result_df = result_df.transpose()
-        result_df.rename(columns={0: self.dats['target_col_name']}, inplace=True)
+        result_df, _ = runtime.produce(self.fitted_pipeline,
+                                       self.inputs)
+        result_df.rename(columns={0: self.dats['target_name']}, inplace=True)
 
         # Create the TRUE dataframe
         true_df = self.inputs[0][list(self.inputs[0].keys()).pop()]
-        true_df = true_df[[self.dats['target_col_name']]]
+        true_df = true_df[[self.dats['target_name']]]
 
         score = self._score(self.metric, true_df, result_df)
-        
+
         return [score]
 
     """
@@ -210,6 +210,6 @@ class Scorer:
             result = self.engine.model_produce(X_test)
             score = self._score(self.metric, y_test, result)
             fold_scores.append(score)
-            
+
         return fold_scores
     """

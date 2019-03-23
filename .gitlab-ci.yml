@@ -21,7 +21,7 @@ before_script:
   - pip install awscli
   - git config --global http.sslVerify false
   - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN $CI_REGISTRY
-  - docker login -u gitlab-ci-token -p $D3M_REGISTRY_PUSH_TOKEN $D3M_REGISTRY 
+  - docker login -u gitlab-ci-token -p $D3M_REGISTRY_PUSH_TOKEN $D3M_REGISTRY
 
 test:
   stage: test
@@ -42,7 +42,6 @@ release-master:
   script:
       # Build el docker container
     - docker pull $CONTAINER_BRANCH_IMAGE || true
-    - docker build -t $CURRENT_CONTAINER_IMAGE --cache-from $CONTAINER_BRANCH_IMAGE . --build-arg BRANCH_NAME=$CI_COMMIT_REF_NAME
     # Tag and push with branch name
     - docker tag $CONTAINER_BRANCH_IMAGE $INTEGRATION_IMAGE
     - docker push $INTEGRATION_IMAGE

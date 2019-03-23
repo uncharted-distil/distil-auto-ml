@@ -45,7 +45,7 @@ class TaskManager():
                 for step in pipe['steps']:
                     for call in step['method_calls']:
                         # Check if initial
-                        for key, arg in call.get('arguments', {}).items():                            
+                        for key, arg in call.get('arguments', {}).items():
                             #call_input = call.get('arguments', {}).get('inputs', '')
                             if arg == 'inputs.0':
                                 call['arguments'][key] = placeholder_input
@@ -56,12 +56,12 @@ class TaskManager():
                     combined_steps.append(step)
                 pipe['steps'] = combined_steps
                 combined_pipelines.append(pipe)
-                        
+
         return combined_pipelines
 
     def _extract_hypers(self, val):
         # Keep going until we get the good stuff
-        # _do you... _see_...        
+        # _do you... _see_...
         allowed_types = {
             'string': str,
             'int64': int,
@@ -83,12 +83,12 @@ class TaskManager():
     def _translate_template(self, template):
         placeholder = {}
         dumped = self.msg.dump_solution_template(template)
-        
+
         # Ensure that 'placeholder' is at end, if anywhere
         step_types = [list(s.keys()).pop() for s in dumped['steps']]
         if 'placeholder' in step_types:
             placeholder = dumped['steps'][-1]
-            
+
         # Put things in order
         adjusted_steps = []
         for step in dumped['steps']:
@@ -121,7 +121,7 @@ class TaskManager():
         if 'placeholder' not in step_types:
             dumped['steps'] = adjusted_steps
             adjusted_steps = dumped
-        
+
         return adjusted_steps, placeholder
 
     def _get_pipelines(self, message):
@@ -129,7 +129,7 @@ class TaskManager():
         # and queue as tasks for worker to validate
         problem_type = self.msg.get_problem_type(message)
         possible_pipelines = get_all_pipelines(problem_type)
-            
+
         try:
             template = self.msg.get_search_template(message)
             adjusted_steps, placeholder = self._translate_template(template)
@@ -152,7 +152,7 @@ class TaskManager():
         #prob_decoded = decode_problem_description(message.problem)
         #self.logger.info(prob_decoded)
         prob = json_format.MessageToDict(message.problem)
-        
+
         # Create search row in DB
         search = models.Searches(id=search_id)
         self.session.add(search)
@@ -181,7 +181,7 @@ class TaskManager():
 
     def GetSearchSolutionsResults(self, request):
         """
-        Searches for correctly exited EXLINE tasks 
+        Searches for correctly exited EXLINE tasks
         associated with given search id
         """
         search_id = self.validator.validate_get_search_solutions_results_request(request, self.session)
@@ -212,7 +212,7 @@ class TaskManager():
 
                     # Link the task to the solution
                     solution_id = task.id
-                    
+
                     solution = models.Solutions(
                         id=solution_id,
                         search_id=search_id,
@@ -279,7 +279,7 @@ class TaskManager():
             task = models.Tasks(id=task_id,
                                 type="SCORE",
                                 solution_id=solution_id,
-                                dataset_uri=dataset_uri,                                
+                                dataset_uri=dataset_uri,
                                 score_config_id=conf_id)
             self.session.add(task)
             # Add configs and tasks to pool
@@ -314,12 +314,10 @@ class TaskManager():
                     config = self.session.query(models.ScoreConfig) \
                                          .filter(models.ScoreConfig.id==m.score_config_id) \
                                          .first()
-                    self.logger.info(m)
                     score_msgs.append(self.msg.make_score_message(config.metric, m.value))
 
-                #score_msgs = [self.msg.make_score_message(m. m.value) for m in scores]
                 progress_msg = self.msg.make_progress_msg("COMPLETED")
-                
+
                 yield self.msg.make_get_score_solution_results_response(score_msgs, progress_msg)
                 break
             else:
@@ -331,7 +329,7 @@ class TaskManager():
     def FitSolution(self, message):
         # Validate request is in required format, extract if it is
         solution_id = self.validator.validate_fit_solution_request(message)
-        
+
         # Create request row in DB
         request_id = self._generate_id()
         request = models.Requests(id=request_id,
@@ -457,7 +455,7 @@ class TaskManager():
             # refresh emits an immediate SELECT to the database to reload all attributes on task
             # this allows us to get the updates written to the db when the task is completed
             self.session.refresh(task)
-            
+
             task_complete = task.ended
             if not task_complete:
                 self.logger.debug("PRODUCE task not complete, waiting")
@@ -478,7 +476,7 @@ class TaskManager():
                 yield self.msg.make_get_produce_solution_results_response(preds_path, task.output_key, progress_msg)
                 break
 
-            
+
     def DescribeSolution(self, request):
         # Validate the solution_id
         solution_id = self.validator.validate_describe_solution_request(request,
@@ -491,7 +489,7 @@ class TaskManager():
                                      .first()
 
         dag = task.DAG
-        
+
         return json.loads(dag)
 
     def SolutionExport(self, request):
@@ -501,9 +499,7 @@ class TaskManager():
         for the eval. You will notice the output folders are hardcoded, this is a known and intentional
         limitation.
         """
-        self.logger.info("START")
         solution_id, rank = self.validator.validate_solution_export_request(request)
-        self.logger.info("SOLUTION ID GOT")
         #solution_id = self.validator.validate_fitted_solution_id_exists(fitted_soln_id, self.session, request)
 
         """
@@ -516,7 +512,6 @@ class TaskManager():
                                          .filter(models.Solutions.id==solution_id) \
                                          .filter(models.Solutions.task_id==models.Tasks.id) \
                                          .first()
-        self.logger.info("SOLUTION GOT")
 
         #export.export_dag(task.DAG, fitted_soln_id, rank)
         #export.export_executable(task.id, fitted_soln_id)

@@ -69,10 +69,9 @@ def score_task(logger, session, task):
                               .filter(models.ScoreConfig.id==task.score_config_id) \
                               .first()
 
-        #dats = QUATTO_LIVES[task.solution_id]
-        # scorer = Scorer(logger, task, score_config, dats)
-        # score_values = scorer.run()
-        score_values = [1.0]
+        dats = QUATTO_LIVES[task.solution_id]
+        scorer = Scorer(logger, task, score_config, dats)
+        score_values = scorer.run()
         for score_value in score_values:
             score = models.Scores(
                 solution_id=task.solution_id,
@@ -107,10 +106,9 @@ def exline_task(logger, session, task):
                 target_col_name = target['column_name']
         prob['id'] = '__unset__'
         prob['digest'] = '__unset__'
-        #logger.info(prob)
         fitted_pipeline = exline_all(logger, task.dataset_uri, prob)
         pipeline_json = fitted_pipeline.pipeline.to_json()
-        save_me = {'pipeline': fitted_pipeline, 'target_name': target['column_name']}
+        save_me = {'pipeline': fitted_pipeline, 'target_name': target_col_name}
         QUATTO_LIVES[task.id] = save_me
         save_job(save_me, task.id)
         task.pipeline = pipeline_json
