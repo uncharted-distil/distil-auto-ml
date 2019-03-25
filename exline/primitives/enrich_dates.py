@@ -1,5 +1,6 @@
 import os
 import sys
+import logging
 
 from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base, hyperparams
@@ -9,6 +10,8 @@ import numpy as np
 import pandas as pd
 
 __all__ = ('EnrichDatesPrimitive',)
+
+logger = logging.getLogger(__name__)
 
 class Hyperparams(hyperparams.Hyperparams):
     pass
@@ -46,12 +49,13 @@ class EnrichDatesPrimitive(transformer.TransformerPrimitiveBase[container.DataFr
     )
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
-        print('>> ENRICH_DATES START')
+        logger.debug(f'Running {__name__}')
+
         outputs = inputs.copy()
         outputs = self._enrich_dates(outputs)
-        print(outputs)
-        print(outputs.dtypes)
-        print('<< ENRICH_DATES END')
+
+        logger.debug(f'\n{outputs}')
+
         return base.CallResult(outputs)
 
     @classmethod

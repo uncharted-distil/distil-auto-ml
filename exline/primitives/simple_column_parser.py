@@ -1,24 +1,21 @@
 import os
+import io
 from typing import List
+import logging
+
 from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base, hyperparams
 from d3m.primitive_interfaces import base, transformer
+from common_primitives import utils as common_utils
 
 import pandas as pd
 
 __all__ = ('SimpleColumnParserPrimitive',)
 
+logger = logging.getLogger(__name__)
+
 class Hyperparams(hyperparams.Hyperparams):
-    target = hyperparams.Hyperparameter[str](
-        default='',
-        semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
-        description="Name of target column"
-    )
-    column_types = hyperparams.Hyperparameter[List[type]](
-        default=[],
-        semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
-        description="Schema type of each column in order they stored in the input dataframe",
-    )
+    pass
 
 class SimpleColumnParserPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
     """
@@ -53,27 +50,67 @@ class SimpleColumnParserPrimitive(transformer.TransformerPrimitiveBase[container
     )
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
-        print('>> SIMPLE COLUMN PARSER START')
+
+        logger.debug(f'Running {__name__} produce')
+
         outputs = inputs.copy()
 
-        # retype from object to int, float, bool or string
-        column_types = self.hyperparams['column_types']
-        for i, col_type in enumerate(column_types):
-            if col_type is int or col_type is float:
+        num_cols = outputs.metadata.query((metadata_base.ALL_ELEMENTS,))['dimension']['length']
+        remove_indices = []
+        for i in range(num_cols):
+            semantic_types = outputs.metadata.query((metadata_base.ALL_ELEMENTS,i))['semantic_types']
+            # mark target + index for removal
+            if 'https://metadata.datadrivendiscovery.org/types/Target' in semantic_types or \
+                'https://metadata.datadrivendiscovery.org/types/TrueTarget' in semantic_types or \
+                'https://metadata.datadrivendiscovery.org/types/PrimaryKey' in semantic_types:
+                remove_indices.append(i)
+
+            # update the structural / df type from the semantic type
+            if 'http://schema.org/Integer' in semantic_types:
+                outputs.metadata = outputs.metadata.update_column(i, {'structural_type': int})
                 outputs.iloc[:,i] = pd.to_numeric(outputs.iloc[:,i])
-            elif col_type is bool:
+            elif 'http://schema.org/Float' in semantic_types:
+                outputs.metadata = outputs.metadata.update_column(i, {'structural_type': float})
+                outputs.iloc[:,i] = pd.to_numeric(outputs.iloc[:,i])
+            elif 'http://schema.org/Boolean' in semantic_types:
+                outputs.metadata = outputs.metadata.update_column(i, {'structural_type': bool})
                 outputs.iloc[:,i] = outputs.iloc[:,i].astype('bool')
-        # flip the d3mIndex to be the df index
-        outputs = outputs.set_index('d3mIndex')
+            # otherwise leave as string
 
-        # drop the targets
-        outputs = outputs.drop(self.hyperparams['target'], axis=1)
+        # flip the d3mIndex to be the df index as well
+        outputs = outputs.set_index('d3mIndex', drop=False)
 
-        print(outputs)
-        print(outputs.dtypes)
-        print('<< SIMPLE COLUMN PARSER END')
-        #return base.CallResult(outputs)
+        # remove target and primary key
+        outputs = common_utils.remove_columns(outputs, remove_indices)
+
+        logger.debug(f'\n{outputs.dtypes}')
+        logger.debug(f'\n{outputs}')
+
         return base.CallResult(outputs)
 
     def produce_target(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
-        return base.CallResult(inputs[self.hyperparams['target']]) 
+        logger.debug(f'Running {__name__} produce_target')
+
+        outputs = inputs.copy()
+
+        # flip the d3mIndex to be the df index as well
+        outputs = outputs.set_index('d3mIndex', drop=False)
+
+        # find the target column and remove all others
+        num_cols = outputs.metadata.query((metadata_base.ALL_ELEMENTS,))['dimension']['length']
+        target_idx = -1
+        for i in range(num_cols):
+            semantic_types = outputs.metadata.query((metadata_base.ALL_ELEMENTS,i))['semantic_types']
+            if 'https://metadata.datadrivendiscovery.org/types/Target' in semantic_types or \
+               'https://metadata.datadrivendiscovery.org/types/TrueTarget' in semantic_types:
+                target_idx = i
+                break
+
+        remove_indices = set(range(num_cols))
+        remove_indices.remove(target_idx)
+        outputs = common_utils.remove_columns(outputs, remove_indices)
+
+        logger.debug(f'\n{outputs.dtypes}')
+        logger.debug(f'\n{outputs}')
+
+        return base.CallResult(outputs)

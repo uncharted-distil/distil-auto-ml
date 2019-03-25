@@ -13,6 +13,8 @@ from sklearn.impute import SimpleImputer
 
 __all__ = ('SimpleImputerPrimitive',)
 
+logger = logging.getLogger(__name__)
+
 class Hyperparams(hyperparams.Hyperparams):
     use_columns = hyperparams.Set(
         elements=hyperparams.Hyperparameter[int](-1),
@@ -20,7 +22,6 @@ class Hyperparams(hyperparams.Hyperparams):
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
         description="A set of column indices to force primitive to operate on. If any specified column cannot be parsed, it is skipped.",
     )
-
 
 class SimpleImputerPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
     """
@@ -54,11 +55,21 @@ class SimpleImputerPrimitive(transformer.TransformerPrimitiveBase[container.Data
         },
     )
 
-
-
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
-        print('>> SIMPLE IMPUTER START')
-        cols = self.hyperparams['use_columns']
+        logger.debug(f'Running {__name__}')
+
+        cols = list(self.hyperparams['use_columns'])
+        if cols is None or len(cols) is 0:
+            cols = []
+            for idx, c in enumerate(inputs.columns):
+                if inputs[c].dtype == int or inputs[c].dtype == float or inputs[c].dtype == bool:
+                    cols.append(idx)
+
+        logger.debug(f'Found {len(cols)} cols for numeric value imputation')
+
+        if len(cols) is 0:
+            return base.CallResult(inputs)
+
         numerical_inputs = inputs.iloc[:,cols]
 
         imputer = SimpleImputer()
@@ -69,8 +80,6 @@ class SimpleImputerPrimitive(transformer.TransformerPrimitiveBase[container.Data
         for i, c in enumerate(cols):
             outputs.iloc[:, c] = result[:,i]
 
-        print(outputs)
-        print(outputs.dtypes)
-        print('<< SIMPLE IMPUTER END')
+        logger.debug(f'\n{outputs}')
 
         return base.CallResult(outputs)

@@ -1,4 +1,5 @@
 import os
+import logging
 
 from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base, hyperparams
@@ -11,6 +12,7 @@ from sklearn.impute import MissingIndicator
 
 from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
 
+logger = logging.getLogger(__name__)
 
 __all__ = ('MissingIndicatorPrimitive',)
 
@@ -56,8 +58,22 @@ class MissingIndicatorPrimitive(transformer.TransformerPrimitiveBase[container.D
     )
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
-        cols = self.hyperparams['use_columns']
-        numerical_inputs = inputs[:,cols]
+        logger.debug(f'Running {__name__}')
+
+        cols = list(self.hyperparams['use_columns'])
+
+        if cols is None or len(cols) is 0:
+            cols = []
+            for idx, c in enumerate(inputs.columns):
+                if inputs[c].dtype == int or inputs[c].dtype == float or inputs[c].dtype == bool:
+                    cols.append(idx)
+
+        logger.debug(f'Found {len(cols)} cols to check for missing values')
+
+        if len(cols) is 0:
+            return base.CallResult(inputs)
+
+        numerical_inputs = inputs.iloc[:,cols]
 
         missing_indicator = MissingIndicator()
         missing_indicator.fit(numerical_inputs)
@@ -66,5 +82,7 @@ class MissingIndicatorPrimitive(transformer.TransformerPrimitiveBase[container.D
         outputs = inputs.copy()
         for i, c in enumerate(cols):
             outputs.iloc[:, c] = result[:, i]
+
+        logger.debug(f'\n{outputs}')
 
         return base.CallResult(outputs)

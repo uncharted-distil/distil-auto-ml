@@ -1,4 +1,5 @@
 import os
+import logging
 
 from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base, hyperparams
@@ -12,12 +13,20 @@ from exline.preprocessing.transformers import BinaryEncoder
 
 __all__ = ('BinaryEncoderPrimitive',)
 
+logger = logging.getLogger(__name__)
+
 class Hyperparams(hyperparams.Hyperparams):
     use_columns = hyperparams.Set(
         elements=hyperparams.Hyperparameter[int](-1),
         default=(),
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
         description="A set of column indices to force primitive to operate on. If any specified column cannot be parsed, it is skipped.",
+    )
+
+    min_binary = hyperparams.Hyperparameter[int](
+        default=17,
+        semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
+        description="Min number of labels for binary encoding",
     )
 
 class BinaryEncoderPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
@@ -52,22 +61,42 @@ class BinaryEncoderPrimitive(transformer.TransformerPrimitiveBase[container.Data
         },
     )
 
-
-
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
-        print('>> BINARY ENCODER START')
-        cols = self.hyperparams['use_columns']
+        logger.debug('Running binary encoder')
+
+        cols = list(self.hyperparams['use_columns'])
+
+        if cols is None or len(cols) is 0:
+            cols = []
+            for idx, c in enumerate(inputs.columns):
+                if inputs[c].dtype == object:
+                    num_labels = len(set(inputs[c]))
+                    if num_labels > 1 and num_labels >= self.hyperparams['min_binary'] and not self._detect_text(inputs[c]):
+                        cols.append(idx)
+
+        logger.debug(f'Found {len(cols)} columns to encode')
+
+        if len(cols) is 0:
+            return base.CallResult(inputs)
+
         encoder = BinaryEncoder()
 
-        # Binary encoder works on series
+        # add the binary encoded columns and remove the source
         outputs = inputs.copy()
+        outputs.drop(outputs.columns[cols], axis=1, inplace=True)
         for i, c in enumerate(cols):
             categorical_inputs = outputs.iloc[:,c]
             encoder.fit(categorical_inputs)
             result = encoder.transform(categorical_inputs)
             outputs[('__binary_' + str(i))] = result[:,0]
 
-        print(outputs)
-        print(outputs.dtypes)
-        print('<< BINARY ENCODER END')
+        logger.debug(f'\n{outputs}')
+
         return base.CallResult(outputs)
+
+    @classmethod
+    def _detect_text(cls, X: container.DataFrame, thresh: int = 8) -> bool:
+        """ returns true if median entry has more than `thresh` tokens"""
+        X = X[X.notnull()]
+        n_toks = X.apply(lambda xx: len(str(xx).split(' '))).values
+        return np.median(n_toks) >= thresh

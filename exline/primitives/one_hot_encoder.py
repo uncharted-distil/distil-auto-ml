@@ -1,6 +1,6 @@
 import os
 from typing import List, Set, Any
-
+import logging
 
 from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base, hyperparams
@@ -12,6 +12,7 @@ import numpy as np
 from sklearn import preprocessing
 from sklearn import compose
 
+logger = logging.getLogger(__name__)
 
 __all__ = ('OneHotEncoderPrimitive',)
 
@@ -21,6 +22,12 @@ class Hyperparams(hyperparams.Hyperparams):
         default=(),
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
         description="A set of column indices to force primitive to operate on. If any specified column cannot be parsed, it is skipped.",
+    )
+
+    max_one_hot = hyperparams.Hyperparameter[int](
+        default=16,
+        semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter'],
+        description="Max number of labels for one hot encoding",
     )
 
 class OneHotEncoderPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
@@ -58,8 +65,23 @@ class OneHotEncoderPrimitive(transformer.TransformerPrimitiveBase[container.Data
 
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
-        print('>> ONE HOT ENCODER START')
-        cols = self.hyperparams['use_columns']
+        logger.debug('Running one hot encoder')
+
+        cols = list(self.hyperparams['use_columns'])
+
+        if cols is None or len(cols) is 0:
+            cols = []
+            for idx, c in enumerate(inputs.columns):
+                if inputs[c].dtype == object:
+                    num_labels = len(set(inputs[c]))
+                    if num_labels > 1 and num_labels <= self.hyperparams['max_one_hot'] and not self._detect_text(inputs[c]):
+                        cols.append(idx)
+
+        logger.debug(f'Found {len(cols)} columns to encode')
+
+        if len(cols) is 0:
+            return base.CallResult(inputs)
+
         input_cols = inputs.iloc[:,cols]
 
         encoder = preprocessing.OneHotEncoder(sparse=False, handle_unknown='ignore')
@@ -67,11 +89,20 @@ class OneHotEncoderPrimitive(transformer.TransformerPrimitiveBase[container.Data
 
         result = encoder.transform(input_cols)
 
+        # remove the source columns and append the result to the copy
         outputs = inputs.copy()
+        outputs.drop(outputs.columns[cols], axis=1, inplace=True)
         for i in range(result.shape[1]):
             outputs[('__onehot_' + str(i))] = result[:,i]
 
-        print(outputs)
-        print(outputs.dtypes)
-        print('<< ONE HOT ENCODER END')
+
+        logger.debug(f'\n{outputs}')
+
         return base.CallResult(outputs)
+
+    @classmethod
+    def _detect_text(cls, X: container.DataFrame, thresh: int = 8) -> bool:
+        """ returns true if median entry has more than `thresh` tokens"""
+        X = X[X.notnull()]
+        n_toks = X.apply(lambda xx: len(str(xx).split(' '))).values
+        return np.median(n_toks) >= thresh

@@ -1,7 +1,10 @@
 import os
+import logging
+
 from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base, hyperparams
 from d3m.primitive_interfaces import base, transformer
+from common_primitives import utils as common_utils
 
 import pandas as pd
 import numpy as np
@@ -13,6 +16,8 @@ from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
 
 
 __all__ = ('CategoricalImputerPrimitive',)
+
+logger = logging.getLogger(__name__)
 
 class Hyperparams(hyperparams.Hyperparams):
     use_columns = hyperparams.Set(
@@ -55,8 +60,20 @@ class CategoricalImputerPrimitive(transformer.TransformerPrimitiveBase[container
     )
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
-        print('>> CATEGORICAL IMPUTER START')
-        cols = self.hyperparams['use_columns']
+
+        logger.debug(f'Running {__name__}')
+
+        cols = list(self.hyperparams['use_columns'])
+        if cols is None or len(cols) is 0:
+            for idx, c in enumerate(inputs.columns):
+                if inputs[c].dtype == object and len(set(inputs[c])) > 1:
+                    cols.append(idx)
+
+        logger.debug(f'Found {len(cols)} categorical columns to evaluate')
+
+        if len(cols) is 0:
+            return base.CallResult(inputs)
+
         input_cols = inputs.iloc[:,cols]
 
         imputer = CategoricalImputer(strategy='constant', fill_value=MISSING_VALUE_INDICATOR)
@@ -67,7 +84,6 @@ class CategoricalImputerPrimitive(transformer.TransformerPrimitiveBase[container
         for idx, col_idx in enumerate(cols):
             outputs.iloc[:,col_idx] = result[:,idx]
 
-        print(outputs)
-        print(outputs.dtypes)
-        print('<< CATEGORICAL IMPUTER END')
+        logger.debug(f'\n{outputs}')
+
         return base.CallResult(outputs)

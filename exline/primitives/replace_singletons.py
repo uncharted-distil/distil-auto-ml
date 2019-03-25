@@ -1,4 +1,5 @@
 import os
+import logging
 
 from d3m import container, utils as d3m_utils
 from d3m.metadata import base as metadata_base, hyperparams
@@ -10,6 +11,8 @@ import numpy as np
 import pandas as pd
 
 __all__ = ('ReplaceSingletonsPrimitive',)
+
+logger = logging.getLogger(__name__)
 
 class Hyperparams(hyperparams.Hyperparams):
     keep_text = hyperparams.Hyperparameter[bool](
@@ -51,8 +54,9 @@ class ReplaceSingletonsPrimitive(transformer.TransformerPrimitiveBase[container.
     )
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
+        logger.debug(f'Running {__name__}')
+
         """ set values that only occur once to a special token """
-        print('>> REPLACE SINGLETONS START')
         cols: typing.List[container.DataFrame] = list(inputs.columns)
         outputs = inputs.copy()
         for c in cols:
@@ -63,9 +67,8 @@ class ReplaceSingletonsPrimitive(transformer.TransformerPrimitiveBase[container.
                     if singletons:
                         outputs[c][outputs[c].isin(singletons)] = SINGLETON_INDICATOR
 
-        print(outputs)
-        print(outputs.dtypes)
-        print('<< REPLACE SINGLETONS END')
+        logger.debug(f'\n{outputs}')
+
         return base.CallResult(outputs)
 
     @classmethod

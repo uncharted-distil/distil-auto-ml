@@ -1,4 +1,5 @@
 import os
+import logging
 from typing import Set, List, Dict, Any, Optional
 from copy import deepcopy
 
@@ -21,8 +22,9 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor, \
     ExtraTreesRegressor, ExtraTreesClassifier
 from sklearn.model_selection import ParameterGrid
 
-
 __all__ = ('EnsembleForest',)
+
+logger = logging.getLogger(__name__)
 
 class AnyForest:
     __possible_model_cls = {
@@ -155,9 +157,6 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         self.param_grid = deepcopy(self._default_param_grids[self.mode])
 
         self._models: List[AnyForest]  = []
-        #self._y_train: Optional[np.ndarray] = None
-
-        #self._target = self.hyperparams['target']
 
     def __getstate__(self) -> dict:
         state = PrimitiveBase.__getstate__(self)
@@ -175,8 +174,14 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         self._outputs = outputs.values
 
     def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
-        self._labels = pd.unique(self._outputs) # store the labels for tie breaking in produce
+        if self.mode == 'classification':
+            self._labels = pd.unique(self._outputs) # store the labels for tie breaking in produce
+        else:
+            self._labels = []
         self._models  = [self._fit(self._inputs, self._outputs) for _ in range(self.num_fits)]
+
+        logger.error(self._inputs)
+
         return CallResult(None)
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> CallResult[container.DataFrame]:
