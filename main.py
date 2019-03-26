@@ -41,7 +41,7 @@ def produce_task(logger, session, task):
         test_dataset = dataset.Dataset.load(task.dataset_uri)
         results, _ = runtime.produce(fitted_pipeline, [test_dataset])
 
-        test_dataset = test_dataset['0']
+        test_dataset = test_dataset['learningData']
         predictions_df = pd. DataFrame(test_dataset['d3mIndex'])
         predictions_df[dats['target_name']] = results
 
