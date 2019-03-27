@@ -104,30 +104,30 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
     )
 
     _default_param_grids = {
-        # "classification" : {
-        #     "estimator"        : ["RandomForest"],
-        #     "n_estimators"     : [32, 64, 128, 256, 512, 1024, 2048],
-        #     "min_samples_leaf" : [1, 2, 4, 8, 16, 32],
-        #     "class_weight"     : [None, "balanced"],
-        # },
-        # "regression" : {
-        #     "estimator"        : ["ExtraTrees", "RandomForest"],
-        #     "bootstrap"        : [True],
-        #     "n_estimators"     : [32, 64, 128, 256, 512, 1024, 2048],
-        #     "min_samples_leaf" : [2, 4, 8, 16, 32, 64],
-        # }
         "classification" : {
             "estimator"        : ["RandomForest"],
-            "n_estimators"     : [32],
-            "min_samples_leaf" : [1],
-            "class_weight"     : [None],
+            "n_estimators"     : [32, 64, 128, 256, 512, 1024, 2048],
+            "min_samples_leaf" : [1, 2, 4, 8, 16, 32],
+            "class_weight"     : [None, "balanced"],
         },
         "regression" : {
             "estimator"        : ["ExtraTrees", "RandomForest"],
             "bootstrap"        : [True],
-            "n_estimators"     : [32],
-            "min_samples_leaf" : [2],
+            "n_estimators"     : [32, 64, 128, 256, 512, 1024, 2048],
+            "min_samples_leaf" : [2, 4, 8, 16, 32, 64],
         }
+        # "classification" : {
+        #     "estimator"        : ["RandomForest"],
+        #     "n_estimators"     : [32],
+        #     "min_samples_leaf" : [1],
+        #     "class_weight"     : [None],
+        # },
+        # "regression" : {
+        #     "estimator"        : ["ExtraTrees", "RandomForest"],
+        #     "bootstrap"        : [True],
+        #     "n_estimators"     : [32],
+        #     "min_samples_leaf" : [2],
+        # }
     }
 
     def __init__(self, *,
