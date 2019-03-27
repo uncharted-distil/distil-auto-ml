@@ -106,7 +106,7 @@ def exline_task(logger, session, task):
         prob['id'] = '__unset__'
         prob['digest'] = '__unset__'
 
-        search_template = pipeline.Pipeline.from_json(task.pipeline)
+        search_template = pipeline.Pipeline.from_json(task.pipeline) if task.pipeline else None
 
         fitted_pipeline = fit_tabular.fit(task.dataset_uri, prob, prepend=search_template)
         pipeline_json = fitted_pipeline.pipeline.to_json()

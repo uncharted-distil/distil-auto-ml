@@ -65,10 +65,10 @@ class MissingIndicatorPrimitive(transformer.TransformerPrimitiveBase[container.D
         if cols is None or len(cols) is 0:
             cols = []
             for idx, c in enumerate(inputs.columns):
-                if inputs[c].dtype == int or inputs[c].dtype == float or inputs[c].dtype == bool:
+                if (inputs[c].dtype == int or inputs[c].dtype == float or inputs[c].dtype == bool) and inputs[c].isnull().any():
                     cols.append(idx)
 
-        logger.debug(f'Found {len(cols)} cols to check for missing values')
+        logger.debug(f'Found {len(cols)} cols to process for missing values')
 
         if len(cols) is 0:
             return base.CallResult(inputs)
@@ -80,8 +80,8 @@ class MissingIndicatorPrimitive(transformer.TransformerPrimitiveBase[container.D
         result = missing_indicator.transform(numerical_inputs)
 
         outputs = inputs.copy()
-        for i, c in enumerate(cols):
-            outputs.iloc[:, c] = result[:, i]
+        for i in range(result.shape[1]):
+            outputs[('__missing_' + str(i))] = result[:,i]
 
         logger.debug(f'\n{outputs}')
 

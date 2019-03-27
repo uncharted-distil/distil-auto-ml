@@ -3,8 +3,8 @@ from typing import List, Set, Any
 import logging
 
 from d3m import container, utils as d3m_utils
-from d3m.metadata import base as metadata_base, hyperparams
-from d3m.primitive_interfaces import base, transformer
+from d3m.metadata import base as metadata_base, hyperparams, params
+from d3m.primitive_interfaces import base, unsupervised_learning
 
 import pandas as pd
 import numpy as np
@@ -30,7 +30,10 @@ class Hyperparams(hyperparams.Hyperparams):
         description="Max number of labels for one hot encoding",
     )
 
-class OneHotEncoderPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
+class Params(params.Params):
+    pass
+
+class OneHotEncoderPrimitive(unsupervised_learning.UnsupervisedLearnerPrimitiveBase[container.DataFrame, container.DataFrame, Params, Hyperparams]):
     """
     A primitive that encodes one hots.
     """
@@ -62,43 +65,75 @@ class OneHotEncoderPrimitive(transformer.TransformerPrimitiveBase[container.Data
         },
     )
 
+    def __init__(self, *,
+                 hyperparams: Hyperparams,
+                 random_seed: int = 0) -> None:
+        base.PrimitiveBase.__init__(self, hyperparams=hyperparams, random_seed=random_seed)
 
+    def __getstate__(self) -> dict:
+        state = base.PrimitiveBase.__getstate__(self)
+        state['models'] = self._encoder
+        state['colums'] = self._cols
+        logger.debug(state)
+        return state
 
-    def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
-        logger.debug('Running one hot encoder')
+    def __setstate__(self, state: dict) -> None:
+        base.PrimitiveBase.__setstate__(self, state)
+        logger.debug(state)
+        self._encoder = state['models']
+        self._cols = state['columns']
+
+    def set_training_data(self, *, inputs: container.DataFrame) -> None:
+        self._inputs = inputs
+
+    def fit(self, *, timeout: float = None, iterations: int = None) -> base.CallResult[None]:
+        logger.debug(f'Fitting {__name__}')
 
         cols = list(self.hyperparams['use_columns'])
 
         if cols is None or len(cols) is 0:
             cols = []
-            for idx, c in enumerate(inputs.columns):
-                if inputs[c].dtype == object:
-                    num_labels = len(set(inputs[c]))
-                    if num_labels > 1 and num_labels <= self.hyperparams['max_one_hot'] and not self._detect_text(inputs[c]):
+            for idx, c in enumerate(self._inputs.columns):
+                if self._inputs[c].dtype == object:
+                    num_labels = len(set(self._inputs[c]))
+                    if num_labels > 1 and num_labels <= self.hyperparams['max_one_hot'] and not self._detect_text(self._inputs[c]):
                         cols.append(idx)
 
         logger.debug(f'Found {len(cols)} columns to encode')
 
         if len(cols) is 0:
-            return base.CallResult(inputs)
+            return base.CallResult(self._inputs)
 
-        input_cols = inputs.iloc[:,cols]
+        self._cols = cols
+        input_cols = self._inputs.iloc[:,cols]
 
-        encoder = preprocessing.OneHotEncoder(sparse=False, handle_unknown='ignore')
-        encoder.fit(input_cols)
+        self._encoder = preprocessing.OneHotEncoder(sparse=False, handle_unknown='ignore')
+        self._encoder.fit(input_cols)
 
-        result = encoder.transform(input_cols)
+        return base.CallResult(None)
+
+    def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
+        logger.debug(f'Producing {__name__}')
+
+        # encode using the previously identified categorical columns
+        input_cols = inputs.iloc[:,self._cols]
+        result = self._encoder.transform(input_cols)
 
         # remove the source columns and append the result to the copy
         outputs = inputs.copy()
-        outputs.drop(outputs.columns[cols], axis=1, inplace=True)
+        outputs.drop(outputs.columns[self._cols], axis=1, inplace=True)
         for i in range(result.shape[1]):
             outputs[('__onehot_' + str(i))] = result[:,i]
-
 
         logger.debug(f'\n{outputs}')
 
         return base.CallResult(outputs)
+
+    def get_params(self) -> Params:
+        return Params()
+
+    def set_params(self, *, params: Params) -> None:
+        return
 
     @classmethod
     def _detect_text(cls, X: container.DataFrame, thresh: int = 8) -> bool:
