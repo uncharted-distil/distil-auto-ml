@@ -31,27 +31,13 @@ def fit(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None) -
 
     # Temp hack to avoid metdata for now -
     modified_path = dataset_doc_path.replace("file://", "").replace("datasetDoc.json", "")
-    column_info = D3MDataset(modified_path).get_learning_data_columns()
-    column_types: Dict[str, type] = {}
-    for c in column_info:
-        col_name = c['colName']
-        col_type = c['colType']
-        if col_type == 'boolean':
-            column_types[col_name] = bool
-        elif col_type == 'real':
-            column_types[col_name] = float
-        elif col_type == 'integer':
-            column_types[col_name] = int
-        else:
-            column_types[col_name] = str
 
     # extract target column and metric from the problem
     df = train_dataset[list(train_dataset.keys()).pop()]
-    target = problem['inputs'][0]['targets'][0]['column_name']
     protobuf_metric = problem['problem']['performanceMetrics'][0]['metric']
     metric = translate_proto_metric(protobuf_metric)
 
-    pipeline = tabular_pipeline.create_pipeline(df, column_types, target, metric)
+    pipeline = tabular_pipeline.create_pipeline(df, metric)
 
     # prepend to the base pipeline
     if prepend is not None:

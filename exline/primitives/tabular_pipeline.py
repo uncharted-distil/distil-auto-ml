@@ -30,28 +30,17 @@ PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1
 
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
 # in a naively implemented state for readability for now.
+#
 # Overall implementation relies on passing the entire dataset through the pipeline, with the primitives
 # identifying columns to operate on based on type.  Alternative implementation (that better lines up with
 # D3M approach, but generates more complex pipelines) would be to extract sub-sets by semantic type using
 # a common primitive, apply the type-specific primitive to the sub-set, and then merge the changes
 # (replace or join) back into the original data.
 def create_pipeline(inputs: container.DataFrame,
-                    column_types: Dict[str, type],
-                    target: str,
                     metric: str,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False) -> Pipeline:
-
-    # generate a list of the column types sorted by index
-    column_indices = [(inputs.columns.get_loc(k), v) for k, v in column_types.items()]
-    column_indices.sort()
-    col_type_list = [t[1] for t in column_indices]
-
-    # move d3m index to df index and drop the target - this will also be done by the column parser at pipeline
-    inputs = inputs.set_index('d3mIndex')
-    inputs = inputs.drop(target, axis=1)
-
     previous_step = 0
     input_val = 'steps.{}.produce'
 
