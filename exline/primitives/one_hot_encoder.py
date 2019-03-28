@@ -48,7 +48,7 @@ class OneHotEncoderPrimitive(unsupervised_learning.UnsupervisedLearnerPrimitiveB
                 'name': 'exline',
                 'contact': 'mailto:cbethune@uncharted.software',
                 'uris': [
-                    'https://github.com/cdbethune/d3m-exline/primitives/simple_imputer.py',
+                    'https://github.com/cdbethune/d3m-exline/primitives/one_hot_encoder.py',
                     'https://github.com/cdbethune/d3m-exline',
                 ],
             },
@@ -74,12 +74,10 @@ class OneHotEncoderPrimitive(unsupervised_learning.UnsupervisedLearnerPrimitiveB
         state = base.PrimitiveBase.__getstate__(self)
         state['models'] = self._encoder
         state['colums'] = self._cols
-        logger.debug(state)
         return state
 
     def __setstate__(self, state: dict) -> None:
         base.PrimitiveBase.__setstate__(self, state)
-        logger.debug(state)
         self._encoder = state['models']
         self._cols = state['columns']
 
@@ -101,12 +99,12 @@ class OneHotEncoderPrimitive(unsupervised_learning.UnsupervisedLearnerPrimitiveB
 
         logger.debug(f'Found {len(cols)} columns to encode')
 
-        if len(cols) is 0:
-            return base.CallResult(self._inputs)
-
         self._cols = cols
-        input_cols = self._inputs.iloc[:,cols]
+        self._encoder = None
+        if len(cols) is 0:
+            return base.CallResult(None)
 
+        input_cols = self._inputs.iloc[:,cols]
         self._encoder = preprocessing.OneHotEncoder(sparse=False, handle_unknown='ignore')
         self._encoder.fit(input_cols)
 
@@ -114,6 +112,9 @@ class OneHotEncoderPrimitive(unsupervised_learning.UnsupervisedLearnerPrimitiveB
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
         logger.debug(f'Producing {__name__}')
+
+        if len(self._cols) == 0:
+            return base.CallResult(inputs)
 
         # encode using the previously identified categorical columns
         input_cols = inputs.iloc[:,self._cols]
