@@ -122,9 +122,9 @@ class OneHotEncoderPrimitive(unsupervised_learning.UnsupervisedLearnerPrimitiveB
 
         # remove the source columns and append the result to the copy
         outputs = inputs.copy()
-        outputs.drop(outputs.columns[self._cols], axis=1, inplace=True)
         for i in range(result.shape[1]):
             outputs[('__onehot_' + str(i))] = result[:,i]
+        outputs.drop(outputs.columns[self._cols], axis=1, inplace=True)
 
         logger.debug(f'\n{outputs}')
 
