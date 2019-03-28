@@ -2,8 +2,8 @@ import os
 import logging
 
 from d3m import container, utils as d3m_utils
-from d3m.metadata import base as metadata_base, hyperparams
-from d3m.primitive_interfaces import base, transformer
+from d3m.metadata import base as metadata_base, hyperparams, params
+from d3m.primitive_interfaces import unsupervised_learning, transformer, base
 
 import pandas as pd
 import numpy as np
@@ -24,8 +24,10 @@ class Hyperparams(hyperparams.Hyperparams):
         description="A set of column indices to force primitive to operate on. If any specified column cannot be parsed, it is skipped.",
     )
 
+class Params(params.Params):
+    pass
 
-class MissingIndicatorPrimitive(transformer.TransformerPrimitiveBase[container.DataFrame, container.DataFrame, Hyperparams]):
+class MissingIndicatorPrimitive(unsupervised_learning.UnsupervisedLearnerPrimitiveBase[container.DataFrame, container.DataFrame, Params, Hyperparams]):
     """
     A primitive that scales standards.
     """
@@ -40,7 +42,7 @@ class MissingIndicatorPrimitive(transformer.TransformerPrimitiveBase[container.D
                 'name': 'exline',
                 'contact': 'mailto:cbethune@uncharted.software',
                 'uris': [
-                    'https://github.com/cdbethune/d3m-exline/primitives/simple_imputer.py',
+                    'https://github.com/cdbethune/d3m-exline/primitives/missing_indicator.py',
                     'https://github.com/cdbethune/d3m-exline',
                 ],
             },
@@ -57,32 +59,69 @@ class MissingIndicatorPrimitive(transformer.TransformerPrimitiveBase[container.D
         },
     )
 
-    def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
-        logger.debug(f'Running {__name__}')
+    def __init__(self, *,
+                 hyperparams: Hyperparams,
+                 random_seed: int = 0) -> None:
+        base.PrimitiveBase.__init__(self, hyperparams=hyperparams, random_seed=random_seed)
 
+    def __getstate__(self) -> dict:
+        state = base.PrimitiveBase.__getstate__(self)
+        state['models'] = self._missing_indicator
+        state['colums'] = self._cols
+        return state
+
+    def __setstate__(self, state: dict) -> None:
+        base.PrimitiveBase.__setstate__(self, state)
+        self._missing_indicator = state['models']
+        self._cols = state['columns']
+
+    def set_training_data(self, *, inputs: container.DataFrame) -> None:
+        self._inputs = inputs
+
+    def fit(self, *, timeout: float = None, iterations: int = None) -> base.CallResult[None]:
+        logger.debug(f'Fitting {__name__}')
+
+        # find candidate columns
         cols = list(self.hyperparams['use_columns'])
-
         if cols is None or len(cols) is 0:
             cols = []
-            for idx, c in enumerate(inputs.columns):
-                if (inputs[c].dtype == int or inputs[c].dtype == float or inputs[c].dtype == bool) and inputs[c].isnull().any():
+            for idx, c in enumerate(self._inputs.columns):
+                if (self._inputs[c].dtype == int or self._inputs[c].dtype == float or self._inputs[c].dtype == bool) and self._inputs[c].isnull().any():
                     cols.append(idx)
 
         logger.debug(f'Found {len(cols)} cols to process for missing values')
-
+        self._cols = cols
+        self._missing_indicator = None
         if len(cols) is 0:
-            return base.CallResult(inputs)
+            return base.CallResult(None)
 
-        numerical_inputs = inputs.iloc[:,cols]
+        numerical_inputs = self._inputs.iloc[:,cols]
 
         missing_indicator = MissingIndicator()
         missing_indicator.fit(numerical_inputs)
-        result = missing_indicator.transform(numerical_inputs)
+        self._missing_indicator = missing_indicator
+
+        return base.CallResult(None)
+
+    def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> base.CallResult[container.DataFrame]:
+        logger.debug(f'Producing {__name__}')
+
+        if len(self._cols) == 0:
+            return base.CallResult(inputs)
+
+        numerical_inputs = inputs.iloc[:,self._cols]
+        result = self._missing_indicator.transform(numerical_inputs)
 
         outputs = inputs.copy()
         for i in range(result.shape[1]):
-            outputs[('__missing_' + str(i))] = result[:,i]
+            outputs[(f'__missing_{i}')] = result[:,i]
 
         logger.debug(f'\n{outputs}')
 
         return base.CallResult(outputs)
+
+    def get_params(self) -> Params:
+        return Params()
+
+    def set_params(self, *, params: Params) -> None:
+        return

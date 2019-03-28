@@ -170,17 +170,16 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         self._labels = state['labels']
 
     def set_training_data(self, *, inputs: container.DataFrame, outputs: container.DataFrame) -> None:
-        self._inputs = inputs.values
-        self._outputs = outputs.values
+        self._inputs = inputs
+        self._outputs = outputs
 
     def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
         if self.mode == 'classification':
             self._labels = pd.unique(self._outputs) # store the labels for tie breaking in produce
+            self._labels = pd.unique(self._outputs.squeeze()) # store the labels for tie breaking in produce
         else:
             self._labels = []
         self._models  = [self._fit(self._inputs, self._outputs) for _ in range(self.num_fits)]
-
-        logger.error(self._inputs)
 
         return CallResult(None)
 
