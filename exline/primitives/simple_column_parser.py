@@ -1,6 +1,6 @@
 import os
 import io
-from typing import List
+from typing import List, Sequence
 import logging
 
 from d3m import container, utils as d3m_utils
@@ -66,16 +66,7 @@ class SimpleColumnParserPrimitive(transformer.TransformerPrimitiveBase[container
                 remove_indices.append(i)
 
             # update the structural / df type from the semantic type
-            if 'http://schema.org/Integer' in semantic_types:
-                outputs.metadata = outputs.metadata.update_column(i, {'structural_type': int})
-                outputs.iloc[:,i] = pd.to_numeric(outputs.iloc[:,i])
-            elif 'http://schema.org/Float' in semantic_types:
-                outputs.metadata = outputs.metadata.update_column(i, {'structural_type': float})
-                outputs.iloc[:,i] = pd.to_numeric(outputs.iloc[:,i])
-            elif 'http://schema.org/Boolean' in semantic_types:
-                outputs.metadata = outputs.metadata.update_column(i, {'structural_type': bool})
-                outputs.iloc[:,i] = outputs.iloc[:,i].astype('bool')
-            # otherwise leave as string
+            outputs = self._update_type_info(semantic_types, outputs, i)
 
         # flip the d3mIndex to be the df index as well
         outputs = outputs.set_index('d3mIndex', drop=False)
@@ -93,9 +84,6 @@ class SimpleColumnParserPrimitive(transformer.TransformerPrimitiveBase[container
 
         outputs = inputs.copy()
 
-        # flip the d3mIndex to be the df index as well
-        outputs = outputs.set_index('d3mIndex', drop=False)
-
         # find the target column and remove all others
         num_cols = outputs.metadata.query((metadata_base.ALL_ELEMENTS,))['dimension']['length']
         target_idx = -1
@@ -104,7 +92,12 @@ class SimpleColumnParserPrimitive(transformer.TransformerPrimitiveBase[container
             if 'https://metadata.datadrivendiscovery.org/types/Target' in semantic_types or \
                'https://metadata.datadrivendiscovery.org/types/TrueTarget' in semantic_types:
                 target_idx = i
-                break
+                outputs = self._update_type_info(semantic_types, outputs, i)
+            elif 'https://metadata.datadrivendiscovery.org/types/PrimaryKey' in semantic_types:
+                outputs = self._update_type_info(semantic_types, outputs, i)
+
+        # flip the d3mIndex to be the df index as well
+        outputs = outputs.set_index('d3mIndex', drop=False)
 
         remove_indices = set(range(num_cols))
         remove_indices.remove(target_idx)
@@ -114,3 +107,18 @@ class SimpleColumnParserPrimitive(transformer.TransformerPrimitiveBase[container
         logger.debug(f'\n{outputs}')
 
         return base.CallResult(outputs)
+
+    @classmethod
+    def _update_type_info(self, semantic_types: Sequence[str], outputs: container.DataFrame, i: int) -> container.DataFrame:
+        # update the structural / df type from the semantic type
+        if 'http://schema.org/Integer' in semantic_types:
+            outputs.metadata = outputs.metadata.update_column(i, {'structural_type': int})
+            outputs.iloc[:,i] = pd.to_numeric(outputs.iloc[:,i])
+        elif 'http://schema.org/Float' in semantic_types:
+            outputs.metadata = outputs.metadata.update_column(i, {'structural_type': float})
+            outputs.iloc[:,i] = pd.to_numeric(outputs.iloc[:,i])
+        elif 'http://schema.org/Boolean' in semantic_types:
+            outputs.metadata = outputs.metadata.update_column(i, {'structural_type': bool})
+            outputs.iloc[:,i] = outputs.iloc[:,i].astype('bool')
+
+        return outputs
