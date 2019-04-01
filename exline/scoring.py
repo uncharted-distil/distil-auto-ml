@@ -184,7 +184,7 @@ class Scorer:
 
         # Create the TRUE dataframe
         true_df = self.inputs[0][list(self.inputs[0].keys()).pop()]
-        true_df = true_df[[self.dats['target_name']]]
+        true_df = true_df[[self.dats['target_name'].lower()]]
         true_df = true_df.iloc[result_df.index]
         score = self._score(self.metric, true_df, result_df)
 
