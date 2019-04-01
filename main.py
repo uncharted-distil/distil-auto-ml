@@ -102,7 +102,7 @@ def exline_task(logger, session, task):
             target['column_index'] = target.pop('columnIndex')
             target['column_name'] = target.pop('columnName')
             if not target_col_name:
-                target_col_name = target['column_name']
+                target_col_name = target['column_name'].lower()
         prob['id'] = '__unset__'
         prob['digest'] = '__unset__'
 

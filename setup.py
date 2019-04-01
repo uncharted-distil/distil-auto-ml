@@ -22,6 +22,7 @@ setup(
             'data_transformation.standard_scaler.ExlineStandardScaler = exline.primitives.standard_scaler:StandardScalerPrimitive',
             'data_transformation.one_hot_encoder.ExlineOneHotEncoder = exline.primitives.one_hot_encoder:OneHotEncoderPrimitive',
             'data_transformation.encoder.ExlineBinaryEncoder = exline.primitives.binary_encoder:BinaryEncoderPrimitive',
+            'data_transformation.encoder.ExlineTextEncoder = exline.primitives.text_encoder:TextEncoderPrimitive',
             'data_transformation.column_parser.ExlineSimpleColumnParser = exline.primitives.simple_column_parser:SimpleColumnParserPrimitive',
             'data_transformation.missing_indicator.ExlineMissingIndicator = exline.primitives.missing_indicator:MissingIndicatorPrimitive',
             'data_transformation.data_cleaning.ExlineZeroColumnRemover = exline.primitives.zero_column_remover:ZeroColumnRemoverPrimitive'

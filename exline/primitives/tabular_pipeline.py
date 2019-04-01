@@ -16,6 +16,7 @@ from exline.primitives.ensemble_forest import EnsembleForestPrimitive
 from exline.primitives.replace_singletons import ReplaceSingletonsPrimitive
 from exline.primitives.one_hot_encoder import OneHotEncoderPrimitive
 from exline.primitives.binary_encoder import BinaryEncoderPrimitive
+from exline.primitives.text_encoder import TextEncoderPrimitive
 from exline.primitives.enrich_dates import EnrichDatesPrimitive
 from exline.primitives.missing_indicator import MissingIndicatorPrimitive
 from exline.primitives.simple_column_parser import SimpleColumnParserPrimitive
@@ -85,6 +86,14 @@ def create_pipeline(inputs: container.DataFrame,
     tabular_pipeline.add_step(step)
     previous_step += 1
 
+    # Adds an svm text encoder for text fields.
+    step = PrimitiveStep(primitive_description=TextEncoderPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
+    step.add_output('produce')
+    tabular_pipeline.add_step(step)
+    previous_step += 1
+
     # Adds a one hot encoder for categoricals of low cardinality.
     step = PrimitiveStep(primitive_description=OneHotEncoderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
@@ -101,23 +110,21 @@ def create_pipeline(inputs: container.DataFrame,
     tabular_pipeline.add_step(step)
     previous_step += 1
 
-    # Need to add text encoder here
-
-    # step 7 - Appends a missing value transformer for numerical values.
+    # Appends a missing value transformer for numerical values.
     step = PrimitiveStep(primitive_description=MissingIndicatorPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     tabular_pipeline.add_step(step)
     previous_step += 1
 
-    # step 8 - Appends an imputer for numerical values.
+    # Appends an imputer for numerical values.
     step = PrimitiveStep(primitive_description=SimpleImputerPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     tabular_pipeline.add_step(step)
     previous_step += 1
 
-    # step 9 - Append scaler for numerical values.
+    # Append scaler for numerical values.
     if scale:
         step = PrimitiveStep(primitive_description=StandardScalerPrimitive.metadata.query())
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
@@ -129,14 +136,14 @@ def create_pipeline(inputs: container.DataFrame,
     # a different set of zeroed columns, which can lead to a mismatch in the data passed into the trained classifier / regressor.
     # Not sure if there's a clean way around this.
     #
-    # step 10 - Remove any columns that are uniformly zeroes
+    # Remove any columns that are uniformly zeroes
     # step = PrimitiveStep(primitive_description=ZeroColumnRemoverPrimitive.metadata.query())
     # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     # step.add_output('produce')
     # tabular_pipeline.add_step(step)
     # previous_step += 1
 
-    # step 11 - Runs a random forest ensemble.
+    # Generates a random forest ensemble model.
     step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
