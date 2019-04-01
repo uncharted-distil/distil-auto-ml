@@ -9,6 +9,7 @@ from d3m.primitive_interfaces.supervised_learning import PrimitiveBase
 from d3m.primitive_interfaces.base import CallResult
 
 from exline.modeling.forest import ForestCV
+from exline.modeling.metrics import classification_metrics, regression_metrics
 
 import pandas as pd
 import numpy as np
@@ -20,6 +21,10 @@ logger = logging.getLogger(__name__)
 class Hyperparams(hyperparams.Hyperparams):
     metric = hyperparams.Hyperparameter[str](
         default='',
+        semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
+    )
+    fast = hyperparams.Hyperparameter[bool](
+        default=False,
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
 
@@ -57,22 +62,44 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
         },
     )
 
+    # number of rows to limit to when in fast mode
+    _FAST_FIT_ROWS = 500
+
+    # grids to use when in fast mode
+    _FAST_GRIDS = {
+        "classification" : {
+            "estimator"        : ["RandomForest"],
+            "n_estimators"     : [32],
+            "min_samples_leaf" : [1],
+            "class_weight"     : [None],
+        },
+        "regression" : {
+            "estimator"        : ["ExtraTrees", "RandomForest"],
+            "bootstrap"        : [True],
+            "n_estimators"     : [32],
+            "min_samples_leaf" : [2],
+        }
+    }
+
     def __init__(self, *,
                  hyperparams: Hyperparams,
                  random_seed: int = 0) -> None:
 
         PrimitiveBase.__init__(self, hyperparams=hyperparams, random_seed=random_seed)
 
-        self._model = ForestCV(self.hyperparams['metric'])
+        self._grid = self._get_grid_for_metric() if self.hyperparams['fast'] else None
+        self._model = ForestCV(self.hyperparams['metric'], param_grid=self._grid)
 
     def __getstate__(self) -> dict:
         state = PrimitiveBase.__getstate__(self)
         state['models'] = self._model
+        state['grid'] = self._grid
         return state
 
     def __setstate__(self, state: dict) -> None:
         PrimitiveBase.__setstate__(self, state)
         self._model = state['models']
+        self._grid = state['grid']
 
     def set_training_data(self, *, inputs: container.DataFrame, outputs: container.DataFrame) -> None:
         self._inputs = inputs
@@ -80,7 +107,14 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
 
     def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
         logger.debug(f'Fitting {__name__}')
-        self._model.fit(self._inputs, self._outputs)
+        if self.hyperparams['fast']:
+            rows = len(self._inputs.index)
+            if rows > self._FAST_FIT_ROWS:
+                sampled_inputs = self._inputs.sample(n=self._FAST_FIT_ROWS, random_state=1)
+                sampled_outputs = self._outputs.loc[self._outputs.index.intersection(sampled_inputs.index), ]
+                self._model.fit(sampled_inputs, sampled_outputs)
+        else:
+            self._model.fit(self._inputs, self._outputs)
         return CallResult(None)
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> CallResult[container.DataFrame]:
@@ -95,3 +129,11 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
 
     def set_params(self, *, params: Params) -> None:
         return
+
+    def _get_grid_for_metric(self) -> Dict[str, Any]:
+        if self.hyperparams['metric'] in classification_metrics:
+            return self._FAST_GRIDS['classification']
+        elif self.hyperparams['metric'] in regression_metrics:
+            return self._FAST_GRIDS['regression']
+        else:
+            raise Exception('ForestCV: unknown metric')
