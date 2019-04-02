@@ -1,4 +1,5 @@
 import dill
+from typing import List, Dict, Any, Tuple, Set
 
 import main_utils as utils
 
@@ -12,12 +13,11 @@ from sklearn.model_selection import (train_test_split,
 from d3m.container import dataset
 from d3m.metadata.pipeline import Pipeline
 from d3m import runtime
-
-from exline.external import D3MDataset
-
-from typing import List, Dict, Any, Tuple, Set
-
 from d3m import utils as dutils
+
+from exline import pipeline
+
+
 PipelineContext = dutils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
 
@@ -49,7 +49,7 @@ class Scorer:
         self.fitted_pipeline = self.dats['pipeline']
 
         # Load the data to test
-        self.inputs = [dataset.Dataset.load(self.dataset_uri)]
+        self.inputs = dataset.Dataset.load(self.dataset_uri)
         #self.logger.info('the vals')
         #self.logger.info(list(test_dataset.keys()).pop())
         #self.logger.info(test_dataset['learningData'])
@@ -178,13 +178,12 @@ class Scorer:
     def hold_out_score(self):
 
         # Predict on the test data
-        result_df, _ = runtime.produce(self.fitted_pipeline,
-                                       self.inputs)
+        result_df = pipeline.produce(self.fitted_pipeline, self.inputs)
         result_df.rename(columns={0: self.dats['target_name']}, inplace=True)
 
         # Create the TRUE dataframe
-        true_df = self.inputs[0][list(self.inputs[0].keys()).pop()]
-        true_df = true_df[[self.dats['target_name'].lower()]]
+        true_df = self.inputs[list(self.inputs.keys()).pop()]
+        true_df = true_df[[self.dats['target_name']]]
         true_df = true_df.iloc[result_df.index]
         score = self._score(self.metric, true_df, result_df)
 

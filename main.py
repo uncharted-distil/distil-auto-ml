@@ -11,7 +11,7 @@ import models
 
 from server.server import Server
 
-from exline import fit_tabular
+from exline import pipeline as ex_pipeline
 from exline.scoring import Scorer
 
 from d3m import runtime
@@ -39,7 +39,7 @@ def produce_task(logger, session, task):
 
         fitted_pipeline = dats['pipeline']
         test_dataset = dataset.Dataset.load(task.dataset_uri)
-        results, _ = runtime.produce(fitted_pipeline, [test_dataset])
+        results = ex_pipeline.produce(fitted_pipeline, test_dataset)
 
         test_dataset = test_dataset['learningData']
         predictions_df = pd. DataFrame(test_dataset['d3mIndex'])
@@ -107,8 +107,9 @@ def exline_task(logger, session, task):
         prob['digest'] = '__unset__'
 
         search_template = pipeline.Pipeline.from_json(task.pipeline) if task.pipeline else None
+        pipe, dataset = ex_pipeline.create(task.dataset_uri, prob, search_template)
+        fitted_pipeline = ex_pipeline.fit(pipe, prob, dataset)
 
-        fitted_pipeline = fit_tabular.fit(task.dataset_uri, prob, prepend=search_template)
         pipeline_json = fitted_pipeline.pipeline.to_json()
         save_me = {'pipeline': fitted_pipeline, 'target_name': target_col_name}
 

@@ -37,8 +37,7 @@ PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1
 # D3M approach, but generates more complex pipelines) would be to extract sub-sets by semantic type using
 # a common primitive, apply the type-specific primitive to the sub-set, and then merge the changes
 # (replace or join) back into the original data.
-def create_pipeline(inputs: container.DataFrame,
-                    metric: str,
+def create_pipeline(metric: str,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False) -> Pipeline:
@@ -149,6 +148,7 @@ def create_pipeline(inputs: container.DataFrame,
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
+    #step.add_hyperparameter('fast', ArgumentType.VALUE, True)
     tabular_pipeline.add_step(step)
     previous_step += 1
 

@@ -36,7 +36,7 @@ class MissingIndicatorPrimitive(unsupervised_learning.UnsupervisedLearnerPrimiti
         {
             'id': '15587104-0e81-4970-add3-668da63be95b',
             'version': '0.1.0',
-            'name': "Standard scaler",
+            'name': "Missing indicator",
             'python_path': 'd3m.primitives.data_transformation.missing_indicator.ExlineMissingIndicator',
             'source': {
                 'name': 'exline',
