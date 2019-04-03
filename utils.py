@@ -85,4 +85,7 @@ def make_preds_filename(task_id):
 
     Down with os.path.join. I have learned my lesson.
     """
-    return pathlib.Path(config.OUTPUT_DIR, '{}.csv'.format(task_id)).resolve()
+    path = pathlib.Path(config.OUTPUT_DIR, '{}.csv'.format(task_id)).resolve()
+    path = str(path)
+    path = path.replace('/app', '')
+    return path
