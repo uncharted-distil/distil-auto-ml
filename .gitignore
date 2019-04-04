@@ -5,6 +5,7 @@ api/ta2ta3api.egg-info
 third_party/*
 .mypy_cache
 .history
+.vscode
 datasets
 seed_datasets_current
 .DS_Store
