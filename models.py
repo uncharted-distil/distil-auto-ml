@@ -96,6 +96,7 @@ class Tasks(Base):
     output_key = Column(String)
     # End -- PRODUCE specific --
     pipeline = Column(String)
+    pipeline_run = Column(String)
     problem = Column(String)
     created_at = Column(
         DateTime,

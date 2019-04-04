@@ -10,6 +10,7 @@ import main_utils as utils
 import models
 
 from server.server import Server
+from server.export import export_run
 
 from exline import pipeline as ex_pipeline
 from exline.scoring import Scorer
@@ -92,6 +93,8 @@ def score_task(logger, session, task):
 
 def exline_task(logger, session, task):
     try:
+
+
         logger.info('Starting exline task ID {}'.format(task.id))
         task.started_at = datetime.datetime.utcnow()
         prob = task.problem
@@ -103,12 +106,12 @@ def exline_task(logger, session, task):
             target['column_name'] = target.pop('columnName')
             if not target_col_name:
                 target_col_name = target['column_name']
-        prob['id'] = '__unset__'
+        prob['id'] = utils.generate_id()
         prob['digest'] = '__unset__'
 
         search_template = pipeline.Pipeline.from_json(task.pipeline) if task.pipeline else None
         pipe, dataset = ex_pipeline.create(task.dataset_uri, prob, search_template)
-        fitted_pipeline = ex_pipeline.fit(pipe, prob, dataset)
+        fitted_pipeline, pipeline_run = ex_pipeline.fit(pipe, prob, dataset)
 
         pipeline_json = fitted_pipeline.pipeline.to_json()
         save_me = {'pipeline': fitted_pipeline, 'target_name': target_col_name}
@@ -116,6 +119,15 @@ def exline_task(logger, session, task):
         QUATTO_LIVES[task.id] = save_me
         save_job(save_me, task.id)
         task.pipeline = pipeline_json
+        #del pipeline_run.problem['digest']
+        #del pipeline_run.problem['id']
+        #logger.info(pipeline_run.problem['id'])
+        #delattr(pipeline_run, 'problem')
+        d = {'header': [target_col_name]}
+        setattr(pipeline_run.run.results.predictions, 'header', [target_col_name])
+        pipeline_run.problem = None
+        #task.pipeline_run = pipeline_run.to_json_structure()
+        pipeline_run.to_yaml('myfile')
     except Exception as e:
         logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
         task.error = True

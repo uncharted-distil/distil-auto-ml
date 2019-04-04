@@ -10,6 +10,7 @@ import config
 
 import models
 import utils
+from server.export import export
 from server.messages import Messaging
 from server.validation import RequestValidator
 
@@ -519,5 +520,4 @@ class TaskManager():
                                          .filter(models.Solutions.task_id==models.Tasks.id) \
                                          .first()
 
-        #export.export_dag(task.DAG, fitted_soln_id, rank)
-        #export.export_executable(task.id, fitted_soln_id)
+        export(task, rank)

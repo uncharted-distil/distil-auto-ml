@@ -43,12 +43,12 @@ def fit(pipeline: pipeline.Pipeline, problem: dict, input_dataset: container.Dat
     random_seed = 0
     volumes_dir = None
 
-    fitted_pipeline, _, _ = runtime.fit(
+    fitted_pipeline, _, pipeline_run = runtime.fit(
         pipeline, problem, [input_dataset], hyperparams=hyperparams, random_seed=random_seed,
         volumes_dir=volumes_dir, context=metadata_base.Context.TESTING
     )
 
-    return fitted_pipeline
+    return fitted_pipeline, pipeline_run
 
 
 def produce(fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset) -> container.DataFrame:
