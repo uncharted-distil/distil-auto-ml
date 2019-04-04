@@ -119,8 +119,14 @@ class EnsembleForestPrimitive(PrimitiveBase[container.DataFrame, container.DataF
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> CallResult[container.DataFrame]:
         logger.debug(f'Producing {__name__}')
+
         result = self._model.predict(inputs)
         result_df = container.DataFrame(result)
+
+        # predict and mark the semantic types on the dataframe
+        result_df.metadata = result_df.metadata.update_column(0, {'semantic_types': ['https://metadata.datadrivendiscovery.org/types/PrimaryKey']})
+        result_df.metadata = result_df.metadata.update_column(1, {'semantic_types': ['https://metadata.datadrivendiscovery.org/types/PredictedTarget']})
+
         logger.debug(f'\n{result_df}')
         return base.CallResult(result_df)
 

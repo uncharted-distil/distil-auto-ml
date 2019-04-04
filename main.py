@@ -13,6 +13,7 @@ from server.server import Server
 
 from exline import pipeline as ex_pipeline
 from exline.scoring import Scorer
+from server import export
 
 from d3m import runtime
 from d3m.container import dataset
@@ -148,6 +149,9 @@ def job_loop(logger, session):
 
 
 def main(once=False):
+    # override config vals D3M values
+    export.override_config()
+
     # Set up logging
     logging_level = logging.DEBUG if config.DEBUG else logging.INFO
     system_version = utils.get_worker_version()
