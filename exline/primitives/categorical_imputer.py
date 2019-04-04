@@ -66,7 +66,7 @@ class CategoricalImputerPrimitive(transformer.TransformerPrimitiveBase[container
         cols = list(self.hyperparams['use_columns'])
         if cols is None or len(cols) is 0:
             for idx, c in enumerate(inputs.columns):
-                if inputs[c].dtype == object and len(set(inputs[c])) > 1:
+                if inputs[c].dtype == object: #and len(set(inputs[c])) > 1:
                     cols.append(idx)
 
         logger.debug(f'Found {len(cols)} categorical columns to evaluate')

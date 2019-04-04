@@ -72,7 +72,6 @@ class EnrichDatesPrimitive(transformer.TransformerPrimitiveBase[container.DataFr
         cols = list(inputs.columns)
         for c in cols:
             if (inputs[c].dtype == np.object_) and cls._detect_date(inputs[c]):
-                print('-- detected date: %s' % c, file=sys.stderr)
 
                 # try:
                 inputs_seconds = (pd.to_datetime(inputs[c]) - pd.to_datetime('2000-01-01')).dt.total_seconds().values
@@ -80,5 +79,9 @@ class EnrichDatesPrimitive(transformer.TransformerPrimitiveBase[container.DataFr
                 sec_mean = inputs_seconds.mean()
                 sec_std  = inputs_seconds.std()
 
-                inputs['%s__seconds' % c] = (inputs_seconds - sec_mean) / sec_std
+                sec_val = 0.0
+                if sec_std != 0.0:
+                    sec_val = (inputs_seconds - sec_mean) / sec_std
+                inputs['%s__seconds' % c] = sec_val
+
         return inputs
