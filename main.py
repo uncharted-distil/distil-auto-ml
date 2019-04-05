@@ -119,15 +119,9 @@ def exline_task(logger, session, task):
         QUATTO_LIVES[task.id] = save_me
         save_job(save_me, task.id)
         task.pipeline = pipeline_json
-        #del pipeline_run.problem['digest']
-        #del pipeline_run.problem['id']
-        #logger.info(pipeline_run.problem['id'])
-        #delattr(pipeline_run, 'problem')
-        d = {'header': [target_col_name]}
-        setattr(pipeline_run.run.results.predictions, 'header', [target_col_name])
         pipeline_run.problem = None
-        #task.pipeline_run = pipeline_run.to_json_structure()
-        pipeline_run.to_yaml('myfile')
+        # TODO: fix below after validation, or put in Export call
+        # pipeline_run.to_yaml('myfile')
     except Exception as e:
         logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
         task.error = True
