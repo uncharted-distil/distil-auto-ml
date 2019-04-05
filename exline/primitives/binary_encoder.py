@@ -94,7 +94,7 @@ class BinaryEncoderPrimitive(unsupervised_learning.UnsupervisedLearnerPrimitiveB
             for idx, c in enumerate(self._inputs.columns):
                 if self._inputs[c].dtype == object:
                     num_labels = len(set(self._inputs[c]))
-                    if num_labels > 1 and num_labels >= self.hyperparams['min_binary'] and not self._detect_text(self._inputs[c]):
+                    if num_labels >= self.hyperparams['min_binary'] and not self._detect_text(self._inputs[c]):
                         cols.append(idx)
 
         logger.debug(f'Found {len(cols)} columns to encode')
