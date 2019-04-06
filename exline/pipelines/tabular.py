@@ -149,7 +149,7 @@ def create_pipeline(metric: str,
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
-    step.add_hyperparameter('fast', ArgumentType.VALUE, True)
+    # step.add_hyperparameter('fast', ArgumentType.VALUE, True)
     tabular_pipeline.add_step(step)
     previous_step += 1
 

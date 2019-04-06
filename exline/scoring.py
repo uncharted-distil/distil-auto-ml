@@ -176,15 +176,23 @@ class Scorer:
         return score
 
     def hold_out_score(self):
+        target_col = self.dats['target_name']
 
-        # Predict on the test data
+        # produce predictions from the fitted model and extract to single col dataframe
+        # with the d3mIndex as the index
         result_df = pipeline.produce(self.fitted_pipeline, self.inputs)
-        result_df.rename(columns={0: self.dats['target_name']}, inplace=True)
+        result_df = result_df.set_index(result_df['d3mIndex'])
+        result_df = result_df[target_col]
 
-        # Create the TRUE dataframe
+        # put the ground truth predictions into a single col dataframe with the d3mIndex
+        # as the index
         true_df = self.inputs[list(self.inputs.keys()).pop()]
-        true_df = true_df[[self.dats['target_name']]]
-        true_df = true_df.iloc[result_df.index]
+        true_df = true_df.set_index(pd.to_numeric(true_df['d3mIndex']))
+        true_df = true_df[target_col]
+
+        # make sure the result and truth have the same d3mIndex
+        true_df = true_df.loc[result_df.index]
+
         score = self._score(self.metric, true_df, result_df)
 
         return [score]
