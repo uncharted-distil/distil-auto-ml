@@ -1,4 +1,4 @@
-#!/bin/basho
+#!/bin/bash
 
 PROJECT_ROOT=$(pwd)
 mkdir -p third_party

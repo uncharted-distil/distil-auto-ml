@@ -13,6 +13,7 @@ from server.server import Server
 
 from exline import pipeline as ex_pipeline
 from exline.scoring import Scorer
+from server import export
 
 from d3m import runtime
 from d3m.container import dataset
@@ -42,8 +43,8 @@ def produce_task(logger, session, task):
         results = ex_pipeline.produce(fitted_pipeline, test_dataset)
 
         test_dataset = test_dataset['learningData']
-        predictions_df = pd. DataFrame(test_dataset['d3mIndex'])
-        predictions_df[dats['target_name']] = results
+        predictions_df = pd.DataFrame(test_dataset['d3mIndex'])
+        predictions_df[dats['target_name']] = results[dats['target_name']]
 
         preds_path = utils.make_preds_filename(task.id)
         predictions_df.to_csv(preds_path, index=False)
@@ -150,6 +151,9 @@ def job_loop(logger, session):
 
 
 def main(once=False):
+    # override config vals D3M values
+    export.override_config()
+
     # Set up logging
     logging_level = logging.DEBUG if config.DEBUG else logging.INFO
     system_version = utils.get_worker_version()
@@ -157,6 +161,8 @@ def main(once=False):
                                  log_file=config.LOG_FILENAME,
                                  system_version=system_version)
     logger.info("System version {}".format(system_version))
+
+    logging.basicConfig(level=logging.DEBUG)
 
     # Create and start the gRPC server
     server = Server()
