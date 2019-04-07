@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Tuple
+from typing import Tuple, Optional
 
 from d3m.container import dataset
 from d3m import container, exceptions, runtime
@@ -38,22 +38,27 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     return pipeline, train_dataset
 
 
-def fit(pipeline: pipeline.Pipeline, problem: dict, input_dataset: container.Dataset) -> runtime.Runtime:
+def fit(pipeline: pipeline.Pipeline, problem: dict, input_dataset: container.Dataset) -> Optional[runtime.Runtime]:
     hyperparams = None
     random_seed = 0
     volumes_dir = None
 
-    fitted_pipeline, _, pipeline_run = runtime.fit(
+    fitted_runtime, _, result = runtime.fit(
         pipeline, problem, [input_dataset], hyperparams=hyperparams, random_seed=random_seed,
         volumes_dir=volumes_dir, context=metadata_base.Context.TESTING
     )
 
-    return fitted_pipeline, pipeline_run
+    if result.has_error():
+        raise result.error
+
+    return fitted_runtime
 
 
 def produce(fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset) -> container.DataFrame:
-    results, _ = runtime.produce(fitted_pipeline, [input_dataset])
-    return results
+    predictions, result = runtime.produce(fitted_pipeline, [input_dataset])
+    if result.has_error():
+        raise result.error
+    return predictions
 
 
 def _prepend_pipeline(base: pipeline.Pipeline, prepend: pipeline.Pipeline) -> pipeline.Pipeline:

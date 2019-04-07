@@ -56,7 +56,7 @@ def get_worker_version():
 
 def lazy_get_primitives(primitives_list):
     """
-    index.search() no longer returns path/module pairs - 
+    index.search() no longer returns path/module pairs -
     re-add that functionality?
     """
     pairs = []
@@ -70,7 +70,7 @@ def lazy_get_primitives(primitives_list):
             pairs.append((path, primitive))
         except Exception as e:
             pass
-        
+
     return pairs
 
 def make_job_fn(task_id):
@@ -86,6 +86,4 @@ def make_preds_filename(task_id):
     Down with os.path.join. I have learned my lesson.
     """
     path = pathlib.Path(config.OUTPUT_DIR, '{}.csv'.format(task_id)).resolve()
-    path = str(path)
-    path = path.replace('/app', '')
     return path

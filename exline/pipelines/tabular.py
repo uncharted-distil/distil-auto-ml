@@ -24,6 +24,7 @@ from exline.primitives.zero_column_remover import ZeroColumnRemoverPrimitive
 
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.remove_columns import RemoveColumnsPrimitive
+from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
 from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
 
@@ -148,7 +149,16 @@ def create_pipeline(metric: str,
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
-    #step.add_hyperparameter('fast', ArgumentType.VALUE, True)
+    # step.add_hyperparameter('fast', ArgumentType.VALUE, True)
+    tabular_pipeline.add_step(step)
+    previous_step += 1
+
+    # convert predictions to expected format
+    step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
+    step.add_output('produce')
+    step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
     tabular_pipeline.add_step(step)
     previous_step += 1
 
