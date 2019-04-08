@@ -10,7 +10,7 @@ import config
 
 import models
 import utils
-from server.export import export
+from server import export
 from server.messages import Messaging
 from server.validation import RequestValidator
 
@@ -473,7 +473,7 @@ class TaskManager():
                     raise RuntimeError("ProduceSolution task didn't complete successfully")
 
                 # TODO(jtorrez): predictions filename creation should live somewhere better than utils
-                preds_path = utils.make_preds_filename(task.id)
+                preds_path = utils.make_preds_filename(task.fit_solution_id)
 
                 # check the file actually exists
                 if not preds_path.exists() and not preds_path.is_file():
@@ -509,5 +509,6 @@ class TaskManager():
                                          .filter(models.FitSolution.id==fitted_solution_id) \
                                          .filter(models.FitSolution.task_id==models.Tasks.id) \
                                          .first()
-        export(task, rank)
-        export_run(task, rank)
+        export.export(task, rank)
+        #export.export_run(task)
+        export.export_predictions(task)

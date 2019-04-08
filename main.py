@@ -3,6 +3,7 @@ import time
 import pathlib
 import logging
 import datetime
+import io
 
 import config
 
@@ -47,7 +48,7 @@ def produce_task(logger, session, task):
         predictions_df = pd.DataFrame(test_dataset['d3mIndex'])
         predictions_df[dats['target_name']] = results[dats['target_name']]
 
-        preds_path = utils.make_preds_filename(task.id)
+        preds_path = utils.make_preds_filename(task.fit_solution_id)
         predictions_df.to_csv(preds_path, index=False)
 
         session.commit()
@@ -107,21 +108,27 @@ def exline_task(logger, session, task):
             target['column_name'] = target.pop('columnName')
             if not target_col_name:
                 target_col_name = target['column_name']
+
         prob['id'] = utils.generate_id()
         prob['digest'] = '__unset__'
+        #description['digest'] = utils.compute_digest(utils.to_json_structure(problem_class._canonical_problem_description(description)))
 
         search_template = pipeline.Pipeline.from_json(task.pipeline) if task.pipeline else None
         pipe, dataset = ex_pipeline.create(task.dataset_uri, prob, search_template)
-        fitted_pipeline, pipeline_run = ex_pipeline.fit(pipe, prob, dataset)
+        fitted_pipeline, result = ex_pipeline.fit(pipe, prob, dataset)
 
-        pipeline_json = fitted_pipeline.pipeline.to_json()
+        pipeline_json = fitted_pipeline.pipeline.to_json(nest_subpipelines=True)
+        # str_buf = io.StringIO()
+        # result.pipeline_run.to_yaml(str_buf)
+        # pipeline_run_yaml = str_buf.value
+
         save_me = {'pipeline': fitted_pipeline, 'target_name': target_col_name}
 
         QUATTO_LIVES[task.id] = save_me
         save_job(save_me, task.id)
         task.pipeline = pipeline_json
-        # TODO: fix below after validation, or put in Export call
-        # pipeline_run.to_yaml('myfile')
+        # task.pipeline_run = pipeline_run_yaml
+
     except Exception as e:
         logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
         task.error = True
