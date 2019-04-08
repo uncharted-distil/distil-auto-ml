@@ -5,6 +5,8 @@ import logging
 import datetime
 import io
 
+from google.protobuf import json_format
+
 import config
 
 import main_utils as utils
@@ -16,10 +18,12 @@ from server.export import export_run
 from exline import pipeline as ex_pipeline
 from exline.scoring import Scorer
 from server import export
+import api.utils as api_utils
+from api import problem_pb2
 
 from d3m import runtime
 from d3m.container import dataset
-from d3m.metadata import pipeline
+from d3m.metadata import pipeline, problem
 
 import pickle
 import pandas as pd
@@ -95,39 +99,30 @@ def score_task(logger, session, task):
 
 def exline_task(logger, session, task):
     try:
-
-
         logger.info('Starting exline task ID {}'.format(task.id))
         task.started_at = datetime.datetime.utcnow()
-        prob = task.problem
-        prob = json.loads(prob)
-        target_col_name = False
-        for target in prob['inputs'][0]['targets']:
-            target['resource_id'] = target.pop('resourceId')
-            target['column_index'] = target.pop('columnIndex')
-            target['column_name'] = target.pop('columnName')
-            if not target_col_name:
-                target_col_name = target['column_name']
 
-        prob['id'] = utils.generate_id()
-        prob['digest'] = '__unset__'
-        #description['digest'] = utils.compute_digest(utils.to_json_structure(problem_class._canonical_problem_description(description)))
+        # load the problem supplied by the search request into a d3m Problem type
+        problem_proto = json_format.Parse(task.problem, problem_pb2.ProblemDescription())
+        problem_d3m = api_utils.decode_problem_description(problem_proto)
+
+        target_name = problem_d3m['inputs'][0]['targets'][0]['column_name']
 
         search_template = pipeline.Pipeline.from_json(task.pipeline) if task.pipeline else None
-        pipe, dataset = ex_pipeline.create(task.dataset_uri, prob, search_template)
-        fitted_pipeline, result = ex_pipeline.fit(pipe, prob, dataset)
+        pipe, dataset = ex_pipeline.create(task.dataset_uri, problem_d3m, search_template)
+        fitted_pipeline, result = ex_pipeline.fit(pipe, problem_d3m, dataset)
 
         pipeline_json = fitted_pipeline.pipeline.to_json(nest_subpipelines=True)
-        # str_buf = io.StringIO()
-        # result.pipeline_run.to_yaml(str_buf)
-        # pipeline_run_yaml = str_buf.value
+        str_buf = io.StringIO()
+        result.pipeline_run.to_yaml(str_buf)
+        pipeline_run_yaml = str_buf.getvalue()
 
-        save_me = {'pipeline': fitted_pipeline, 'target_name': target_col_name}
+        save_me = {'pipeline': fitted_pipeline, 'target_name': target_name}
 
         QUATTO_LIVES[task.id] = save_me
         save_job(save_me, task.id)
         task.pipeline = pipeline_json
-        # task.pipeline_run = pipeline_run_yaml
+        task.pipeline_run = pipeline_run_yaml
 
     except Exception as e:
         logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)

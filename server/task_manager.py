@@ -151,7 +151,9 @@ class TaskManager():
         # Generate search ID
         search_id = self._generate_id()
 
+        # serialize the problem buf to json to save it in the db
         prob = json_format.MessageToDict(message.problem)
+        prob = json.dumps(prob)
 
         # serialize the pipeline to a string for storage in db if one is provided
         search_template: str = None
@@ -164,7 +166,6 @@ class TaskManager():
         self.session.add(search)
         self.session.commit()
 
-        prob = json.dumps(prob)
 
         task = models.Tasks(problem=prob,
                             pipeline=search_template,
@@ -510,5 +511,5 @@ class TaskManager():
                                          .filter(models.FitSolution.task_id==models.Tasks.id) \
                                          .first()
         export.export(task, rank)
-        #export.export_run(task)
+        export.export_run(task)
         export.export_predictions(task)
