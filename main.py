@@ -114,8 +114,6 @@ def exline_task(logger, session, task):
         pipe, dataset = ex_pipeline.create(task.dataset_uri, prob, search_template)
         fitted_pipeline, pipeline_run = ex_pipeline.fit(pipe, prob, dataset)
 
-        # For better serialization
-        pipeline_run.problem = None
         pipeline_json = fitted_pipeline.pipeline.to_json()
         save_me = {'pipeline': fitted_pipeline, 'target_name': target_col_name}
 

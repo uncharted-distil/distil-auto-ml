@@ -20,6 +20,21 @@ D3MCPU = os.getenv("D3MCPU", None)
 D3MRAM = os.getenv("D3MRAM", None)
 D3MTIMEOUT = os.getenv("D3MTIMEOUT", None)
 
+def override_config():
+    supporting_files_dir = pathlib.Path(D3MOUTPUTDIR, "supporting_files")
+    supporting_files_dir.mkdir(parents=True, exist_ok=True)
+
+    # override aretha output directory to be supporting_files directory
+    # which is always preserved between runs, meaning we'll
+    # always have access to files written to this directory
+    config.OUTPUT_DIR = str(supporting_files_dir.resolve())
+    # override log filename so it is saved properly and preserved between runs
+    config.LOG_FILENAME = str(pathlib.Path(supporting_files_dir, "eval_log.log").resolve())
+    # override db filename so it is saved properly and preserved between runs
+    config.DB_LOCATION = str(pathlib.Path(supporting_files_dir, "eval_db.db").resolve())
+    # put system in debug mode always
+    config.DEBUG = True
+
 
 def export_predictions(original_preds_path, expected_preds_fn, fitted_soln_id):
     parser = translate.EvalParser(setup.CONFIG_PATH, setup.D3MRUN)
@@ -56,7 +71,7 @@ def export(task, rank):
     # Set name
     name = pipeline_json.get('name', False)
     if not name:
-        name = task.id        
+        name = task.id
     pipeline_json['name'] = name
     # Confirm is valid
     #pipeline.PIPELINE_SCHEMA_VALIDATOR.validate(pipeline_json)

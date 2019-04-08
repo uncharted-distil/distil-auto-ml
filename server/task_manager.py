@@ -500,24 +500,14 @@ class TaskManager():
         return json.loads(dag)
 
     def SolutionExport(self, request):
-        """Output pipeline JSON and "executeable" for D3M evaluation.
-
-        NOTE: This method is HIGHLY SPECIFIC to the eval and would be WONTFIX if not required
-        for the eval. You will notice the output folders are hardcoded, this is a known and intentional
-        limitation.
         """
-        solution_id, rank = self.validator.validate_solution_export_request(request)
-        #solution_id = self.validator.validate_fitted_solution_id_exists(fitted_soln_id, self.session, request)
-
+        Output pipeline JSON for D3M evaluation.
         """
-        fit_solution, task = self.session.query(models.FitSolution, models.Tasks) \
-                                         .filter(models.FitSolution.id==fitted_soln_id) \
+        fitted_solution_id, rank = self.validator.validate_solution_export_request(request)
+
+        _, task = self.session.query(models.FitSolution, models.Tasks) \
+                                         .filter(models.FitSolution.id==fitted_solution_id) \
                                          .filter(models.FitSolution.task_id==models.Tasks.id) \
                                          .first()
-        """
-        solution, task = self.session.query(models.Solutions, models.Tasks) \
-                                         .filter(models.Solutions.id==solution_id) \
-                                         .filter(models.Solutions.task_id==models.Tasks.id) \
-                                         .first()
-
         export(task, rank)
+        export_run(task, rank)

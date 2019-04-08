@@ -38,7 +38,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     return pipeline, train_dataset
 
 
-def fit(pipeline: pipeline.Pipeline, problem: dict, input_dataset: container.Dataset) -> Optional[runtime.Runtime]:
+def fit(pipeline: pipeline.Pipeline, problem: dict, input_dataset: container.Dataset) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
     hyperparams = None
     random_seed = 0
     volumes_dir = None
@@ -51,7 +51,7 @@ def fit(pipeline: pipeline.Pipeline, problem: dict, input_dataset: container.Dat
     if result.has_error():
         raise result.error
 
-    return fitted_runtime
+    return fitted_runtime, result
 
 
 def produce(fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset) -> container.DataFrame:
