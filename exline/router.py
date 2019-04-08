@@ -9,6 +9,7 @@ import logging
 from copy import deepcopy
 from .modeling.metrics import classification_metrics, regression_metrics
 from typing import Sequence, Tuple
+from d3m.metadata import problem
 
 logger = logging.getLogger(__name__)
 
@@ -20,11 +21,11 @@ SMALL_DATASET_THRESH = 2000
 def get_resource_types(dataset_doc: dict) -> Sequence[str]:
     return sorted([dr['resType'] for dr in dataset_doc['dataResources']])
 
-def is_tabular(dataset_doc: dict, problem: dict) -> bool:
+def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
     resource_types = get_resource_types(dataset_doc)
-    task_type = problem['problem']['taskType'].lower()
+    task_type = problem_desc['problem']['task_type']
 
-    if task_type not in ['regression', 'classification', 'timeSeriesForecasting']:
+    if task_type not in [problem.TaskType.REGRESSION, problem.TaskType.CLASSIFICATION, problem.TaskType.TIME_SERIES_FORECASTING]:
         return False
     elif resource_types == ['table']:
         return True
@@ -53,22 +54,22 @@ def is_image(dataset_doc: dict) -> bool:
     return 'image' in get_resource_types(dataset_doc)
 
 def is_graph_matching(problem: dict) -> bool:
-    return problem['problem']['taskType'] == 'graphMatching'
+    return problem_desc['problem']['task_type'] == problem.TaskType.GRAPH_MATCHING
 
 def is_community_detection(problem: dict) -> bool:
-    return problem['problem']['taskType'] == 'communityDetection'
+    return problem_desc['problem']['task_type'] == problem.TaskType.COMMUNITY_DETECTION
 
 def is_clustering(problem: dict) -> bool:
-    return problem['problem']['taskType'] == 'clustering'
+    return problem_desc['problem']['task_type'] == problem.TaskType.CLUSTERING
 
 def is_vertex_nomination(problem: dict) -> bool:
-    return problem['problem']['taskType'] == 'vertexNomination'
+    return problem_desc['problem']['task_type'] == problem.TaskType.VERTEX_NOMINATION
 
 def is_collaborative_filtering(problem: dict) -> bool:
-    return problem['problem']['taskType'] == 'collaborativeFiltering'
+    return problem_desc['problem']['task_type'] == problem.TaskType.COLLABORATIVE_FILTERING
 
 def is_link_prediction(problem: dict) -> bool:
-    return problem['problem']['taskType'] == 'linkPrediction'
+    return problem_desc['problem']['task_type'] == problem.TaskType.LINK_PREDICTION
 
 def is_text(dataset_doc: dict) -> bool:
     return ['table', 'text'] == get_resource_types(dataset_doc)

@@ -10,6 +10,7 @@ import config
 
 import models
 import utils
+from server import export
 from server.messages import Messaging
 from server.validation import RequestValidator
 
@@ -150,7 +151,9 @@ class TaskManager():
         # Generate search ID
         search_id = self._generate_id()
 
+        # serialize the problem buf to json to save it in the db
         prob = json_format.MessageToDict(message.problem)
+        prob = json.dumps(prob)
 
         # serialize the pipeline to a string for storage in db if one is provided
         search_template: str = None
@@ -163,7 +166,6 @@ class TaskManager():
         self.session.add(search)
         self.session.commit()
 
-        prob = json.dumps(prob)
 
         task = models.Tasks(problem=prob,
                             pipeline=search_template,
@@ -472,7 +474,7 @@ class TaskManager():
                     raise RuntimeError("ProduceSolution task didn't complete successfully")
 
                 # TODO(jtorrez): predictions filename creation should live somewhere better than utils
-                preds_path = utils.make_preds_filename(task.id)
+                preds_path = utils.make_preds_filename(task.fit_solution_id)
 
                 # check the file actually exists
                 if not preds_path.exists() and not preds_path.is_file():
@@ -499,25 +501,15 @@ class TaskManager():
         return json.loads(dag)
 
     def SolutionExport(self, request):
-        """Output pipeline JSON and "executeable" for D3M evaluation.
-
-        NOTE: This method is HIGHLY SPECIFIC to the eval and would be WONTFIX if not required
-        for the eval. You will notice the output folders are hardcoded, this is a known and intentional
-        limitation.
         """
-        solution_id, rank = self.validator.validate_solution_export_request(request)
-        #solution_id = self.validator.validate_fitted_solution_id_exists(fitted_soln_id, self.session, request)
-
+        Output pipeline JSON for D3M evaluation.
         """
-        fit_solution, task = self.session.query(models.FitSolution, models.Tasks) \
-                                         .filter(models.FitSolution.id==fitted_soln_id) \
+        fitted_solution_id, rank = self.validator.validate_solution_export_request(request)
+
+        _, task = self.session.query(models.FitSolution, models.Tasks) \
+                                         .filter(models.FitSolution.id==fitted_solution_id) \
                                          .filter(models.FitSolution.task_id==models.Tasks.id) \
                                          .first()
-        """
-        solution, task = self.session.query(models.Solutions, models.Tasks) \
-                                         .filter(models.Solutions.id==solution_id) \
-                                         .filter(models.Solutions.task_id==models.Tasks.id) \
-                                         .first()
-
-        #export.export_dag(task.DAG, fitted_soln_id, rank)
-        #export.export_executable(task.id, fitted_soln_id)
+        export.export(task, rank)
+        export.export_run(task)
+        export.export_predictions(task)

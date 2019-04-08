@@ -4,11 +4,12 @@ from typing import Tuple, Optional
 
 from d3m.container import dataset
 from d3m import container, exceptions, runtime
-from d3m.metadata import base as metadata_base, pipeline
+from d3m.metadata import base as metadata_base, pipeline, problem
 
 from exline import router
 from exline.modeling import metrics
 from exline.pipelines import tabular
+import main_utils as utils
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +23,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
         dataset_doc = json.load(json_file)
 
     # extract metric from the problem
-    protobuf_metric = problem['problem']['performanceMetrics'][0]['metric']
+    protobuf_metric = problem['problem']['performance_metrics'][0]['metric']
     metric = metrics.translate_proto_metric(protobuf_metric)
 
     # determine type of pipeline required for dataset
@@ -38,7 +39,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     return pipeline, train_dataset
 
 
-def fit(pipeline: pipeline.Pipeline, problem: dict, input_dataset: container.Dataset) -> Optional[runtime.Runtime]:
+def fit(pipeline: pipeline.Pipeline, problem: problem.Problem, input_dataset: container.Dataset) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
     hyperparams = None
     random_seed = 0
     volumes_dir = None
@@ -51,7 +52,7 @@ def fit(pipeline: pipeline.Pipeline, problem: dict, input_dataset: container.Dat
     if result.has_error():
         raise result.error
 
-    return fitted_runtime
+    return fitted_runtime, result
 
 
 def produce(fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset) -> container.DataFrame:
