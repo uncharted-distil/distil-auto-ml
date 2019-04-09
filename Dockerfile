@@ -53,7 +53,7 @@ RUN sh build.sh
 RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
 
 # Barf
-COPY base.py /usr/local/lib/python3.6/dist-packages/d3m/metadata/base.py
+#COPY base.py /usr/local/lib/python3.6/dist-packages/d3m/metadata/base.py
 
 # Common primitives KILL ME NOW
 RUN git clone https://gitlab.com/datadrivendiscovery/common-primitives.git && \
