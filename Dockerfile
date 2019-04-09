@@ -50,7 +50,7 @@ COPY build.sh .
 RUN sh build.sh
 
 # TODO: not this
-RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.2.18
+RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
 
 # Barf
 COPY base.py /usr/local/lib/python3.6/dist-packages/d3m/metadata/base.py
