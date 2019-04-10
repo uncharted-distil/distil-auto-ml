@@ -8,7 +8,7 @@ from d3m.metadata import base as metadata_base, pipeline, problem
 
 from exline import router
 from exline.modeling import metrics
-from exline.pipelines import tabular
+from exline.pipelines import tabular, graph_matching
 import main_utils as utils
 
 logger = logging.getLogger(__name__)
@@ -29,8 +29,13 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     # determine type of pipeline required for dataset
     pipeline_type, pipeline_info = router.get_routing_info(dataset_doc, problem, metric)
 
+    pipeline_type = pipeline_type.lower()
+
     if pipeline_type is 'table':
         pipeline = tabular.create_pipeline(metric)
+
+    elif pipeline_type is 'graph_matching':
+        pipeline = graph_matching.create_pipeline(metric)
 
     # prepend to the base pipeline
     if prepend is not None:

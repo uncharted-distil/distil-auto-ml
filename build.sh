@@ -18,13 +18,15 @@ pip3 install tensorflow-gpu==1.12.0
 pip3 install fastai
 
 # SGM
-cd third_party
-git clone https://github.com/bkj/sgm.git
-cd sgm
-pip3 install cython==0.29.3
-pip3 install -r requirements.txt
-pip3 install -e .
-cd $PROJECT_ROOT
+#cd third_party
+#git clone https://github.com/bkj/sgm.git
+#cd sgm
+#pip3 install cython==0.29.3
+#pip3 install -r requirements.txt
+#pip3 install -e .
+#cd $PROJECT_ROOT
+
+pip3 install git+https://github.com/nowfred/sgm.git
 
 # Recommender system
 pip3 install git+https://github.com/bkj/basenet.git@903756540b89809ef458f35257287b937b333417
