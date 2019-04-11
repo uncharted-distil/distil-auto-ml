@@ -31,6 +31,9 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
 
     if pipeline_type is 'table':
         pipeline = tabular.create_pipeline(metric)
+    else:
+        logger.error(f'Pipeline type [{pipeline_type}] is not yet supported.')
+        return None, train_dataset
 
     # prepend to the base pipeline
     if prepend is not None:
