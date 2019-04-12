@@ -4,7 +4,7 @@ ARG BRANCH_NAME=__UNSET__
 ENV BRANCH_NAME=${BRANCH_NAME}
 
 ENV PYTHONPATH=$PYTHONPATH:/app
-ENV COMMON_PRIMITIVES_VERSION=v0.4.0
+ENV COMMON_PRIMITIVES_VERSION=v0.3.0
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -50,7 +50,7 @@ COPY build.sh .
 RUN sh build.sh
 
 # TODO: not this
-RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
+RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.2.18
 
 # Barf
 #COPY base.py /usr/local/lib/python3.6/dist-packages/d3m/metadata/base.py

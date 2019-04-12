@@ -110,11 +110,11 @@ def exline_task(logger, session, task):
 
         search_template = pipeline.Pipeline.from_json(task.pipeline) if task.pipeline else None
         pipe, dataset = ex_pipeline.create(task.dataset_uri, problem_d3m, search_template)
-        fitted_pipeline, result = ex_pipeline.fit(pipe, problem_d3m, dataset)
+        fitted_pipeline, run = ex_pipeline.fit(pipe, problem_d3m, dataset)
 
         pipeline_json = fitted_pipeline.pipeline.to_json(nest_subpipelines=True)
         str_buf = io.StringIO()
-        result.pipeline_run.to_yaml(str_buf)
+        run.to_yaml(str_buf)
         pipeline_run_yaml = str_buf.getvalue()
 
         save_me = {'pipeline': fitted_pipeline, 'target_name': target_name}
