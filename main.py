@@ -15,8 +15,8 @@ import models
 from server.server import Server
 from server.export import export_run
 
-from exline import pipeline as ex_pipeline
-from exline.scoring import Scorer
+from processing import pipeline as ex_pipeline
+from processing.scoring import Scorer
 from server import export
 import api.utils as api_utils
 from api import problem_pb2

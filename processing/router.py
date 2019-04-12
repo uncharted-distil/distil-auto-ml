@@ -7,7 +7,7 @@
 import sys
 import logging
 from copy import deepcopy
-from .modeling.metrics import classification_metrics, regression_metrics
+from exline.modeling.metrics import classification_metrics, regression_metrics
 from typing import Sequence, Tuple
 from d3m.metadata import problem
 
