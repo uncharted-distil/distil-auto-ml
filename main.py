@@ -105,6 +105,7 @@ def exline_task(logger, session, task):
         # load the problem supplied by the search request into a d3m Problem type
         problem_proto = json_format.Parse(task.problem, problem_pb2.ProblemDescription())
         problem_d3m = api_utils.decode_problem_description(problem_proto)
+        print(f'********** problem proto\n{problem_d3m}')
 
         target_name = problem_d3m['inputs'][0]['targets'][0]['column_name']
 

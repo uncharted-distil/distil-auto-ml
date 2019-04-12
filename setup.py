@@ -12,6 +12,9 @@ setup(
     license='ALV2',
     packages=find_packages(),
     version="0.0.0",
+    dependency_links=[
+        'git+https://github.com/uncharted-distil/distil-primitives.git#egg=distil_primitives',
+    ],
     entry_points={
         'd3m.primitives': [
             'data_transformation.imputer.ExlineSimpleImputer = exline.primitives.simple_imputer:SimpleImputerPrimitive',
