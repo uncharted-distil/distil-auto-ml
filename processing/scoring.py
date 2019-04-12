@@ -15,7 +15,7 @@ from d3m.metadata.pipeline import Pipeline
 from d3m import runtime
 from d3m import utils as dutils
 
-from exline import pipeline
+from processing import pipeline
 
 
 PipelineContext = dutils.Enum(value='PipelineContext', names=['TESTING'], start=1)

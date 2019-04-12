@@ -6,9 +6,9 @@ from d3m.container import dataset
 from d3m import container, exceptions, runtime
 from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 
-from exline import router
 from exline.modeling import metrics
-from exline.pipelines import tabular
+from processing import router
+from processing.pipelines import tabular
 import main_utils as utils
 
 logger = logging.getLogger(__name__)
