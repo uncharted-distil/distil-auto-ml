@@ -4,7 +4,7 @@ from typing import Tuple, Optional
 
 from d3m.container import dataset
 from d3m import container, exceptions, runtime
-from d3m.metadata import base as metadata_base, pipeline, problem
+from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 
 from exline import router
 from exline.modeling import metrics
@@ -42,26 +42,20 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     return pipeline, train_dataset
 
 
-def fit(pipeline: pipeline.Pipeline, problem: problem.Problem, input_dataset: container.Dataset) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
+def fit(pipeline: pipeline.Pipeline, problem: dict, input_dataset: container.Dataset) -> Tuple[Optional[runtime.Runtime], Optional[pipeline_run.PipelineRun]]:
     hyperparams = None
     random_seed = 0
     volumes_dir = None
 
-    fitted_runtime, _, result = runtime.fit(
+    fitted_runtime, _, run = runtime.fit(
         pipeline, problem, [input_dataset], hyperparams=hyperparams, random_seed=random_seed,
         volumes_dir=volumes_dir, context=metadata_base.Context.TESTING
     )
-
-    if result.has_error():
-        raise result.error
-
-    return fitted_runtime, result
+    return fitted_runtime, run
 
 
 def produce(fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset) -> container.DataFrame:
-    predictions, result = runtime.produce(fitted_pipeline, [input_dataset])
-    if result.has_error():
-        raise result.error
+    predictions, run = runtime.produce(fitted_pipeline, [input_dataset])
     return predictions
 
 
