@@ -49,7 +49,7 @@ def fit(pipeline: pipeline.Pipeline, problem: dict, input_dataset: container.Dat
 
     fitted_runtime, _, run = runtime.fit(
         pipeline, problem, [input_dataset], hyperparams=hyperparams, random_seed=random_seed,
-        volumes_dir=volumes_dir, context=metadata_base.Context.TESTING
+        volumes_dir=volumes_dir, context=metadata_base.Context.TESTING, runtime_environment=pipeline_run.RuntimeEnvironment()
     )
     return fitted_runtime, run
 
