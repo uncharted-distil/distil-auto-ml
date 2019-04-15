@@ -72,10 +72,10 @@ RUN pip3 install python-prctl
 COPY .git /.git
 COPY . .
 
-ENV D3M_BASE_IMAGE_NAME=_none_
-ENV D3M_BASE_IMAGE_DIGEST=_none_
-ENV D3M_IMAGE_NAME=_none_
-ENV D3M_IMAGE_DIGEST=_none_
+#ENV D3M_BASE_IMAGE_NAME=_none_
+#ENV D3M_BASE_IMAGE_DIGEST=_none_
+#ENV D3M_IMAGE_NAME=_none_
+#ENV D3M_IMAGE_DIGEST=_none_
 
 RUN pip3 install -e /app
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]

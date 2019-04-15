@@ -121,7 +121,7 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
         logger.debug(f'Fitting {__name__}')
         #assert len(self._inputs) == 3
 
-        G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes = self._inputs
+        G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes, _ = self._inputs
 
         G1p = nx.relabel_nodes(G1, G1_lookup)
         G2p = nx.relabel_nodes(G2, G2_lookup)
@@ -154,20 +154,24 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> CallResult[container.DataFrame]:
         logger.debug(f'Producing {__name__}')
 
-        G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes = self._inputs
+        _, _, _, _, X_train, _, _, index = self._inputs
         
         preds = self._model[(X_train.num_id1.values, X_train.num_id2.values)]
+        preds = np.asarray(preds).squeeze()
+        #logger.info(preds)
+
+        result_df = container.DataFrame({"d3mIndex": index, "match": preds}, generate_metadata=True)
 
         # create dataframe to hold d3mIndex and result
         #result = self._model.predict(inputs)
         #result_df = container.DataFrame({inputs.index.name: inputs.index, self._outputs.columns[0]: result}, generate_metadata=True)
 
         # mark the semantic types on the dataframe
-        #result_df.metadata = result_df.metadata.add_semantic_type((metadata_base.ALL_ELEMENTS, 0), 'https://metadata.datadrivendiscovery.org/types/PrimaryKey')
-        #result_df.metadata = result_df.metadata.add_semantic_type((metadata_base.ALL_ELEMENTS, 1), 'https://metadata.datadrivendiscovery.org/types/PredictedTarget')
+        result_df.metadata = result_df.metadata.add_semantic_type((metadata_base.ALL_ELEMENTS, 0), 'https://metadata.datadrivendiscovery.org/types/PrimaryKey')
+        result_df.metadata = result_df.metadata.add_semantic_type((metadata_base.ALL_ELEMENTS, 1), 'https://metadata.datadrivendiscovery.org/types/PredictedTarget')
 
         #logger.debug(f'\n{result_df}')
-        return base.CallResult(preds)
+        return base.CallResult(result_df)
 
     def _pad_graphs(self, G1, G2):
         n_nodes = max(G1.order(), G2.order())  

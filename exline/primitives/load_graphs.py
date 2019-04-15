@@ -75,9 +75,9 @@ class ExlineGraphLoaderPrimitive(transformer.TransformerPrimitiveBase[Inputs, Ou
 
         assert isinstance(dataframe, container.DataFrame), type(dataframe)
 
-        G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes = self._prep([dataframe, graph1, graph2])
+        G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes, index = self._prep([dataframe, graph1, graph2])
 
-        return base.CallResult([G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes])
+        return base.CallResult([G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes, index])
 
     def _pad_graphs(self, G1, G2):
         n_nodes = max(G1.order(), G2.order())  
@@ -99,6 +99,7 @@ class ExlineGraphLoaderPrimitive(transformer.TransformerPrimitiveBase[Inputs, Ou
         #df = inputs[0]
         logger.info(df.columns)
         y_train = df['match']
+        index = df['d3mIndex']
         df.drop(['d3mIndex', 'match'], axis=1, inplace=True)
         assert df.shape[1] == 2
 
@@ -120,7 +121,7 @@ class ExlineGraphLoaderPrimitive(transformer.TransformerPrimitiveBase[Inputs, Ou
 
         X_train = df
 
-        return G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes
+        return G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes, index
 
     @classmethod
     def _update_metadata(cls, metadata: metadata_base.DataMetadata, resource_id: metadata_base.SelectorSegment) -> metadata_base.DataMetadata:
