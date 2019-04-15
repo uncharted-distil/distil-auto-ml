@@ -51,22 +51,22 @@ def is_audio(dataset_doc: dict) -> bool:
 def is_image(dataset_doc: dict) -> bool:
     return 'image' in get_resource_types(dataset_doc)
 
-def is_graph_matching(problem: dict) -> bool:
+def is_graph_matching(problem_desc: dict) -> bool:
     return problem_desc['problem']['task_type'] == problem.TaskType.GRAPH_MATCHING
 
-def is_community_detection(problem: dict) -> bool:
+def is_community_detection(problem_desc: dict) -> bool:
     return problem_desc['problem']['task_type'] == problem.TaskType.COMMUNITY_DETECTION
 
-def is_clustering(problem: dict) -> bool:
+def is_clustering(problem_desc: dict) -> bool:
     return problem_desc['problem']['task_type'] == problem.TaskType.CLUSTERING
 
-def is_vertex_nomination(problem: dict) -> bool:
+def is_vertex_nomination(problem_desc: dict) -> bool:
     return problem_desc['problem']['task_type'] == problem.TaskType.VERTEX_NOMINATION
 
-def is_collaborative_filtering(problem: dict) -> bool:
+def is_collaborative_filtering(problem_desc: dict) -> bool:
     return problem_desc['problem']['task_type'] == problem.TaskType.COLLABORATIVE_FILTERING
 
-def is_link_prediction(problem: dict) -> bool:
+def is_link_prediction(problem_desc: dict) -> bool:
     return problem_desc['problem']['task_type'] == problem.TaskType.LINK_PREDICTION
 
 def is_text(dataset_doc: dict) -> bool:
