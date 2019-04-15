@@ -96,8 +96,6 @@ class ExlineGraphLoaderPrimitive(transformer.TransformerPrimitiveBase[Inputs, Ou
         assert isinstance(list(G1.nodes)[0], str)
         assert isinstance(list(G2.nodes)[0], str)
         
-        #df = inputs[0]
-        logger.info(df.columns)
         y_train = df['match']
         index = df['d3mIndex']
         df.drop(['d3mIndex', 'match'], axis=1, inplace=True)

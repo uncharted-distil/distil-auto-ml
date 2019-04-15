@@ -66,7 +66,7 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
         PrimitiveBase.__init__(self, hyperparams=hyperparams, random_seed=random_seed)
         self._model = False
         self.unweighted = True
-        self.verbose = True
+        self.verbose = False
         self.num_iters = 20
         self.tolerance = 1
 
@@ -119,7 +119,6 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
 
     def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
         logger.debug(f'Fitting {__name__}')
-        #assert len(self._inputs) == 3
 
         G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes, _ = self._inputs
 
@@ -129,7 +128,6 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
         B = nx.adjacency_matrix(G2p, nodelist=list(G2_lookup.values()))
 
         # Symmetrize (required by our SGM implementation)
-        # Does it hurt performance?
         A = ((A + A.T) > 0).astype(np.float32)
         B = ((B + B.T) > 0).astype(np.float32)
 
@@ -158,13 +156,9 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
         
         preds = self._model[(X_train.num_id1.values, X_train.num_id2.values)]
         preds = np.asarray(preds).squeeze()
-        #logger.info(preds)
-
-        result_df = container.DataFrame({"d3mIndex": index, "match": preds}, generate_metadata=True)
 
         # create dataframe to hold d3mIndex and result
-        #result = self._model.predict(inputs)
-        #result_df = container.DataFrame({inputs.index.name: inputs.index, self._outputs.columns[0]: result}, generate_metadata=True)
+        result_df = container.DataFrame({"d3mIndex": index, "match": preds}, generate_metadata=True)
 
         # mark the semantic types on the dataframe
         result_df.metadata = result_df.metadata.add_semantic_type((metadata_base.ALL_ELEMENTS, 0), 'https://metadata.datadrivendiscovery.org/types/PrimaryKey')
@@ -172,15 +166,6 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
 
         #logger.debug(f'\n{result_df}')
         return base.CallResult(result_df)
-
-    def _pad_graphs(self, G1, G2):
-        n_nodes = max(G1.order(), G2.order())  
-        for i in range(n_nodes - G1.order()):
-            G1.add_node('__new_node__salt123_%d' % i)      
-        for i in range(n_nodes - G2.order()):
-            G2.add_node('__new_node__salt456_%d' % i)     
-        assert G1.order() == G2.order()
-        return G1, G2, n_nodes
 
     def get_params(self) -> Params:
         return Params()

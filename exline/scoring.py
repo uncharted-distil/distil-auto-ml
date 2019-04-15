@@ -17,9 +17,10 @@ from d3m import utils as dutils
 
 from exline import pipeline
 
+import copy
+
 
 PipelineContext = dutils.Enum(value='PipelineContext', names=['TESTING'], start=1)
-
 
 
 class Scorer:
@@ -50,11 +51,6 @@ class Scorer:
 
         # Load the data to test
         self.inputs = dataset.Dataset.load(self.dataset_uri)
-        #self.logger.info('the vals')
-        #self.logger.info(list(test_dataset.keys()).pop())
-        #self.logger.info(test_dataset['learningData'])
-        #o = runtime.produce(fitted_pipeline, inputs)
-        #self.logger.info(o)
 
         # TODO: actually accept new data
         if self.method == 'holdout':
@@ -180,20 +176,30 @@ class Scorer:
 
         # produce predictions from the fitted model and extract to single col dataframe
         # with the d3mIndex as the index
-        result_df = pipeline.produce(self.fitted_pipeline, self.inputs)
+        _in = copy.deepcopy(self.inputs)
+        result_df = pipeline.produce(self.fitted_pipeline, _in)
         result_df = result_df.set_index(result_df['d3mIndex'])
-        result_df = result_df[target_col]
+        result_df.index = result_df.index.map(int)
+
+        result_series = result_df[target_col]
 
         # put the ground truth predictions into a single col dataframe with the d3mIndex
         # as the index
-        true_df = self.inputs[list(self.inputs.keys()).pop()]
+        true_df = self.inputs['learningData']
         true_df = true_df.set_index(pd.to_numeric(true_df['d3mIndex']))
-        true_df = true_df[target_col]
-
+                
         # make sure the result and truth have the same d3mIndex
         true_df = true_df.loc[result_df.index]
 
-        score = self._score(self.metric, true_df, result_df)
+        # make sure that both have the same type
+        ensure_type = str(true_df[target_col].dtype)
+        self.logger.info("ensure_type")
+        self.logger.info(ensure_type)
+        result_series = result_series.astype(ensure_type)
+
+        true_series = true_df[target_col]
+
+        score = self._score(self.metric, true_series, result_series)
 
         return [score]
 
