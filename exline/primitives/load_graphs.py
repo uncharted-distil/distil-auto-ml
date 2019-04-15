@@ -63,12 +63,13 @@ class ExlineGraphLoaderPrimitive(transformer.TransformerPrimitiveBase[Inputs, Ou
     def produce(self, *, inputs: Inputs, timeout: float = None, iterations: int = None) -> base.CallResult[Outputs]:
         dataframe_resource_id, dataframe = base_utils.get_tabular_resource(inputs, self.hyperparams['dataframe_resource'])
 
-        #logger.info("inputs['0']")
         graph1 = inputs['0']
+        int2str_map = dict(zip(graph1.nodes, [str(n) for n in graph1.nodes]))
+        graph1 = nx.relabel_nodes(graph1, mapping=int2str_map)
+
         graph2 = inputs['1']
-        #logger.info(graph1)
-        #logger.info(dict(inputs).values()[0])
-        #logger.info("end")
+        int2str_map = dict(zip(graph2.nodes, [str(n) for n in graph2.nodes]))
+        graph2 = nx.relabel_nodes(graph2, mapping=int2str_map)
 
         dataframe.metadata = self._update_metadata(inputs.metadata, dataframe_resource_id)
 

@@ -66,6 +66,8 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
         PrimitiveBase.__init__(self, hyperparams=hyperparams, random_seed=random_seed)
         self.unweighted = True
         self.verbose = True
+        self.num_iters = 20
+        self.tolerance = 1
 
     def __getstate__(self) -> dict:
         state = PrimitiveBase.__getstate__(self)
@@ -89,10 +91,11 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
         G1 = self._inputs[1]
         G2 = self._inputs[2]
         logger.info(list(G1.nodes))
-        #assert isinstance(list(G1.nodes)[0], str)
-        #assert isinstance(list(G2.nodes)[0], str)
+        assert isinstance(list(G1.nodes)[0], str)
+        assert isinstance(list(G2.nodes)[0], str)
         
         df = self._inputs[0]
+        y_train = df['match']
         df.drop(['d3mIndex', 'match'], axis=1, inplace=True)
         logger.info(df.shape)
         assert df.shape[1] == 2
@@ -127,7 +130,7 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
             A = (A != 0)
             B = (B != 0)
         
-        P = df[['num_id1', 'num_id2']].values
+        P = df[['num_id1', 'num_id2']][y_train == 1].values
         P = sparse.csr_matrix((np.ones(P.shape[0]), (P[:,0], P[:,1])), shape=(n_nodes, n_nodes))
         
         sgm = ScipyJVClassicSGM(A=A, B=B, P=P, verbose=self.verbose)
