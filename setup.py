@@ -14,6 +14,8 @@ setup(
     version="0.0.0",
     entry_points={
         'd3m.primitives': [
+            'data_transformation.seeded_graph_matcher.ExlineSeededGraphMatcher = exline.primitives.seeded_graph_matcher:ExlineSeededGraphMatchingPrimitive',
+            'data_transformation.load_graphs.ExlineGraphLoader = exline.primitives.load_graphs:ExlineGraphLoaderPrimitive',
             'data_transformation.imputer.ExlineSimpleImputer = exline.primitives.simple_imputer:SimpleImputerPrimitive',
             'data_transformation.data_cleaning.ExlineReplaceSingletons = exline.primitives.replace_singletons:ReplaceSingletonsPrimitive',
             'data_transformation.imputer.ExlineCategoricalImputer = exline.primitives.categorical_imputer:CategoricalImputerPrimitive',

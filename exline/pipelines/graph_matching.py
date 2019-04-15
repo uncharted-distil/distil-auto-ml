@@ -9,23 +9,9 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from exline.primitives.simple_imputer import SimpleImputerPrimitive
-from exline.primitives.categorical_imputer import CategoricalImputerPrimitive
-from exline.primitives.standard_scaler import StandardScalerPrimitive
-from exline.primitives.ensemble_forest import EnsembleForestPrimitive
-from exline.primitives.replace_singletons import ReplaceSingletonsPrimitive
-from exline.primitives.one_hot_encoder import OneHotEncoderPrimitive
-from exline.primitives.binary_encoder import BinaryEncoderPrimitive
-from exline.primitives.text_encoder import TextEncoderPrimitive
-from exline.primitives.enrich_dates import EnrichDatesPrimitive
-from exline.primitives.missing_indicator import MissingIndicatorPrimitive
-from exline.primitives.simple_column_parser import SimpleColumnParserPrimitive
-from exline.primitives.zero_column_remover import ZeroColumnRemoverPrimitive
+from exline.primitives.load_graphs import ExlineGraphLoaderPrimitive
+from exline.primitives.seeded_graph_matcher import ExlineSeededGraphMatchingPrimitive
 
-from exline.primitives.load_graphs import LoadGraphsPrimitive
-
-from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
-from common_primitives.remove_columns import RemoveColumnsPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
 from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
@@ -49,35 +35,47 @@ PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1
 }
 '''
 
+'''
+def load_graphs(d3mds):
+    Gs = {}
+    for resource in d3mds.dataset.dsDoc['dataResources']:
+        if resource['resType'] == 'graph':
+            assert 'text/gml' in resource['resFormat']
+            Gs[resource['resID']] = nx.read_gml(os.path.join(d3mds.dataset.dsHome, resource['resPath']))
+            
+return Gs
+'''
 
-def create_pipeline(metric: str,
-                    cat_mode: str = 'one_hot',
-                    max_one_hot: int = 16,
-                    scale: bool = False) -> Pipeline:
-    previous_step = 0
-    input_val = 'steps.{}.produce'
+
+def create_pipeline(metric: str) -> Pipeline:
 
     # create the basic pipeline
     graph_matching_pipeline = Pipeline(context=PipelineContext.TESTING)
     graph_matching_pipeline.add_input(name='inputs')
 
     # step 0 - load the graphs 
-    step = PrimitiveStep(primitive_description=LoadGraphsPrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=ExlineGraphLoaderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
     graph_matching_pipeline.add_step(step)
 
-    
-    # convert predictions to expected format
-    step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
+    # step 1 - match the graphs that have been seeded 
+    step = PrimitiveStep(primitive_description=ExlineSeededGraphMatchingPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
+    step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     step.add_output('produce')
-    step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
     graph_matching_pipeline.add_step(step)
-    previous_step += 1
+
+    # convert predictions to expected format
+    #step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query())
+    #step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
+    #step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
+    #step.add_output('produce')
+    #step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
+    #graph_matching_pipeline.add_step(step)
 
     # Adding output step to the pipeline
-    graph_matching_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
+    graph_matching_pipeline.add_output(name='output', data_reference='steps.1.produce')
 
     return graph_matching_pipeline

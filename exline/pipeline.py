@@ -31,10 +31,9 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
 
     pipeline_type = pipeline_type.lower()
 
-    if pipeline_type is 'table':
+    if pipeline_type == 'table':
         pipeline = tabular.create_pipeline(metric)
-
-    elif pipeline_type is 'graph_matching':
+    if pipeline_type == 'graph_matching':
         pipeline = graph_matching.create_pipeline(metric)
 
     # prepend to the base pipeline

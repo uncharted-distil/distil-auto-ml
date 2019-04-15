@@ -8,13 +8,14 @@ from d3m.primitive_interfaces import base, transformer
 from d3m.primitive_interfaces.supervised_learning import PrimitiveBase
 from d3m.primitive_interfaces.base import CallResult
 
-from exline.modeling.forest import ForestCV
-from exline.modeling.metrics import classification_metrics, regression_metrics
-
 import pandas as pd
 import numpy as np
+import networkx as nx
+from scipy import sparse
 
-__all__ = ('EnsembleForest',)
+from sgm.backends.classic import ScipyJVClassicSGM
+
+__all__ = ('SeededGraphMatcher',)
 
 logger = logging.getLogger(__name__)
 
@@ -23,15 +24,11 @@ class Hyperparams(hyperparams.Hyperparams):
         default='',
         semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
     )
-    fast = hyperparams.Hyperparameter[bool](
-        default=False,
-        semantic_types=['https://metadata.datadrivendiscovery.org/types/ControlParameter']
-    )
 
 class Params(params.Params):
     pass
 
-class SeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, container.DataFrame, Params, Hyperparams]):
+class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, container.DataFrame, Params, Hyperparams]):
     """
     A primitive that matches seeded graphs.
     """
@@ -40,7 +37,7 @@ class SeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, container.
             'id': '8baea8e6-9d3a-46d7-acf1-04fd593dcd37',
             'version': '0.1.0',
             'name': "SeededGraphMatcher",
-            'python_path': 'd3m.primitives.learner.random_forest.ExlineSeededGraphMatcher',
+            'python_path': 'd3m.primitives.data_transformation.seeded_graph_matcher.ExlineSeededGraphMatcher',
             'source': {
                 'name': 'exline',
                 'contact': 'mailto:cbethune@uncharted.software',
@@ -67,19 +64,18 @@ class SeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, container.
                  random_seed: int = 0) -> None:
 
         PrimitiveBase.__init__(self, hyperparams=hyperparams, random_seed=random_seed)
-
-        self._model = ForestCV(self.hyperparams['metric'], param_grid=self._grid)
+        self._model = SGMGraphMatcher(self.hyperparams['metric'])
+        self.unweighted = True
+        self.verbose = True
 
     def __getstate__(self) -> dict:
         state = PrimitiveBase.__getstate__(self)
         state['models'] = self._model
-        state['grid'] = self._grid
         return state
 
     def __setstate__(self, state: dict) -> None:
         PrimitiveBase.__setstate__(self, state)
         self._model = state['models']
-        self._grid = state['grid']
 
     def set_training_data(self, *, inputs: container.DataFrame, outputs: container.DataFrame) -> None:
         self._inputs = inputs
@@ -87,14 +83,59 @@ class SeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, container.
 
     def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
         logger.debug(f'Fitting {__name__}')
-        if self.hyperparams['fast']:
-            rows = len(self._inputs.index)
-            if rows > self._FAST_FIT_ROWS:
-                sampled_inputs = self._inputs.sample(n=self._FAST_FIT_ROWS, random_state=1)
-                sampled_outputs = self._outputs.loc[self._outputs.index.intersection(sampled_inputs.index), ]
-                self._model.fit(sampled_inputs, sampled_outputs)
-        else:
-            self._model.fit(self._inputs, self._outputs)
+        assert len(self._inputs) == 3
+        
+        G1 = self._inputs[0]
+        G2 = self._inputs[1]
+        assert isinstance(list(G1.nodes)[0], str)
+        assert isinstance(list(G2.nodes)[0], str)
+        
+        df = self._inputs[2]
+        assert df.shape[1] == 2
+
+        df.columns = ('orig_id1', 'orig_id2')
+        df.orig_id1 = df.orig_id1.astype(str)
+        df.orig_id2 = df.orig_id2.astype(str)
+
+        G1, G2, n_nodes = self._pad_graphs(G1, G2)
+
+        G1_nodes = sorted(dict(G1.degree()).items(), key=lambda x: -x[1])
+        G1_nodes = list(zip(*G1_nodes))[0]
+        G1_lookup = dict(zip(G1.nodes, range(len(G1.nodes))))
+        df['num_id1'] = df['orig_id1'].apply(lambda x: G1_lookup[x])
+
+        G2_nodes = sorted(dict(G1.degree()).items(), key=lambda x: -x[1])
+        G2_nodes = list(zip(*G2_nodes))[0]
+        G2_lookup = dict(zip(G2.nodes, range(len(G2.nodes))))
+        df['num_id2'] = df['orig_id2'].apply(lambda x: G2_lookup[x])
+
+
+        G1p = nx.relabel_nodes(G1, G1_lookup)
+        G2p = nx.relabel_nodes(G2, G2_lookup)
+        A = nx.adjacency_matrix(G1p, nodelist=list(G1_lookup.values()))
+        B = nx.adjacency_matrix(G2p, nodelist=list(G2_lookup.values()))
+
+        # Symmetrize (required by our SGM implementation)
+        # Does it hurt performance?
+        A = ((A + A.T) > 0).astype(np.float32)
+        B = ((B + B.T) > 0).astype(np.float32)
+
+        if self.unweighted:
+            A = (A != 0)
+            B = (B != 0)
+        
+        P = df[['num_id1', 'num_id2']].values
+        P = sparse.csr_matrix((np.ones(P.shape[0]), (P[:,0], P[:,1])), shape=(n_nodes, n_nodes))
+        
+        sgm = ScipyJVClassicSGM(A=A, B=B, P=P, verbose=self.verbose)
+        P_out = sgm.run(
+            num_iters=self.num_iters,
+            tolerance=self.tolerance
+        )
+        P_out = sparse.csr_matrix((np.ones(n_nodes), (np.arange(n_nodes), P_out)))
+
+        self._model = P_out
+
         return CallResult(None)
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> CallResult[container.DataFrame]:
@@ -111,16 +152,17 @@ class SeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, container.
         logger.debug(f'\n{result_df}')
         return base.CallResult(result_df)
 
+    def _pad_graphs(self, G1, G2):
+        n_nodes = max(G1.order(), G2.order())  
+        for i in range(n_nodes - G1.order()):
+            G1.add_node('__new_node__salt123_%d' % i)      
+        for i in range(n_nodes - G2.order()):
+            G2.add_node('__new_node__salt456_%d' % i)     
+        assert G1.order() == G2.order()
+        return G1, G2, n_nodes
+
     def get_params(self) -> Params:
         return Params()
 
     def set_params(self, *, params: Params) -> None:
         return
-
-    def _get_grid_for_metric(self) -> Dict[str, Any]:
-        if self.hyperparams['metric'] in classification_metrics:
-            return self._FAST_GRIDS['classification']
-        elif self.hyperparams['metric'] in regression_metrics:
-            return self._FAST_GRIDS['regression']
-        else:
-            raise Exception('ForestCV: unknown metric')
