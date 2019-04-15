@@ -64,7 +64,6 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
                  random_seed: int = 0) -> None:
 
         PrimitiveBase.__init__(self, hyperparams=hyperparams, random_seed=random_seed)
-        self._model = SGMGraphMatcher(self.hyperparams['metric'])
         self.unweighted = True
         self.verbose = True
 
@@ -84,13 +83,18 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
     def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
         logger.debug(f'Fitting {__name__}')
         assert len(self._inputs) == 3
+
+        logger.info(self._inputs)
         
-        G1 = self._inputs[0]
-        G2 = self._inputs[1]
-        assert isinstance(list(G1.nodes)[0], str)
-        assert isinstance(list(G2.nodes)[0], str)
+        G1 = self._inputs[1]
+        G2 = self._inputs[2]
+        logger.info(list(G1.nodes))
+        #assert isinstance(list(G1.nodes)[0], str)
+        #assert isinstance(list(G2.nodes)[0], str)
         
-        df = self._inputs[2]
+        df = self._inputs[0]
+        df.drop(['d3mIndex', 'match'], axis=1, inplace=True)
+        logger.info(df.shape)
         assert df.shape[1] == 2
 
         df.columns = ('orig_id1', 'orig_id2')
@@ -108,7 +112,6 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
         G2_nodes = list(zip(*G2_nodes))[0]
         G2_lookup = dict(zip(G2.nodes, range(len(G2.nodes))))
         df['num_id2'] = df['orig_id2'].apply(lambda x: G2_lookup[x])
-
 
         G1p = nx.relabel_nodes(G1, G1_lookup)
         G2p = nx.relabel_nodes(G2, G2_lookup)
@@ -140,6 +143,8 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
 
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> CallResult[container.DataFrame]:
         logger.debug(f'Producing {__name__}')
+
+        #train_preds = P[(X_train.num_id1.values, X_train.num_id2.values)]
 
         # create dataframe to hold d3mIndex and result
         result = self._model.predict(inputs)
