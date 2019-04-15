@@ -30,9 +30,7 @@ def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
     elif resource_types == ['table']:
         return True
     elif set(resource_types) == {'table'} and len(resource_types) > 2 and not is_question_answering(dataset_doc):
-        print((
-            "is_tabular: found more than two tables, which we can't handle.  falling back to single table"
-        ), file=sys.stderr)
+        logger.warn("is_tabular: found more than two tables, which we can't handle.  falling back to single table")
         return True
     else:
         return False

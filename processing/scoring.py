@@ -186,7 +186,7 @@ class Scorer:
 
         # put the ground truth predictions into a single col dataframe with the d3mIndex
         # as the index
-        true_df = self.inputs[list(self.inputs.keys()).pop()]
+        true_df = self.inputs['learningData']
         true_df = true_df.set_index(pd.to_numeric(true_df['d3mIndex']))
         true_df = true_df[target_col]
 
