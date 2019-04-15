@@ -8,7 +8,7 @@ from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 
 from exline.modeling import metrics
 from processing import router
-from processing.pipelines import tabular
+from processing.pipelines import tabular, question_answer
 import main_utils as utils
 
 logger = logging.getLogger(__name__)
@@ -31,6 +31,8 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
 
     if pipeline_type is 'table':
         pipeline = tabular.create_pipeline(metric)
+    elif pipeline_type is 'question_answering':
+        pipeline = question_answer.create_pipeline(metric)
     else:
         logger.error(f'Pipeline type [{pipeline_type}] is not yet supported.')
         return None, train_dataset
