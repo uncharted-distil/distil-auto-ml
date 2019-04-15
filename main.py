@@ -51,8 +51,7 @@ def produce_task(logger, session, task):
         test_dataset = test_dataset['learningData']
         predictions_df = pd.DataFrame(test_dataset['d3mIndex'])
         predictions_df[dats['target_name']] = results[dats['target_name']]
-
-        preds_path = utils.make_preds_filename(task.fit_solution_id)
+        preds_path = utils.make_preds_filename(task.solution_id)
         predictions_df.to_csv(preds_path, index=False)
 
         session.commit()

@@ -504,11 +504,11 @@ class TaskManager():
         """
         Output pipeline JSON for D3M evaluation.
         """
-        fitted_solution_id, rank = self.validator.validate_solution_export_request(request)
+        solution_id, rank = self.validator.validate_solution_export_request(request)
 
-        _, task = self.session.query(models.FitSolution, models.Tasks) \
-                                         .filter(models.FitSolution.id==fitted_solution_id) \
-                                         .filter(models.FitSolution.task_id==models.Tasks.id) \
+        _, task = self.session.query(models.Solutions, models.Tasks) \
+                                         .filter(models.Solutions.id==solution_id) \
+                                         .filter(models.Solutions.task_id==models.Tasks.id) \
                                          .first()
         export.export(task, rank)
         export.export_run(task)

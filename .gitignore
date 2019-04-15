@@ -9,6 +9,7 @@ third_party/*
 datasets
 seed_datasets_current
 .DS_Store
-output
+outputs/*
+output/*
 test.db
 exline.log

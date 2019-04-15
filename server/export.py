@@ -38,18 +38,20 @@ def override_config():
     config.DEBUG = True
 
 
-def export_predictions(fit_solution_task):
+def export_predictions(solution_task):
     # copy predictions from original scoring output path to the expected D3M location
-    solution_results_dir = pathlib.Path(D3MOUTPUTDIR, 'predictions', str(fit_solution_task.id))
+    solution_results_dir = pathlib.Path(D3MOUTPUTDIR, 'predictions', str(solution_task.id))
     solution_results_dir.mkdir(parents=True, exist_ok=True)
-    original_preds_path = utils.make_preds_filename(fit_solution_task.id)
-    shutil.copy(original_preds_path, solution_results_dir)
-    old_fn = pathlib.Path(solution_results_dir, '{}.csv'.format(fit_solution_task.id))
-    expected_name = pathlib.Path(solution_results_dir, 'predictions.csv')
-    old_fn.rename(expected_name)
+    original_preds_path = utils.make_preds_filename(solution_task.id)
+    # check if predictions were actually generated and export them if so
+    if os.path.exists(original_preds_path):
+        shutil.copy(original_preds_path, solution_results_dir)
+        old_fn = pathlib.Path(solution_results_dir, '{}.csv'.format(solution_task.id))
+        expected_name = pathlib.Path(solution_results_dir, 'predictions.csv')
+        old_fn.rename(expected_name)
 
 
-def export(fit_solution_task, rank):
+def export(solution_task, rank):
     """
     https://datadrivendiscovery.org/wiki/pages/viewpage.action?spaceKey=work&title=Evaluation+Workflow
     Output directory structure
@@ -62,8 +64,8 @@ def export(fit_solution_task, rank):
     """
     # WRITE TO pipelines_ranked
     # ensure it is proper JSON by loading it first
-    if isinstance(fit_solution_task.pipeline, str):
-        pipeline_json = json.loads(fit_solution_task.pipeline)
+    if isinstance(solution_task.pipeline, str):
+        pipeline_json = json.loads(solution_task.pipeline)
     else:
         pipeline_json = fit_solution_task.pipeline
     # Set rank
@@ -71,14 +73,14 @@ def export(fit_solution_task, rank):
     # Set name
     name = pipeline_json.get('name', False)
     if not name:
-        name = fit_solution_task.id
+        name = solution_task.id
     pipeline_json['name'] = name
     # Confirm is valid
     #pipeline.PIPELINE_SCHEMA_VALIDATOR.validate(pipeline_json)
     # Write
     pipeline_ranked_dir = pathlib.Path(D3MOUTPUTDIR + '/pipelines_ranked')
     pipeline_ranked_dir.mkdir(parents=True, exist_ok=True)
-    pipeline_file = pathlib.Path(pipeline_ranked_dir, '{}.json'.format(fit_solution_task.id))
+    pipeline_file = pathlib.Path(pipeline_ranked_dir, '{}.json'.format(solution_task.id))
     with open(pipeline_file, 'w') as f:
         f.write(json.dumps(pipeline_json, sort_keys=True, indent=4))
 
@@ -86,18 +88,17 @@ def export(fit_solution_task, rank):
     # Write
     pipeline_scored_dir = pathlib.Path(D3MOUTPUTDIR + '/pipelines_scored')
     pipeline_scored_dir.mkdir(parents=True, exist_ok=True)
-    scored_file = pathlib.Path(pipeline_scored_dir, '{}.json'.format(fit_solution_task.id))
+    scored_file = pathlib.Path(pipeline_scored_dir, '{}.json'.format(solution_task.id))
     with open(scored_file, 'w') as f:
         f.write(json.dumps(pipeline_json, sort_keys=True, indent=4))
 
 
-
-def export_run(fit_solution_task):
+def export_run(solution_task):
     # WRITE TO pipeline_runs
     # Write
     pipeline_runs_dir = pathlib.Path(D3MOUTPUTDIR + '/pipeline_runs')
     pipeline_runs_dir.mkdir(parents=True, exist_ok=True)
-    run_file = pathlib.Path(pipeline_runs_dir, '{}.yml'.format(fit_solution_task.id))
+    run_file = pathlib.Path(pipeline_runs_dir, '{}.yml'.format(solution_task.id))
     with open(run_file, 'w') as f:
-        f.write(fit_solution_task.pipeline_run)
+        f.write(solution_task.pipeline_run)
 
