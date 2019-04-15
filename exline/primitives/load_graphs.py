@@ -75,7 +75,52 @@ class ExlineGraphLoaderPrimitive(transformer.TransformerPrimitiveBase[Inputs, Ou
 
         assert isinstance(dataframe, container.DataFrame), type(dataframe)
 
-        return base.CallResult([dataframe, graph1, graph2])
+        G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes = self._prep([dataframe, graph1, graph2])
+
+        return base.CallResult([G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes])
+
+    def _pad_graphs(self, G1, G2):
+        n_nodes = max(G1.order(), G2.order())  
+        for i in range(n_nodes - G1.order()):
+            G1.add_node('__new_node__salt123_%d' % i)      
+        for i in range(n_nodes - G2.order()):
+            G2.add_node('__new_node__salt456_%d' % i)     
+        assert G1.order() == G2.order()
+        return G1, G2, n_nodes
+
+    def _prep(self, inputs):
+        df = inputs[0]
+
+        G1 = inputs[1]
+        G2 = inputs[2]
+        assert isinstance(list(G1.nodes)[0], str)
+        assert isinstance(list(G2.nodes)[0], str)
+        
+        #df = inputs[0]
+        logger.info(df.columns)
+        y_train = df['match']
+        df.drop(['d3mIndex', 'match'], axis=1, inplace=True)
+        assert df.shape[1] == 2
+
+        df.columns = ('orig_id1', 'orig_id2')
+        df.orig_id1 = df.orig_id1.astype(str)
+        df.orig_id2 = df.orig_id2.astype(str)
+
+        G1, G2, n_nodes = self._pad_graphs(G1, G2)
+
+        G1_nodes = sorted(dict(G1.degree()).items(), key=lambda x: -x[1])
+        G1_nodes = list(zip(*G1_nodes))[0]
+        G1_lookup = dict(zip(G1.nodes, range(len(G1.nodes))))
+        df['num_id1'] = df['orig_id1'].apply(lambda x: G1_lookup[x])
+
+        G2_nodes = sorted(dict(G1.degree()).items(), key=lambda x: -x[1])
+        G2_nodes = list(zip(*G2_nodes))[0]
+        G2_lookup = dict(zip(G2.nodes, range(len(G2.nodes))))
+        df['num_id2'] = df['orig_id2'].apply(lambda x: G2_lookup[x])
+
+        X_train = df
+
+        return G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes
 
     @classmethod
     def _update_metadata(cls, metadata: metadata_base.DataMetadata, resource_id: metadata_base.SelectorSegment) -> metadata_base.DataMetadata:

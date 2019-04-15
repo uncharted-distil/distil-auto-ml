@@ -64,6 +64,7 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
                  random_seed: int = 0) -> None:
 
         PrimitiveBase.__init__(self, hyperparams=hyperparams, random_seed=random_seed)
+        self._model = False
         self.unweighted = True
         self.verbose = True
         self.num_iters = 20
@@ -82,22 +83,18 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
         self._inputs = inputs
         self._outputs = outputs
 
-    def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
-        logger.debug(f'Fitting {__name__}')
-        assert len(self._inputs) == 3
+    def _prep(self, inputs):
+        df = inputs[0]
 
-        logger.info(self._inputs)
-        
         G1 = self._inputs[1]
         G2 = self._inputs[2]
-        logger.info(list(G1.nodes))
         assert isinstance(list(G1.nodes)[0], str)
         assert isinstance(list(G2.nodes)[0], str)
         
         df = self._inputs[0]
+        logger.info(df.columns)
         y_train = df['match']
         df.drop(['d3mIndex', 'match'], axis=1, inplace=True)
-        logger.info(df.shape)
         assert df.shape[1] == 2
 
         df.columns = ('orig_id1', 'orig_id2')
@@ -116,6 +113,16 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
         G2_lookup = dict(zip(G2.nodes, range(len(G2.nodes))))
         df['num_id2'] = df['orig_id2'].apply(lambda x: G2_lookup[x])
 
+        X_train = df
+
+        return G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes
+
+    def fit(self, *, timeout: float = None, iterations: int = None) -> CallResult[None]:
+        logger.debug(f'Fitting {__name__}')
+        #assert len(self._inputs) == 3
+
+        G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes = self._inputs
+
         G1p = nx.relabel_nodes(G1, G1_lookup)
         G2p = nx.relabel_nodes(G2, G2_lookup)
         A = nx.adjacency_matrix(G1p, nodelist=list(G1_lookup.values()))
@@ -130,7 +137,7 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
             A = (A != 0)
             B = (B != 0)
         
-        P = df[['num_id1', 'num_id2']][y_train == 1].values
+        P = X_train[['num_id1', 'num_id2']][y_train == 1].values
         P = sparse.csr_matrix((np.ones(P.shape[0]), (P[:,0], P[:,1])), shape=(n_nodes, n_nodes))
         
         sgm = ScipyJVClassicSGM(A=A, B=B, P=P, verbose=self.verbose)
@@ -147,18 +154,20 @@ class ExlineSeededGraphMatchingPrimitive(PrimitiveBase[container.DataFrame, cont
     def produce(self, *, inputs: container.DataFrame, timeout: float = None, iterations: int = None) -> CallResult[container.DataFrame]:
         logger.debug(f'Producing {__name__}')
 
-        #train_preds = P[(X_train.num_id1.values, X_train.num_id2.values)]
+        G1, G2, G1_lookup, G2_lookup, X_train, y_train, n_nodes = self._inputs
+        
+        preds = self._model[(X_train.num_id1.values, X_train.num_id2.values)]
 
         # create dataframe to hold d3mIndex and result
-        result = self._model.predict(inputs)
-        result_df = container.DataFrame({inputs.index.name: inputs.index, self._outputs.columns[0]: result}, generate_metadata=True)
+        #result = self._model.predict(inputs)
+        #result_df = container.DataFrame({inputs.index.name: inputs.index, self._outputs.columns[0]: result}, generate_metadata=True)
 
         # mark the semantic types on the dataframe
-        result_df.metadata = result_df.metadata.add_semantic_type((metadata_base.ALL_ELEMENTS, 0), 'https://metadata.datadrivendiscovery.org/types/PrimaryKey')
-        result_df.metadata = result_df.metadata.add_semantic_type((metadata_base.ALL_ELEMENTS, 1), 'https://metadata.datadrivendiscovery.org/types/PredictedTarget')
+        #result_df.metadata = result_df.metadata.add_semantic_type((metadata_base.ALL_ELEMENTS, 0), 'https://metadata.datadrivendiscovery.org/types/PrimaryKey')
+        #result_df.metadata = result_df.metadata.add_semantic_type((metadata_base.ALL_ELEMENTS, 1), 'https://metadata.datadrivendiscovery.org/types/PredictedTarget')
 
-        logger.debug(f'\n{result_df}')
-        return base.CallResult(result_df)
+        #logger.debug(f'\n{result_df}')
+        return base.CallResult(preds)
 
     def _pad_graphs(self, G1, G2):
         n_nodes = max(G1.order(), G2.order())  
