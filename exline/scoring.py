@@ -75,24 +75,23 @@ class Scorer:
         return cleaned_target_names
 
 
-    def _get_pos_label(self):
+    def _get_pos_label(self, true):
         """Return pos_label if needed, False if not needed.
 
         sklearn binary scoring funcs run on indicator types just fine
         but will break on categorical w/o setting pos_label kwarg
         """
-        # TODO
-        return False
 
         # can safely assume there is only one target for now, will have to change in the future
-        labels_series = self.engine.variables['targets'][self._get_target_name()[0]]
-        labels_dtype = labels_series.dtype.name
+        labels_dtype = true.dtype.name
         # not ideal to compare by string name, but direct comparison of the dtype will throw errors
         # for categorical for older versions of pandas
         if labels_dtype == 'object' or labels_dtype == 'category':
             # grab first label arbitrarily bc as of now, no good way to determine what is positive label
             # (not in problem schema or data schema)
-            pos_label = labels_series.unique().tolist()[0]
+            pos_label = true.unique().tolist()[0]
+            self.logger.info("the pos label")
+            self.logger.info(pos_label)
             return pos_label
         return False
 
@@ -107,7 +106,7 @@ class Scorer:
         return binary_true, binary_preds
 
     def _f1(self, true, preds):
-        pos_label = self._get_pos_label()
+        pos_label = self._get_pos_label(true)
         if pos_label:
             return metrics.f1_score(true, preds, pos_label=pos_label)
         return metrics.f1_score(true, preds)
@@ -192,12 +191,15 @@ class Scorer:
         true_df = true_df.loc[result_df.index]
 
         # make sure that both have the same type
-        ensure_type = str(true_df[target_col].dtype)
+        ensure_type = true_df[target_col].dtype
         self.logger.info("ensure_type")
         self.logger.info(ensure_type)
-        result_series = result_series.astype(ensure_type)
 
         true_series = true_df[target_col]
+
+        self.logger.info(true_series.dtype)
+        true_series = true_series.astype(result_series.dtype)
+        self.logger.info(result_series.dtype)
 
         score = self._score(self.metric, true_series, result_series)
 
