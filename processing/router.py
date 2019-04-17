@@ -9,7 +9,7 @@ import logging
 from copy import deepcopy
 from exline.modeling.metrics import classification_metrics, regression_metrics
 from typing import Sequence, Tuple
-from d3m.metadata import problem
+from d3m.metadata import problem as d3m_problem
 
 logger = logging.getLogger(__name__)
 
@@ -52,22 +52,22 @@ def is_image(dataset_doc: dict) -> bool:
     return 'image' in get_resource_types(dataset_doc)
 
 def is_graph_matching(problem_desc: dict) -> bool:
-    return problem_desc['problem']['task_type'] == problem.TaskType.GRAPH_MATCHING
+    return problem_desc['problem']['task_type'] == d3m_problem.TaskType.GRAPH_MATCHING
 
 def is_community_detection(problem_desc: dict) -> bool:
-    return problem_desc['problem']['task_type'] == problem.TaskType.COMMUNITY_DETECTION
+    return problem_desc['problem']['task_type'] == d3m_problem.TaskType.COMMUNITY_DETECTION
 
 def is_clustering(problem_desc: dict) -> bool:
-    return problem_desc['problem']['task_type'] == problem.TaskType.CLUSTERING
+    return problem_desc['problem']['task_type'] == d3m_problem.TaskType.CLUSTERING
 
 def is_vertex_nomination(problem_desc: dict) -> bool:
-    return problem_desc['problem']['task_type'] == problem.TaskType.VERTEX_NOMINATION
+    return problem_desc['problem']['task_type'] == d3m_problem.TaskType.VERTEX_NOMINATION
 
 def is_collaborative_filtering(problem_desc: dict) -> bool:
-    return problem_desc['problem']['task_type'] == problem.TaskType.COLLABORATIVE_FILTERING
+    return problem_desc['problem']['task_type'] == d3m_problem.TaskType.COLLABORATIVE_FILTERING
 
 def is_link_prediction(problem_desc: dict) -> bool:
-    return problem_desc['problem']['task_type'] == problem.TaskType.LINK_PREDICTION
+    return problem_desc['problem']['task_type'] == d3m_problem.TaskType.LINK_PREDICTION
 
 def is_text(dataset_doc: dict) -> bool:
     return ['table', 'text'] == get_resource_types(dataset_doc)
