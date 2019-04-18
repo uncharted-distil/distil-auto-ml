@@ -44,20 +44,26 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     return pipeline, train_dataset
 
 
-def fit(pipeline: pipeline.Pipeline, problem: dict, input_dataset: container.Dataset) -> Tuple[Optional[runtime.Runtime], Optional[pipeline_run.PipelineRun]]:
+def fit(pipeline: pipeline.Pipeline, problem: problem.Problem, input_dataset: container.Dataset) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
     hyperparams = None
     random_seed = 0
     volumes_dir = None
 
-    fitted_runtime, _, run = runtime.fit(
+    fitted_runtime, _, result = runtime.fit(
         pipeline, problem, [input_dataset], hyperparams=hyperparams, random_seed=random_seed,
         volumes_dir=volumes_dir, context=metadata_base.Context.TESTING, runtime_environment=pipeline_run.RuntimeEnvironment()
     )
-    return fitted_runtime, run
+
+    if result.has_error():
+        raise result.error
+
+    return fitted_runtime, result
 
 
 def produce(fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset) -> container.DataFrame:
-    predictions, run = runtime.produce(fitted_pipeline, [input_dataset])
+    predictions, result = runtime.produce(fitted_pipeline, [input_dataset])
+    if result.has_error():
+        raise result.error
     return predictions
 
 
