@@ -25,7 +25,7 @@ def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
     resource_types = get_resource_types(dataset_doc)
     task_type = problem_desc['problem']['task_type']
 
-    if task_type not in [problem.TaskType.REGRESSION, problem.TaskType.CLASSIFICATION, problem.TaskType.TIME_SERIES_FORECASTING]:
+    if task_type not in [d3m_problem.TaskType.REGRESSION, d3m_problem.TaskType.CLASSIFICATION, d3m_problem.TaskType.TIME_SERIES_FORECASTING]:
         return False
     elif resource_types == ['table']:
         return True

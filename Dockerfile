@@ -55,7 +55,7 @@ RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendis
 # Our primitives
 # cython there because no good way to spec build time dependency
 RUN pip3 install --upgrade setuptools pip cython==0.29.3
-RUN echo HAH
+RUN echo HAH HAH
 RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
 RUN pip3 install git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
