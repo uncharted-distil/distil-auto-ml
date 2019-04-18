@@ -47,13 +47,18 @@ COPY build.sh .
 RUN sh build.sh
 
 # TODO: not this
-RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.2.18
+RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
 
 # Common primitives
 RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/common-primitives.git@v0.3.0
 
 # Our primitives
-RUN pip3 install --process-dependency-links git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
+# cython there because no good way to spec build time dependency
+RUN pip3 install --upgrade setuptools pip cython==0.29.3
+RUN echo HAH
+RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
+
+RUN pip3 install git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
 
 # TODO: fix in build
 RUN apt-get -qq update -qq \
