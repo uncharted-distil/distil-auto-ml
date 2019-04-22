@@ -181,7 +181,7 @@ class Scorer:
         # produce predictions from the fitted model and extract to single col dataframe
         # with the d3mIndex as the index
         result_df = pipeline.produce(self.fitted_pipeline, self.inputs)
-        result_df = result_df.set_index(result_df['d3mIndex'])
+        result_df = result_df.set_index(pd.to_numeric(result_df['d3mIndex']))
         result_df = result_df[target_col]
 
         # put the ground truth predictions into a single col dataframe with the d3mIndex
