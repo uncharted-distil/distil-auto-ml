@@ -60,7 +60,16 @@ RUN apt-get -qq update -qq \
     && apt-get install -y -qq build-essential libcap-dev
 RUN pip3 install python-prctl
 
+RUN apt-get install -y ffmpeg
+RUN pip3 install resampy soundfile
+RUN pip3 install --upgrade tensorflow
+RUN apt-get install -y curl
+RUN curl -O https://storage.googleapis.com/audioset/vggish_model.ckpt && \
+        mv vggish_model.ckpt /app/third_party/audioset/vggish_model.ckpt
+
+
 # Put everything in
+RUN head -c 5 /dev/random > random_bytes && echo "REBUILD"
 COPY .git /.git
 COPY . .
 

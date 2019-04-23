@@ -8,7 +8,7 @@ from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 
 from exline.modeling import metrics
 from processing import router
-from processing.pipelines import tabular, question_answer, timeseries
+from processing.pipelines import tabular, question_answer, timeseries, , text, image, audio
 import main_utils as utils
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,12 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
         pipeline = timeseries.create_pipeline(metric)
     elif pipeline_type is 'question_answering':
         pipeline = question_answer.create_pipeline(metric)
+    elif pipeline_type is 'text':
+        pipeline = text.create_pipeline(metric)
+    elif pipeline_type is 'image':
+        pipeline = image.create_pipeline(metric)
+    elif pipeline_type is 'audio':
+        pipeline = audio.create_pipeline(metric)
     else:
         logger.error(f'Pipeline type [{pipeline_type}] is not yet supported.')
         return None, train_dataset
