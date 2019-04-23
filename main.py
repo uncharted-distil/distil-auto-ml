@@ -15,15 +15,15 @@ import models
 from server.server import Server
 from server.export import export_run
 
-from exline import pipeline as ex_pipeline
-from exline.scoring import Scorer
+from processing import pipeline as ex_pipeline
+from processing.scoring import Scorer
 from server import export
 import api.utils as api_utils
 from api import problem_pb2
 
 from d3m import runtime
 from d3m.container import dataset
-from d3m.metadata import pipeline, problem
+from d3m.metadata import pipeline, problem, pipeline_run
 
 import pickle
 import pandas as pd
@@ -51,8 +51,7 @@ def produce_task(logger, session, task):
         test_dataset = test_dataset['learningData']
         predictions_df = pd.DataFrame(test_dataset['d3mIndex'])
         predictions_df[dats['target_name']] = results[dats['target_name']]
-
-        preds_path = utils.make_preds_filename(task.fit_solution_id)
+        preds_path = utils.make_preds_filename(task.solution_id)
         predictions_df.to_csv(preds_path, index=False)
 
         session.commit()

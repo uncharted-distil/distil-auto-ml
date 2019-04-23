@@ -4,8 +4,6 @@ ARG BRANCH_NAME=__UNSET__
 ENV BRANCH_NAME=${BRANCH_NAME}
 
 ENV PYTHONPATH=$PYTHONPATH:/app
-ENV COMMON_PRIMITIVES_VERSION=v0.4.0
-
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get -qq update -qq \
@@ -27,7 +25,6 @@ RUN apt-get -qq update -qq \
     zlib1g-dev \
     libncurses5-dev \
     swig \
-    # Cleanup
     && apt-get autoremove -y \
     && apt-get purge -y \
     && apt-get clean -y
@@ -52,16 +49,12 @@ RUN sh build.sh
 # TODO: not this
 RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
 
-# Barf
-#COPY base.py /usr/local/lib/python3.6/dist-packages/d3m/metadata/base.py
+# Common primitives
+RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/common-primitives.git@v0.4.0
 
-# Common primitives KILL ME NOW
-RUN git clone https://gitlab.com/datadrivendiscovery/common-primitives.git && \
-    cd common-primitives && \
-    git checkout $COMMON_PRIMITIVES_VERSION && \
-    pip3 install . --process-dependency-links && \
-    cd .. && \
-    rm -rf common-primitives
+# Our primitives
+RUN pip3 install --upgrade pip cython
+RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
 # TODO: fix in build
 RUN apt-get -qq update -qq \
