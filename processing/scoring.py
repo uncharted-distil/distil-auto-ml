@@ -79,25 +79,25 @@ class Scorer:
         return cleaned_target_names
 
 
-    def _get_pos_label(self):
+    def _get_pos_label(self, labels_series):
         """Return pos_label if needed, False if not needed.
 
         sklearn binary scoring funcs run on indicator types just fine
         but will break on categorical w/o setting pos_label kwarg
         """
-        # TODO
-        return False
-
         # can safely assume there is only one target for now, will have to change in the future
-        labels_series = self.engine.variables['targets'][self._get_target_name()[0]]
         labels_dtype = labels_series.dtype.name
         # not ideal to compare by string name, but direct comparison of the dtype will throw errors
         # for categorical for older versions of pandas
         if labels_dtype == 'object' or labels_dtype == 'category':
-            # grab first label arbitrarily bc as of now, no good way to determine what is positive label
             # (not in problem schema or data schema)
-            pos_label = labels_series.unique().tolist()[0]
-            return pos_label
+            labels_list = labels_series.unique().tolist()
+            # since problem / data schema don't list positive label, we'll do a quick heuristic
+            if set(labels_list).equals(set('0', '1')):
+                return '1'
+            else:
+                # grab first label arbitrarily bc as of now, no good way to determine what is positive label
+                return lables_list[0]
         return False
 
     def _binarize(self, true, preds, pos_label):
@@ -188,10 +188,10 @@ class Scorer:
         # as the index
         true_df = self.inputs['learningData']
         true_df = true_df.set_index(pd.to_numeric(true_df['d3mIndex']))
-        true_df = true_df[target_col]
 
         # make sure the result and truth have the same d3mIndex
         true_df = true_df.loc[result_df.index]
+        true_df = true_df[target_col]
 
         score = self._score(self.metric, true_df, result_df)
 
