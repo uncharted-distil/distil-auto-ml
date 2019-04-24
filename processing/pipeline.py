@@ -8,7 +8,7 @@ from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 
 from exline.modeling import metrics
 from processing import router
-from processing.pipelines import tabular, question_answer, timeseries, , text, image, audio
+from processing.pipelines import tabular, question_answer, timeseries, text, image, audio
 import main_utils as utils
 
 logger = logging.getLogger(__name__)
