@@ -60,7 +60,7 @@ RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendis
 # Common primitives
 RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/common-primitives.git@master
 
-ARG CACHEBUST=1
+RUN echo
 # Our primitives
 RUN pip3 install --process-dependency-links git+https://github.com/uncharted-distil/distil-primitives.git@audio_text_image_pipelines
 
