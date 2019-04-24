@@ -57,7 +57,7 @@ RUN curl -O https://storage.googleapis.com/audioset/vggish_model.ckpt && \
 # TODO: not this
 RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
 
-RUN echo
+RUN echo "BUILD"
 # Common primitives
 RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/common-primitives.git@master
 
