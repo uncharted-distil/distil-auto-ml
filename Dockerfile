@@ -58,10 +58,10 @@ RUN curl -O https://storage.googleapis.com/audioset/vggish_model.ckpt && \
 RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
 
 # Common primitives
-RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/common-primitives.git@v0.4.0
+RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/common-primitives.git@master
 
+RUN head -c 64 /dev/random > random_bytes && cat random_bytes
 # Our primitives
-RUN head -c 5 /dev/random > random_bytes && echo "REBUILD"
 RUN pip3 install --process-dependency-links git+https://github.com/uncharted-distil/distil-primitives.git@audio_text_image_pipelines
 
 # TODO: fix in build
