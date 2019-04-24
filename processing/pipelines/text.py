@@ -19,7 +19,7 @@ from common_primitives.construct_predictions import ConstructPredictionsPrimitiv
 from exline.primitives.simple_column_parser import SimpleColumnParserPrimitive
 
 from common_primitives.denormalize import DenormalizePrimitive
-from common_primitives.text_reader import TextReaderPrimitive
+from exline.primitives..text_reader import TextReaderPrimitive
 
 
 from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
