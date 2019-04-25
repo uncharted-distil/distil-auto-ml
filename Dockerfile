@@ -68,7 +68,7 @@ COPY . .
 
 # Our primitives
 RUN pip3 install --upgrade pip cython
-RUN echo sigh
+RUN echo sighhh
 RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git@debug-graphs#egg=DistilPrimitives
 
 RUN pip3 install -e /app
