@@ -438,6 +438,7 @@ class TaskManager():
                             type="PRODUCE",
                             request_id=request_id,
                             fit_solution_id=fit_solution.task_id,
+                            solution_id=fit_solution.solution_id,
                             dataset_uri=dataset_uri,
                             output_key=output_key)
         self.session.add(task)
