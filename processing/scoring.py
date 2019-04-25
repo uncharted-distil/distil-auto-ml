@@ -190,16 +190,9 @@ class Scorer:
         # make sure the result and truth have the same d3mIndex
         true_df = true_df.loc[result_df.index]
 
-        # make sure that both have the same type
-        ensure_type = true_df[target_col].dtype
-        self.logger.info("ensure_type")
-        self.logger.info(ensure_type)
-
         true_series = true_df[target_col]
 
-        self.logger.info(true_series.dtype)
         true_series = true_series.astype(result_series.dtype)
-        self.logger.info(result_series.dtype)
 
         score = self._score(self.metric, true_series, result_series)
 

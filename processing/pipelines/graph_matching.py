@@ -12,39 +12,16 @@ from d3m.metadata import hyperparams
 from exline.primitives.load_graphs import ExlineGraphLoaderPrimitive
 from exline.primitives.seeded_graph_matcher import ExlineSeededGraphMatchingPrimitive
 
+from exline.primitives.simple_column_parser import SimpleColumnParserPrimitive
+from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
+
+
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
 from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
-
-'''
-        graphs = load_graphs(d3mds)
-        assert len(graphs) == 2
-        
-        sgm = SGMGraphMatcher(target_metric=ll_metric)
-        test_score = sgm.fit_score(graphs, X_train, X_test, y_train, y_test)
-        
-        _extra = {
-            "train_acc"      : sgm.train_acc,
-            "null_train_acc" : sgm.null_train_acc,
-            
-            "test_acc"       : sgm.test_acc,
-            "null_test_acc"  : sgm.null_test_acc,
-}
-'''
-
-'''
-def load_graphs(d3mds):
-    Gs = {}
-    for resource in d3mds.dataset.dsDoc['dataResources']:
-        if resource['resType'] == 'graph':
-            assert 'text/gml' in resource['resFormat']
-            Gs[resource['resID']] = nx.read_gml(os.path.join(d3mds.dataset.dsHome, resource['resPath']))
-            
-return Gs
-'''
 
 
 def create_pipeline(metric: str) -> Pipeline:
@@ -53,16 +30,17 @@ def create_pipeline(metric: str) -> Pipeline:
     graph_matching_pipeline = Pipeline(context=PipelineContext.TESTING)
     graph_matching_pipeline.add_input(name='inputs')
 
-    # step 0 - load the graphs 
+    # step 0 - extract the graphs 
     step = PrimitiveStep(primitive_description=ExlineGraphLoaderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
+    step.add_output('produce_target')
     graph_matching_pipeline.add_step(step)
 
     # step 1 - match the graphs that have been seeded 
     step = PrimitiveStep(primitive_description=ExlineSeededGraphMatchingPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce_target')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     step.add_output('produce')
     graph_matching_pipeline.add_step(step)
