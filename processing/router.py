@@ -126,7 +126,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         learning_resource = resources[0]
 
         # !! Not sure if I'm supposed to be looking at this
-        n_clusters = problem['inputs']['data'][0]['targets'][0]['numClusters']
+        n_clusters = problem['inputs'][0]['targets'][0]['clusters_number']
 
         all_float = set([r['colType'] for r in learning_resource['columns'] if
             ('suggestedTarget' not in r['role']) and
