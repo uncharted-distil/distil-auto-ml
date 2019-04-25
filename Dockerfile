@@ -52,8 +52,6 @@ RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendis
 # Common primitives
 RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/common-primitives.git@v0.4.0
 
-
-
 # TODO: fix in build
 RUN apt-get -qq update -qq \
     && apt-get install -y -qq build-essential libcap-dev
@@ -70,7 +68,7 @@ COPY . .
 
 # Our primitives
 RUN pip3 install --upgrade pip cython
-RUN echo sighhhhhhhhhhh
+RUN echo sigh
 RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git@debug-graphs#egg=DistilPrimitives
 
 RUN pip3 install -e /app
