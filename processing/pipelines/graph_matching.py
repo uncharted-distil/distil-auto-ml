@@ -15,7 +15,6 @@ from exline.primitives.seeded_graph_matcher import ExlineSeededGraphMatchingPrim
 from exline.primitives.simple_column_parser import SimpleColumnParserPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 
-
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
 from exline.preprocessing.utils import MISSING_VALUE_INDICATOR

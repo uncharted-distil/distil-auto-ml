@@ -61,15 +61,9 @@ RUN pip3 install python-prctl
 COPY .git /.git
 COPY . .
 
-#ENV D3M_BASE_IMAGE_NAME=_none_
-#ENV D3M_BASE_IMAGE_DIGEST=_none_
-#ENV D3M_IMAGE_NAME=_none_
-#ENV D3M_IMAGE_DIGEST=_none_
-
 # Our primitives
 RUN pip3 install --upgrade pip cython
-RUN echo sighhh
-RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git@debug-graphs#egg=DistilPrimitives
+RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
 RUN pip3 install -e /app
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
