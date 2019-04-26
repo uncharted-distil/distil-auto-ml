@@ -48,10 +48,10 @@ COPY build.sh .
 RUN sh build.sh
 
 # TODO: not this
-RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
+RUN pip3 install git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
 
 # Common primitives
-RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/common-primitives.git@v0.4.0
+RUN pip3 install git+https://gitlab.com/datadrivendiscovery/common-primitives.git@v0.4.0
 
 # TODO: fix in build
 RUN apt-get -qq update -qq \
