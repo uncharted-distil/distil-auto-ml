@@ -174,10 +174,8 @@ class Scorer:
         true_df = true_df.set_index(pd.to_numeric(true_df['d3mIndex']))
         # make sure the result and truth have the same d3mIndex
         true_df = true_df.loc[result_df.index]
-        true_df = true_df[target_col]
 
         true_series = true_df[target_col]
-
         true_series = true_series.astype(result_series.dtype)
 
         score = self._score(self.metric, true_series, result_series)
