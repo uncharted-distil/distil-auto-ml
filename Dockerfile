@@ -7,28 +7,28 @@ ENV BRANCH_NAME=${BRANCH_NAME}
 ENV PYTHONPATH=$PYTHONPATH:/app
 ENV DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get -qq update -qq \
-    && apt-get install -y -qq \
-    build-essential \
-    git \
-    python-dev \
-    python-pip \
-    python3 \
-    python3-pip \
-    python3-dev \
-    python3-setuptools \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    tzdata \
-    libffi-dev \
-    libxml2-dev \
-    libxslt1-dev \
-    zlib1g-dev \
-    libncurses5-dev \
-    swig \
-    && apt-get autoremove -y \
-    && apt-get purge -y \
-    && apt-get clean -y
+#RUN apt-get -qq update -qq \
+#    && apt-get install -y -qq \
+#    build-essential \
+#    git \
+#    python-dev \
+#    python-pip \
+#    python3 \
+#    python3-pip \
+#    python3-dev \
+#    python3-setuptools \
+#    libcurl4-openssl-dev \
+#   libssl-dev \
+#    tzdata \
+#    libffi-dev \
+#    libxml2-dev \
+#    libxslt1-dev \
+#    zlib1g-dev \
+#    libncurses5-dev \
+#    swig \
+#    && apt-get autoremove -y \
+#    && apt-get purge -y \
+#    && apt-get clean -y
 
 # timezone-related fixes
 RUN ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime && \
