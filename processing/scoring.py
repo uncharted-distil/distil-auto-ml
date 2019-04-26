@@ -60,21 +60,6 @@ class Scorer:
         else:
             raise ValueError('Cannot score {} type'.format(self.method))
 
-    """
-    def _get_features_and_targets(self):
-        features = self.engine.variables['features']
-        targets = self.engine.variables['targets']
-        return features, targets
-    """
-    def _get_target_name(self):
-        cleaned_target_names = False
-        target_df = self.engine.variables.get('targets', False)
-        if isinstance(target_df, pd.DataFrame):
-            target_names = target_df.columns
-            cleaned_target_names = [name for name in target_names if name != 'd3m_index']
-        return cleaned_target_names
-
-
     def _get_pos_label(self, labels_series):
         """Return pos_label if needed, False if not needed.
 
@@ -93,7 +78,7 @@ class Scorer:
                 return '1'
             else:
                 # grab first label arbitrarily bc as of now, no good way to determine what is positive label
-                return lables_list[0]
+                return labels_list[0]
         return False
 
     def _binarize(self, true, preds, pos_label):
