@@ -1,4 +1,5 @@
-FROM "ubuntu:bionic"
+#FROM "ubuntu:bionic"
+FROM registry.gitlab.com/datadrivendiscovery/images/base:ubuntu-bionic-python36
 
 ARG BRANCH_NAME=__UNSET__
 ENV BRANCH_NAME=${BRANCH_NAME}
