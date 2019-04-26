@@ -8,7 +8,7 @@ from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 
 from exline.modeling import metrics
 from processing import router
-from processing.pipelines import tabular, question_answer, timeseries, collaborative_filtering, clustering
+from processing.pipelines import tabular, question_answer, timeseries, collaborative_filtering, clustering, graph_matching
 import main_utils as utils
 
 logger = logging.getLogger(__name__)
@@ -30,8 +30,12 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     # determine type of pipeline required for dataset
     pipeline_type, pipeline_info = router.get_routing_info(dataset_doc, problem, metric)
 
-    if pipeline_type is 'table':
+    pipeline_type = pipeline_type.lower()
+
+    if pipeline_type == 'table':
         pipeline = tabular.create_pipeline(metric)
+    elif pipeline_type == 'graph_matching':
+        pipeline = graph_matching.create_pipeline(metric)
     elif pipeline_type is 'timeseries':
         pipeline = timeseries.create_pipeline(metric)
     elif pipeline_type is 'question_answering':

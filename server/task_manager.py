@@ -232,6 +232,14 @@ class TaskManager():
 
                 search_ended = self._is_search_ended(search_id)
                 if search_ended:
+                    # Make the Fit solution message here
+                    fit_solution_id = self._generate_id()
+                    fit_solution = models.FitSolution(
+                        id=fit_solution_id,
+                        solution_id=solution_id,
+                        task_id=task.id)
+                    self.session.add(fit_solution)
+                    self.session.commit()
                     progress = "COMPLETED"
                     progress_msg = self.msg.make_progress_msg(progress)
                     yield self.msg.make_get_search_solutions_result(solution_id, progress_msg)
@@ -354,13 +362,6 @@ class TaskManager():
         # do not create the task
         dataset_uri = self.msg.get_dataset_uri(message)
         if not dataset_uri or dataset_uri == task.dataset_uri:
-            # Create the fit_solution here
-            fit_solution_id = self._generate_id()
-            fit_solution = models.FitSolution(
-                id=fit_solution_id,
-                solution_id=solution_id,
-                task_id=task.id)
-            self.session.add(fit_solution)
             # Link the request to the fit_solution
             request.fit_solution_id = fit_solution_id
             self.session.commit()

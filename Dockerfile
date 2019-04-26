@@ -52,9 +52,6 @@ RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendis
 # Common primitives
 RUN pip3 install --process-dependency-links git+https://gitlab.com/datadrivendiscovery/common-primitives.git@v0.4.0
 
-# Our primitives
-RUN pip3 install --process-dependency-links git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
-
 # TODO: fix in build
 RUN apt-get -qq update -qq \
     && apt-get install -y -qq build-essential libcap-dev
@@ -64,10 +61,9 @@ RUN pip3 install python-prctl
 COPY .git /.git
 COPY . .
 
-#ENV D3M_BASE_IMAGE_NAME=_none_
-#ENV D3M_BASE_IMAGE_DIGEST=_none_
-#ENV D3M_IMAGE_NAME=_none_
-#ENV D3M_IMAGE_DIGEST=_none_
+# Our primitives
+RUN pip3 install --upgrade pip cython
+RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
 RUN pip3 install -e /app
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
