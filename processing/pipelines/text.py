@@ -74,7 +74,6 @@ def create_pipeline(metric: str,
     text_pipeline.add_step(step)
 
 
-
     # step 4 - generates a text classification model.
     step = PrimitiveStep(primitive_description=TextClassifierPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
