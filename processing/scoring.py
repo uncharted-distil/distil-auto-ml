@@ -17,9 +17,10 @@ from d3m import utils as dutils
 
 from processing import pipeline
 
+import copy
+
 
 PipelineContext = dutils.Enum(value='PipelineContext', names=['TESTING'], start=1)
-
 
 
 class Scorer:
@@ -50,11 +51,6 @@ class Scorer:
 
         # Load the data to test
         self.inputs = dataset.Dataset.load(self.dataset_uri)
-        #self.logger.info('the vals')
-        #self.logger.info(list(test_dataset.keys()).pop())
-        #self.logger.info(test_dataset['learningData'])
-        #o = runtime.produce(fitted_pipeline, inputs)
-        #self.logger.info(o)
 
         # TODO: actually accept new data
         if self.method == 'holdout':
@@ -63,21 +59,6 @@ class Scorer:
         #    #return self.k_fold_score()
         else:
             raise ValueError('Cannot score {} type'.format(self.method))
-
-    """
-    def _get_features_and_targets(self):
-        features = self.engine.variables['features']
-        targets = self.engine.variables['targets']
-        return features, targets
-    """
-    def _get_target_name(self):
-        cleaned_target_names = False
-        target_df = self.engine.variables.get('targets', False)
-        if isinstance(target_df, pd.DataFrame):
-            target_names = target_df.columns
-            cleaned_target_names = [name for name in target_names if name != 'd3m_index']
-        return cleaned_target_names
-
 
     def _get_pos_label(self, labels_series):
         """Return pos_label if needed, False if not needed.
@@ -97,7 +78,7 @@ class Scorer:
                 return '1'
             else:
                 # grab first label arbitrarily bc as of now, no good way to determine what is positive label
-                return lables_list[0]
+                return labels_list[0]
         return False
 
     def _binarize(self, true, preds, pos_label):
@@ -111,7 +92,7 @@ class Scorer:
         return binary_true, binary_preds
 
     def _f1(self, true, preds):
-        pos_label = self._get_pos_label()
+        pos_label = self._get_pos_label(true)
         if pos_label:
             return metrics.f1_score(true, preds, pos_label=pos_label)
         return metrics.f1_score(true, preds)
@@ -180,20 +161,24 @@ class Scorer:
 
         # produce predictions from the fitted model and extract to single col dataframe
         # with the d3mIndex as the index
-        result_df = pipeline.produce(self.fitted_pipeline, self.inputs)
-        result_df = result_df.set_index(pd.to_numeric(result_df['d3mIndex']))
-        result_df = result_df[target_col]
+        _in = copy.deepcopy(self.inputs)
+        result_df = pipeline.produce(self.fitted_pipeline, _in)
+        result_df = result_df.set_index(result_df['d3mIndex'])
+        result_df.index = result_df.index.map(int)
+
+        result_series = result_df[target_col]
 
         # put the ground truth predictions into a single col dataframe with the d3mIndex
         # as the index
         true_df = self.inputs['learningData']
         true_df = true_df.set_index(pd.to_numeric(true_df['d3mIndex']))
-
         # make sure the result and truth have the same d3mIndex
         true_df = true_df.loc[result_df.index]
-        true_df = true_df[target_col]
 
-        score = self._score(self.metric, true_df, result_df)
+        true_series = true_df[target_col]
+        true_series = true_series.astype(result_series.dtype)
+
+        score = self._score(self.metric, true_series, result_series)
 
         return [score]
 
