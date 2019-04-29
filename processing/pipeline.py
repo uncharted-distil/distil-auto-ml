@@ -22,7 +22,8 @@ from processing.pipelines import (clustering,
                                   link_prediction,
                                   audio,
                                   vertex_nomination,
-                                  community_detection)
+                                  community_detection,
+                                  forecasting)
 
 
 import utils
@@ -74,6 +75,8 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
         n_clusters = problem['inputs'][0]['targets'][0]['clusters_number']
         col_name = problem['inputs'][0]['targets'][0]['column_name']
         pipeline = clustering.create_pipeline(metric, num_clusters=n_clusters, cluster_col_name=col_name)
+    elif pipeline_type == 'forecasting':
+        pipeline = forecasting.create_pipeline(metric)
     else:
         logger.error(f'Pipeline type [{pipeline_type}] is not yet supported.')
         return None, train_dataset

@@ -25,12 +25,23 @@ def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
     resource_types = get_resource_types(dataset_doc)
     task_type = problem_desc['problem']['task_type']
 
-    if task_type not in [_problem.TaskType.REGRESSION, _problem.TaskType.CLASSIFICATION, _problem.TaskType.TIME_SERIES_FORECASTING]:
+    if task_type not in [_problem.TaskType.REGRESSION, _problem.TaskType.CLASSIFICATION]:
         return False
     elif resource_types == ['table']:
         return True
     elif set(resource_types) == {'table'} and len(resource_types) > 2 and not is_question_answering(dataset_doc):
         logger.warn("is_tabular: found more than two tables, which we can't handle.  falling back to single table")
+        return True
+    else:
+        return False
+
+def is_forecasting(dataset_doc: dict, problem_desc: dict) -> bool:
+    resource_types = get_resource_types(dataset_doc)
+    task_type = problem_desc['problem']['task_type']
+
+    if task_type != _problem.TaskType.TIME_SERIES_FORECASTING:
+        return False
+    elif resource_types == ['table']:
         return True
     else:
         return False
@@ -144,6 +155,8 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
             "forest"        : True,
             "ensemble_size" : 3,
         }
+    elif is_forecasting(dataset_doc, problem):
+        return 'forecasting', {}
 
     elif is_audio(dataset_doc):
         return 'audio', {}
