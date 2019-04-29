@@ -51,6 +51,7 @@ COPY .git /.git
 COPY . .
 
 # Our primitives
+RUN pip3 install --upgrade pip cython
 RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
 RUN pip3 install -e /app
