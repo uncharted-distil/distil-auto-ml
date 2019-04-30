@@ -6,6 +6,9 @@ ENV BRANCH_NAME=${BRANCH_NAME}
 ENV PYTHONPATH=$PYTHONPATH:/app
 ENV DEBIAN_FRONTEND=noninteractive
 
+# For torch
+ENV TORCH_MODEL_ZOO=/app
+
 # timezone-related fixes
 RUN ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime && \
     dpkg-reconfigure --frontend noninteractive tzdata
@@ -23,13 +26,13 @@ RUN pip3 install -r server-requirements.txt
 COPY build.sh .
 RUN sh build.sh
 
-RUN  apt update
-RUN apt-get install -y ffmpeg
-RUN pip3 install resampy soundfile
-RUN pip3 install --upgrade tensorflow
-RUN apt-get install -y curl
-RUN curl -O https://storage.googleapis.com/audioset/vggish_model.ckpt && \
-        mv vggish_model.ckpt /app/third_party/audioset/vggish_model.ckpt
+RUN apt update && \
+    apt-get install -y ffmpeg && \
+    pip3 install resampy soundfile && \
+    pip3 install --upgrade tensorflow && \
+    apt-get install -y curl && \
+    curl -O https://storage.googleapis.com/audioset/vggish_model.ckpt && \
+    mv vggish_model.ckpt /app/third_party/audioset/vggish_model.ckpt
 
 # TODO: not this
 RUN pip3 install git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
