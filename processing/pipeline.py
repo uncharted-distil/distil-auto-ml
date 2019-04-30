@@ -8,7 +8,19 @@ from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 
 from exline.modeling import metrics
 from processing import router
-from processing.pipelines import tabular, question_answer, timeseries, collaborative_filtering, clustering, graph_matching
+
+from processing.pipelines import (audio,
+                                  collaborative_filtering,
+                                  clustering,
+                                  graph_matching,
+                                  image,
+                                  question_answer,
+                                  tabular,
+                                  text,
+                                  timeseries)
+
+
+
 import main_utils as utils
 
 logger = logging.getLogger(__name__)
@@ -40,11 +52,19 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
         pipeline = timeseries.create_pipeline(metric)
     elif pipeline_type is 'question_answering':
         pipeline = question_answer.create_pipeline(metric)
+
+    elif pipeline_type is 'text':
+        pipeline = text.create_pipeline(metric)
+    elif pipeline_type is 'image':
+        pipeline = image.create_pipeline(metric)
+    elif pipeline_type is 'audio':
+        pipeline = audio.create_pipeline(metric)
     elif pipeline_type is 'collaborative_filtering':
         pipeline = collaborative_filtering.create_pipeline(metric)
     elif pipeline_type is 'clustering':
         n_clusters = problem['inputs'][0]['targets'][0]['clusters_number']
         pipeline = clustering.create_pipeline(metric, num_clusters=n_clusters)
+
     else:
         logger.error(f'Pipeline type [{pipeline_type}] is not yet supported.')
         return None, train_dataset

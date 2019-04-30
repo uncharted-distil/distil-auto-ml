@@ -25,15 +25,15 @@ pip3 install nose==1.3.7
 pip3 install git+https://github.com/mnick/rescal.py
 
 # Audio
-#cd third_party
-#git clone https://github.com/tensorflow/models
-#cd models/research/audioset
-#pip install resampy==0.2.1
-#pip install soundfile==0.10.2
-#curl -O https://storage.googleapis.com/audioset/vggish_model.ckpt
-#cd $PROJECT_ROOT
-#mv third_party/models/research/audioset third_party/audioset
-#rm -rf third_party/models/
+cd third_party
+git clone https://github.com/tensorflow/models
+cd models/research/audioset
+pip install resampy==0.2.1
+pip install soundfile==0.10.2
+curl -O https://storage.googleapis.com/audioset/vggish_model.ckpt
+cd $PROJECT_ROOT
+mv third_party/models/research/audioset third_party/audioset
+rm -rf third_party/models/
 
 # Image
 # ???
