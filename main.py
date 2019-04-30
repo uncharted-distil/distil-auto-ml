@@ -42,7 +42,7 @@ def save_job(runtime, task_id):
 def produce_task(logger, session, task):
     try:
         logger.info('Starting produce task ID {}'.format(task.id))
-        dats = QUATTO_LIVES[task.fit_solution_id]
+        dats = QUATTO_LIVES[task.solution_id]
 
         fitted_pipeline = dats['pipeline']
         test_dataset = dataset.Dataset.load(task.dataset_uri)
@@ -51,7 +51,7 @@ def produce_task(logger, session, task):
         test_dataset = test_dataset['learningData']
         predictions_df = pd.DataFrame(test_dataset['d3mIndex'])
         predictions_df[dats['target_name']] = results[dats['target_name']]
-        preds_path = utils.make_preds_filename(task.solution_id)
+        preds_path = utils.make_preds_filename(task.fit_solution_id)
         predictions_df.to_csv(preds_path, index=False)
 
         session.commit()
@@ -95,6 +95,20 @@ def score_task(logger, session, task):
         task.ended_at = datetime.datetime.utcnow()
         session.commit()
 
+def fit_task(logger, session, task):
+    try:
+        logger.info('Starting task task ID {}'.format(task.id))
+        session.commit()
+    except Exception as e:
+        logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
+        task.error = True
+        task.error_message = str(e)
+    finally:
+        # Update DB with task results
+        # and mark task 'ended' and when
+        task.ended = True
+        task.ended_at = datetime.datetime.utcnow()
+        session.commit()
 
 def exline_task(logger, session, task):
     try:
@@ -152,6 +166,8 @@ def job_loop(logger, session):
             score_task(logger, session, task)
         elif task.type == "PRODUCE":
             produce_task(logger, session, task)
+        elif task.type == "FIT":
+            fit_task(logger, session, task)
 
 
 def main(once=False):
