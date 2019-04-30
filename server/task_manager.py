@@ -358,29 +358,15 @@ class TaskManager():
                          .filter(models.Solutions.task_id==models.Tasks.id) \
                          .first()
 
-        # If task has already fit on same dataset_uri,
-        # do not create the task
-        dataset_uri = self.msg.get_dataset_uri(message)
-        if not dataset_uri or dataset_uri == task.dataset_uri:
-            # Link the request to the fit_solution
-            request.fit_solution_id = fit_solution_id
-            self.session.commit()
-            return request_id
-        else:
-            # Create the task otherwise
-            task = models.Tasks(id=self._generate_id(),
-                                DAG=task.DAG,
-                                type="FIT",
-                                solution_id=solution_id,
-                                fit_solution_id=fit_solution_id,
-                                dataset_uri=dataset_uri,
-                                request_id=request_id)
-            self.session.add(task)
+        # Should already be fitted as part of search
+        fit_solution = self.session.query(models.FitSolution) \
+            .filter(models.FitSolution.solution_id==solution_id) \
+            .first()
 
-        # Add all to DB
+        request.fit_solution_id = fit_solution.id
         self.session.commit()
-
         return request_id
+
 
     def GetFitSolutionResults(self, message):
         request_id = self.validator.validate_get_fit_solution_results_request(message, self.session)
@@ -429,7 +415,6 @@ class TaskManager():
                           .filter(models.FitSolution.id==fitted_solution_id) \
                           .first()
 
-        # .first() query returns either first row from query or None
         if fit_solution is None:
             raise ValueError("Fitted solution id {} doesn't exist".format(fitted_solution_id))
 
@@ -438,7 +423,7 @@ class TaskManager():
         task = models.Tasks(id=task_id,
                             type="PRODUCE",
                             request_id=request_id,
-                            fit_solution_id=fit_solution.task_id,
+                            fit_solution_id=fitted_solution_id,
                             solution_id=fit_solution.solution_id,
                             dataset_uri=dataset_uri,
                             output_key=output_key)
@@ -449,7 +434,7 @@ class TaskManager():
         request_record = models.Requests(id=request_id,
                                          task_id=task.id,
                                          type="PRODUCE",
-                                         fit_solution_id=fit_solution.id)
+                                         fit_solution_id=fitted_solution_id)
         self.session.add(request_record)
         self.session.commit()
 
