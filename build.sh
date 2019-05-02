@@ -11,9 +11,8 @@ pip3 install sklearn_pandas==1.8.0
 pip3 install joblib==0.13.0
 pip3 install fastdtw==0.3.2
 pip3 install networkx==2.2.0
-pip3 install pytorch==1.0.0
+pip3 install torch==1.0.0
 pip3 install torchvision
-pip3 install pytorch
 pip3 install tensorflow-gpu==1.12.0
 pip3 install fastai
 

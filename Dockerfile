@@ -11,7 +11,7 @@ ENV TORCH_MODEL_ZOO=/app
 
 # timezone-related fixes
 RUN ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime && \
-    dpkg-reconfigure --frontend noninteractive tzdata
+   dpkg-reconfigure --frontend noninteractive tzdata
 
 # apt cleanup
 RUN rm -rf /var/lib/apt/lists/* /opt/* /tmp/*
@@ -29,7 +29,6 @@ RUN sh build.sh
 RUN apt update && \
     apt-get install -y ffmpeg && \
     pip3 install resampy soundfile && \
-    pip3 install --upgrade tensorflow && \
     apt-get install -y curl && \
     curl -O https://storage.googleapis.com/audioset/vggish_model.ckpt && \
     mv vggish_model.ckpt /app/third_party/audioset/vggish_model.ckpt
@@ -38,20 +37,20 @@ RUN apt update && \
 RUN pip3 install git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
 
 # Common primitives
-RUN pip3 install git+https://gitlab.com/datadrivendiscovery/common-primitives.git@v0.4.0
+RUN pip3 install git+https://gitlab.com/datadrivendiscovery/common-primitives.git@11f24bf517a98a57c9175d71c73db8ed0be69167
 
 # TODO: fix in build
 RUN apt-get -qq update -qq \
     && apt-get install -y -qq build-essential libcap-dev
 RUN pip3 install python-prctl
 
+RUN pip3 install cython==0.29.3
 
 # Put everything in
 COPY .git /.git
 COPY . .
 
 # Our primitives
-RUN pip3 install --upgrade pip cython
 RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
 RUN pip3 install -e /app
