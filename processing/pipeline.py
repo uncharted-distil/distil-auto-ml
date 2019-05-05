@@ -105,7 +105,7 @@ def _prepend_pipeline(base: pipeline.Pipeline, prepend: pipeline.Pipeline) -> pi
     for i, step in enumerate(prepend.steps):
         if isinstance(step, pipeline.PlaceholderStep):
             # set inputs/outputs manually since the replace doesn't infer them
-            for input_ref in step.get_input_data_references():
+            for input_ref in step.inputs:
                 subpipeline.add_input(input_ref)
             for output_id in step.outputs:
                 subpipeline.add_output(output_id)
