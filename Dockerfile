@@ -47,16 +47,12 @@ RUN pip3 install python-prctl
 RUN pip3 install cython==0.29.3
 
 # Put everything in
-RUN pip3 install numba
-
-RUN echo "hi thereeeeeeeeeeeeeeeeeeedddeeeeeeeeeeeeeeeeeeeeeeddeeee"
-
 COPY .git /.git
 COPY . .
 
 # Our primitives
-RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git@audio_bugfix
+RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
 RUN pip3 install -e /app
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
-CMD ["python3","/app/main.py"]
+CMD ["python3", "/app/main.py"]
