@@ -28,7 +28,7 @@ RUN sh build.sh
 
 RUN apt update && \
     apt-get install -y ffmpeg && \
-    pip3 install resampy soundfile && \
+    pip3 install resampy==0.2.1 soundfile==0.10.2 && \
     apt-get install -y curl && \
     curl -O https://storage.googleapis.com/audioset/vggish_model.ckpt && \
     mv vggish_model.ckpt /app/third_party/audioset/vggish_model.ckpt
@@ -44,14 +44,12 @@ RUN apt-get -qq update -qq \
     && apt-get install -y -qq build-essential libcap-dev
 RUN pip3 install python-prctl
 
-RUN pip3 install cython==0.29.3
-
 # Put everything in
 COPY .git /.git
 COPY . .
 
 # Our primitives
-RUN pip3 install --upgrade pip cython
+RUN pip3 install --upgrade pip cython==0.29.3
 RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
 RUN pip3 install -e /app
