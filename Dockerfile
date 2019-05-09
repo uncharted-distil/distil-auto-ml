@@ -45,13 +45,14 @@ RUN apt-get -qq update -qq \
 RUN pip3 install python-prctl
 
 RUN pip3 install cython==0.29.3
-
+RUN echo '          '
 # Put everything in
 COPY .git /.git
 COPY . .
 
+RUN echo '                       '
 # Our primitives
-RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
+RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git@remove_mmap2
 
 RUN pip3 install -e /app
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
