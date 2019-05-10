@@ -48,6 +48,7 @@ RUN pip3 install python-prctl
 COPY .git /.git
 COPY . .
 
+RUN echo '                         '
 # Our primitives
 RUN pip3 install --upgrade pip cython==0.29.3
 RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
