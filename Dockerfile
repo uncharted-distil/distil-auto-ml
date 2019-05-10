@@ -1,7 +1,4 @@
-FROM registry.gitlab.com/datadrivendiscovery/images/base:ubuntu-bionic-python36
-
-ARG BRANCH_NAME=__UNSET__
-ENV BRANCH_NAME=${BRANCH_NAME}
+FROM registry.datadrivendiscovery.org/jpl/docker_images/complete:ubuntu-bionic-python36-v2019.4.4-20190509-004421
 
 ENV PYTHONPATH=$PYTHONPATH:/app
 ENV DEBIAN_FRONTEND=noninteractive
@@ -30,14 +27,9 @@ RUN apt update && \
     apt-get install -y ffmpeg && \
     pip3 install resampy==0.2.1 soundfile==0.10.2 && \
     apt-get install -y curl && \
+    mkdir -p /app/third_party/audioset && \
     curl -O https://storage.googleapis.com/audioset/vggish_model.ckpt && \
     mv vggish_model.ckpt /app/third_party/audioset/vggish_model.ckpt
-
-# TODO: not this
-RUN pip3 install git+https://gitlab.com/datadrivendiscovery/d3m.git@v2019.4.4
-
-# Common primitives
-RUN pip3 install git+https://gitlab.com/datadrivendiscovery/common-primitives.git@11f24bf517a98a57c9175d71c73db8ed0be69167
 
 # TODO: fix in build
 RUN apt-get -qq update -qq \
