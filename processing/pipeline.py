@@ -9,8 +9,7 @@ from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 from exline.modeling import metrics
 from processing import router
 
-from processing.pipelines import (audio,
-                                  collaborative_filtering,
+from processing.pipelines import (collaborative_filtering,
                                   clustering,
                                   graph_matching,
                                   image,
@@ -19,6 +18,8 @@ from processing.pipelines import (audio,
                                   text,
                                   timeseries,
                                   link_prediction,
+                                  # TODO:
+                                  #audio,
                                   vertex_nomination)
 
 
@@ -57,8 +58,8 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
         pipeline = text.create_pipeline(metric)
     elif pipeline_type == 'image':
         pipeline = image.create_pipeline(metric)
-    elif pipeline_type == 'audio':
-        pipeline = audio.create_pipeline(metric)
+    #elif pipeline_type == 'audio':
+    #    pipeline = audio.create_pipeline(metric)
     elif pipeline_type == 'collaborative_filtering':
         pipeline = collaborative_filtering.create_pipeline(metric)
     elif pipeline_type == 'vertex_nomination':
