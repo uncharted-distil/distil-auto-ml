@@ -161,9 +161,9 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         return 'link_prediction', {}
 
     elif is_community_detection(problem):
-        assert problem['problem']['taskSubType'] == 'nonOverlapping'
+        assert problem['problem']['task_subtype'] == _problem.TaskSubtype.NONOVERLAPPING
         return 'community_detection', {
-            'overlapping' : problem['taskSubType'] != 'nonOverlapping',
+            'overlapping' : False,
         }
 
     else:

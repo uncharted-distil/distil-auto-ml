@@ -19,7 +19,8 @@ from processing.pipelines import (collaborative_filtering,
                                   timeseries,
                                   link_prediction,
                                   audio,
-                                  vertex_nomination)
+                                  vertex_nomination,
+                                  community_detection)
 
 
 import main_utils as utils
@@ -65,6 +66,8 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
         pipeline = vertex_nomination.create_pipeline(metric)
     elif pipeline_type == 'link_prediction':
         pipeline = link_prediction.create_pipeline(metric)
+    elif pipeline_type == 'community_detection':
+        pipeline = community_detection.create_pipeline(metric)
     elif pipeline_type == 'clustering':
         n_clusters = problem['inputs'][0]['targets'][0]['clusters_number']
         pipeline = clustering.create_pipeline(metric, num_clusters=n_clusters)
