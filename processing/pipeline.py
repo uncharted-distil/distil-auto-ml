@@ -18,8 +18,7 @@ from processing.pipelines import (collaborative_filtering,
                                   text,
                                   timeseries,
                                   link_prediction,
-                                  # TODO:
-                                  #audio,
+                                  audio,
                                   vertex_nomination)
 
 
@@ -58,8 +57,8 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
         pipeline = text.create_pipeline(metric)
     elif pipeline_type == 'image':
         pipeline = image.create_pipeline(metric)
-    #elif pipeline_type == 'audio':
-    #    pipeline = audio.create_pipeline(metric)
+    elif pipeline_type == 'audio':
+       pipeline = audio.create_pipeline(metric)
     elif pipeline_type == 'collaborative_filtering':
         pipeline = collaborative_filtering.create_pipeline(metric)
     elif pipeline_type == 'vertex_nomination':
