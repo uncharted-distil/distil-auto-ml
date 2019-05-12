@@ -55,6 +55,8 @@ class Scorer:
         # TODO: actually accept new data
         if self.method == 'holdout':
             return self.hold_out_score()
+        elif self.method == 'ranking':
+            return self.ranking()
         #elif self.method == 'k_fold':
         #    #return self.k_fold_score()
         else:
@@ -181,6 +183,14 @@ class Scorer:
         score = self._score(self.metric, true_series, result_series)
 
         return [score]
+
+    def ranking(self):
+        # rank is always 1 when requested since the system only generates a single solution
+        if self.metric == 'rank':
+            score = [1]
+        else:
+            raise ValueError(f'Cannot rank metric {self.metric}')
+        return score
 
     """
     def k_fold_score(self,):
