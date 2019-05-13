@@ -26,12 +26,15 @@ def override_config():
     supporting_files_dir = pathlib.Path(D3MOUTPUTDIR, "supporting_files")
     supporting_files_dir.mkdir(parents=True, exist_ok=True)
 
+    # override log filename so it is saved properly and preserved between runs
+    log_dir = pathlib.Path(D3MOUTPUTDIR, 'logs').resolve()
+    log_dir.mkdir(parents=True, exist_ok=True)
+    config.LOG_FILENAME = str(pathlib.Path(log_dir, 'distil_auto_ml.log').resolve())
+
     # override aretha output directory to be supporting_files directory
     # which is always preserved between runs, meaning we'll
     # always have access to files written to this directory
     config.OUTPUT_DIR = str(supporting_files_dir.resolve())
-    # override log filename so it is saved properly and preserved between runs
-    config.LOG_FILENAME = str(pathlib.Path(supporting_files_dir, "eval_log.log").resolve())
     # override db filename so it is saved properly and preserved between runs
     config.DB_LOCATION = str(pathlib.Path(supporting_files_dir, "eval_db.db").resolve())
     # put system in debug mode always
