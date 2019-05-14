@@ -35,13 +35,13 @@ RUN apt update && \
 RUN apt-get -qq update -qq \
     && apt-get install -y -qq build-essential libcap-dev
 RUN pip3 install python-prctl
+RUN pip3 install --upgrade pip cython==0.29.3
 
 # Put everything in
 COPY .git /.git
 COPY . .
 
 # Our primitives
-RUN pip3 install --upgrade pip cython==0.29.3
 RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
 RUN pip3 install -e /app
