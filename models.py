@@ -10,13 +10,16 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from sqlalchemy.pool import StaticPool
+
 
 Base = declarative_base()
 
 def get_session(db_location):
     # TODO: not disable check_same_thread
     engine = create_engine('sqlite:///' + db_location,
-                           connect_args={'check_same_thread': False})
+                           connect_args={'check_same_thread': False},
+                           poolclass=StaticPool)
     session = sessionmaker()
     session.configure(bind=engine)
     return session()
@@ -24,7 +27,8 @@ def get_session(db_location):
 def start_session(db_location):
     # TODO: not disable_check_same_thread
     engine = create_engine('sqlite:///' + db_location,
-                           connect_args={'check_same_thread': False})
+                           connect_args={'check_same_thread': False},
+                           poolclass=StaticPool)
     session = sessionmaker()
     session.configure(bind=engine)
     Base.metadata.create_all(engine)
@@ -131,7 +135,7 @@ class ScoreConfig(Base):
     stratified = Column(Boolean,
                         default=False)
 
-    
+
 class Scores(Base):
     __tablename__ = 'scores'
     id = Column(Integer, primary_key=True)
@@ -140,7 +144,7 @@ class Scores(Base):
     score_config_id = Column(Integer, ForeignKey('score_config.id'))
     value = Column(Float)
 
-    
+
 class Messages(Base):
     __tablename__ = 'messages'
     id = Column(Integer, primary_key=True)
