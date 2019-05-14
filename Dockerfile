@@ -32,7 +32,7 @@ RUN apt update && \
     git clone https://github.com/tensorflow/models && \
     curl -O https://storage.googleapis.com/audioset/vggish_model.ckpt && \
     mv vggish_model.ckpt /app/third_party/audioset/vggish_model.ckpt && \
-    mv third_party/models/research/audioset third_party/audioset && \
+    mv /app/third_party/models/research/audioset /app/third_party/audioset && \
     rm -rf /app/third_party/models
 
 # TODO: fix in build
