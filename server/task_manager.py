@@ -34,120 +34,10 @@ class TaskManager():
         _id = utils.generate_id()
         return _id
 
-    def _combine_pipelines(self, placeholder, their_steps, possible_pipelines):
-        combined_pipelines = []
-        if not placeholder:
-            combined_pipelines = [their_steps]
-        else:
-            placeholder_input = placeholder['placeholder']['inputs'][0]['data']
-            pipelines = []
-            _, offset, _ = placeholder_input.split('.')
-            offset = int(offset)
-            for pipe in possible_pipelines:
-                combined_steps = their_steps
-                for step in pipe['steps']:
-                    for call in step['method_calls']:
-                        # Check if initial
-                        for key, arg in call.get('arguments', {}).items():
-                            #call_input = call.get('arguments', {}).get('inputs', '')
-                            if arg == 'inputs.0':
-                                call['arguments'][key] = placeholder_input
-                            if arg.startswith('steps.'):
-                                s, i, a = arg.split('.')
-                                i = int(i) + offset + 1
-                                call['arguments'][key] = '.'.join([s,str(i),a])
-                    combined_steps.append(step)
-                pipe['steps'] = combined_steps
-                combined_pipelines.append(pipe)
-
-        return combined_pipelines
-
-    def _extract_hypers(self, val):
-        # Keep going until we get the good stuff
-        # _do you... _see_...
-        allowed_types = {
-            'string': str,
-            'int64': int,
-            'float': float,
-            'bool': bool,
-        }
-        for k, v in val.items():
-            if k in allowed_types.keys():
-                return allowed_types[k](v)
-            elif k == 'items':
-                items = []
-                items += [self._extract_hypers(i) for i in v]
-                return items
-            else:
-                return self._extract_hypers(v)
-        return {}
-
-
-    def _translate_template(self, template):
-        placeholder = {}
-        dumped = self.msg.dump_solution_template(template)
-
-        # Ensure that 'placeholder' is at end, if anywhere
-        step_types = [list(s.keys()).pop() for s in dumped['steps']]
-        if 'placeholder' in step_types:
-            placeholder = dumped['steps'][-1]
-
-        # Put things in order
-        adjusted_steps = []
-        for step in dumped['steps']:
-            prim = step.get('primitive', False)
-            if prim:
-                hp = {}
-                # Assemble hyperparams
-                for hype_name, hype_val in prim.get('hyperparams', {}).items():
-                    for _, inner_val in hype_val.items():
-                        val = self._extract_hypers(inner_val)
-                        hp.update({hype_name: {'data': val}})
-                base = {
-                    "type": "PRIMITIVE",
-                    "stage": "PREPROCESS",
-                    "primitive" : {
-                        "python_path": prim['primitive']['pythonPath'],
-                    },
-                    "method_calls": [
-                        {
-                            "name": "produce",
-                            "arguments": {
-                                "inputs": prim['arguments']['inputs']['container']['data'],
-                            }
-                        },
-                    ],
-                    "hyperparams": hp
-                }
-                adjusted_steps.append(base)
-
-        if 'placeholder' not in step_types:
-            dumped['steps'] = adjusted_steps
-            adjusted_steps = dumped
-
-        return adjusted_steps, placeholder
-
-    def _get_pipelines(self, message):
-        # Assemble possible pipelines
-        # and queue as tasks for worker to validate
-        problem_type = self.msg.get_problem_type(message)
-        possible_pipelines = get_all_pipelines(problem_type)
-
-        try:
-            template = self.msg.get_search_template(message)
-            adjusted_steps, placeholder = self._translate_template(template)
-            possible_pipelines = self._combine_pipelines(placeholder,
-                                                         adjusted_steps,
-                                                         possible_pipelines)
-        except Exception as e:
-            self.logger.info(e)
-            pass
-        return possible_pipelines
-
     def SearchSolutions(self, message):
         """Get potential pipelines and load into DB."""
         # Validate request is in required format, extract if it is
-        dataset_uri, problem_type = self.validator.validate_search_solutions_request(message)
+        dataset_uri, _ = self.validator.validate_search_solutions_request(message)
         # Generate search ID
         search_id = self._generate_id()
 
@@ -165,7 +55,6 @@ class TaskManager():
         search = models.Searches(id=search_id)
         self.session.add(search)
         self.session.commit()
-
 
         task = models.Tasks(problem=prob,
                             pipeline=search_template,

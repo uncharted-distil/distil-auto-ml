@@ -44,6 +44,5 @@ COPY . .
 RUN pip3 install --upgrade pip cython==0.29.3
 RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
-RUN pip3 install -e /app
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 CMD ["python3", "/app/main.py"]

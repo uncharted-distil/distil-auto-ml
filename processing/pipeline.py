@@ -23,7 +23,7 @@ from processing.pipelines import (collaborative_filtering,
                                   community_detection)
 
 
-import main_utils as utils
+import utils
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +108,10 @@ def produce(fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset) 
 def _prepend_pipeline(base: pipeline.Pipeline, prepend: pipeline.Pipeline) -> pipeline.Pipeline:
     # wrap pipeline in a sub pipeline - d3m core node replacement function doesn't work otherwise
     subpipeline = pipeline.SubpipelineStep(pipeline=base)
+
+    # If there isn't a placeholder, return the prepended pipe
+    if not [True for s in prepend.steps if isinstance(s, pipeline.PlaceholderStep)]:
+        return prepend
 
     # find the placeholder node in the prepend and replace it with the base sub pipeline
     for i, step in enumerate(prepend.steps):
