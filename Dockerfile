@@ -29,7 +29,7 @@ RUN apt update && \
 RUN rm -rf /var/lib/apt/lists/* /opt/* /tmp/*
 
 # Our primitives
-RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git@update-setup-file#egg=DistilPrimitives
+RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
 # Put everything in
 COPY .git /.git
