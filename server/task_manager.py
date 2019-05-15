@@ -367,14 +367,14 @@ class TaskManager():
                                                                         self.session)
 
         # Get the task that ran with the solution
-        solution, task = self.session.query(models.Solutions,models.Tasks) \
+        _, task = self.session.query(models.Solutions,models.Tasks) \
                                      .filter(models.Solutions.id==solution_id) \
                                      .filter(models.Solutions.task_id==models.Tasks.id) \
                                      .first()
 
-        dag = task.DAG
+        pipeline = task.pipeline
 
-        return json.loads(dag)
+        return json.loads(pipeline)
 
     def SolutionExport(self, request):
         """

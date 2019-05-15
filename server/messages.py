@@ -3,7 +3,9 @@ from google.protobuf import json_format
 
 import config
 
-from api import core_pb2, problem_pb2, value_pb2, pipeline_pb2, primitive_pb2
+from api import core_pb2, problem_pb2, value_pb2, pipeline_pb2, primitive_pb2, utils
+
+from d3m.metadata import pipeline
 
 class Messaging:
 
@@ -131,39 +133,10 @@ class Messaging:
         return core_pb2.ProduceSolutionResponse(request_id=request_id)
 
     def make_describe_solution_response(self, description):
-        output = pipeline_pb2.PipelineDescriptionOutput(
-            data=description['outputs'][0]['data'])
 
-        # Assemble ordered pipeline steps
-        pb_steps = []
-        for step in description['steps']:
-            python_path = step['primitive']['python_path']
-            step_primitive = primitive_pb2.Primitive(
-                python_path=python_path)
-            step_input = step['method_calls']
-            input_str = step['inputs'].pop()
-            step_primitive_arguments = {
-                "inputs": pipeline_pb2.PrimitiveStepArgument(
-                    container=pipeline_pb2.ContainerArgument(
-                        data=input_str))
-            }
+        pipeline_obj = pipeline.Pipeline.from_json(description)
 
-            step_output = pipeline_pb2.StepOutput(
-                id="produce")
-            step_description = pipeline_pb2.PrimitivePipelineDescriptionStep(
-                primitive=step_primitive,
-                arguments=step_primitive_arguments,
-                # Omitted hyperparams
-                outputs=[step_output])
-        
-            pb_step = pipeline_pb2.PipelineDescriptionStep(
-                primitive=step_description)
-
-            pb_steps.append(pb_step)
-            
-        pipeline_description = pipeline_pb2.PipelineDescription(
-            outputs=[output],
-            steps=pb_steps)
+        pipeline_description = utils.encode_pipeline_description(pipeline_obj)
 
         msg = core_pb2.DescribeSolutionResponse(
             pipeline=pipeline_description)
