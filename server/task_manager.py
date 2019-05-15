@@ -374,7 +374,7 @@ class TaskManager():
 
         pipeline = task.pipeline
 
-        return json.loads(pipeline)
+        return pipeline
 
     def SolutionExport(self, request):
         """

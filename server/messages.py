@@ -136,7 +136,12 @@ class Messaging:
 
         pipeline_obj = pipeline.Pipeline.from_json(description)
 
-        pipeline_description = utils.encode_pipeline_description(pipeline_obj)
+        allowed = [utils.ValueType.RAW,utils.ValueType.CSV_URI,
+                   utils.ValueType.DATASET_URI,
+                   utils.ValueType.PICKLE_BLOB,
+                   utils.ValueType.PICKLE_URI,
+                  ]
+        pipeline_description = utils.encode_pipeline_description(pipeline_obj, allowed, '.')
 
         msg = core_pb2.DescribeSolutionResponse(
             pipeline=pipeline_description)
