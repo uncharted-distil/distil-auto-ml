@@ -64,9 +64,8 @@ def create_pipeline(metric: str) -> Pipeline:
     # step 4 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
-    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
+    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
     step.add_output('produce')
-    step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
     ts_pipeline.add_step(step)
 
     # Adding output step to the pipeline
