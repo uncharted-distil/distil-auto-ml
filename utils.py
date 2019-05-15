@@ -54,25 +54,6 @@ def get_worker_version():
         branch = branch.decode('ascii').strip()
     return branch + "-" + sha.decode('ascii').strip()
 
-def lazy_get_primitives(primitives_list):
-    """
-    index.search() no longer returns path/module pairs -
-    re-add that functionality?
-    """
-    pairs = []
-    for path in primitives_list:
-        try:
-            # Get & import base module
-            base, p = path.rsplit('.', 1)
-            lib = importlib.import_module(base)
-            # Create item
-            primitive = getattr(lib, p)
-            pairs.append((path, primitive))
-        except Exception as e:
-            pass
-
-    return pairs
-
 def make_job_fn(task_id):
     filename = task_id + '.dill'
     filepath = pathlib.Path(config.OUTPUT_DIR, filename)

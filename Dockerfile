@@ -6,49 +6,34 @@ ENV DEBIAN_FRONTEND=noninteractive
 # For torch
 ENV TORCH_MODEL_ZOO=/app
 
-# timezone-related fixes
-RUN ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime && \
-   dpkg-reconfigure --frontend noninteractive tzdata
-
-# apt cleanup
-RUN rm -rf /var/lib/apt/lists/* /opt/* /tmp/*
-
 # Install server requirements
 WORKDIR /app
 COPY server-requirements.txt .
 COPY api api
 RUN pip3 install -r server-requirements.txt
 
-# Install exline requirements
-COPY build.sh .
-RUN sh build.sh
-
+# Out-of-band Exline requirements
 RUN apt update && \
-    apt-get install -y ffmpeg && \
-    pip3 install resampy==0.2.1 soundfile==0.10.2 && \
-    apt-get install -y curl && \
+    apt-get install -y ffmpeg build-essential libcap-dev curl && \
+    pip3 install --upgrade pip cython==0.29.3 python-prctl==1.7 && \
     mkdir -p /app/third_party && \
     cd /app/third_party && \
-    git clone https://github.com/tensorflow/models && \
+    git clone https://github.com/tensorflow/models.git && \
+    cd models && git checkout aecf5d0256806d4cb3b32fa87406d891e11dbe94 && cd .. && \
     curl -O https://storage.googleapis.com/audioset/vggish_model.ckpt && \
     mv vggish_model.ckpt /app/third_party/models/research/audioset/vggish_model.ckpt && \
     mv /app/third_party/models/research/audioset /app/third_party/audioset && \
-    rm -rf /app/third_party/models
+   rm -rf /app/third_party/models
 
-# TODO: fix in build
-RUN apt-get -qq update -qq \
-    && apt-get install -y -qq build-essential libcap-dev
-RUN pip3 install python-prctl
-RUN pip3 install --upgrade pip cython==0.29.3
+# apt cleanup
+RUN rm -rf /var/lib/apt/lists/* /opt/* /tmp/*
 
+# Our primitives
+RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
 # Put everything in
 COPY .git /.git
 COPY . .
 
-# Our primitives
-RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
-
-RUN pip3 install -e /app
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 CMD ["python3", "/app/main.py"]
