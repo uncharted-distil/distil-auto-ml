@@ -7,13 +7,19 @@ from sqlalchemy import (Column, DateTime,
                         Binary)
 from sqlalchemy.ext.declarative import declarative_base
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event, engine
 from sqlalchemy.orm import sessionmaker
 
 from sqlalchemy.pool import StaticPool
 
 
 Base = declarative_base()
+
+@event.listens_for(engine.Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.close()
 
 def get_session(db_location):
     # TODO: not disable check_same_thread

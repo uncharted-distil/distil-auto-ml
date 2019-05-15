@@ -118,7 +118,7 @@ class RequestValidator:
 
     def validate_describe_solution_request(self, request, session):
         solution_id = self.msg.get_solution_id(request)
-        solution_id = self._validate_solution_id_exists(solution_id, session)
+        solution_id = self._validate_solution_id_exists(solution_id, session, request)
 
         return solution_id
 

@@ -11,8 +11,8 @@ services:
       - ./main.py:/app/main.py
       - ./config.py:/app/config.py
   dummy-ta3:
-    image: registry.gitlab.com/datadrivendiscovery/dummy-ta3/dummy-ta3:latest
-    command: ["/usr/bin/python3", "-m", "dummy_ta3.dummy_ta3", "-p", "/seed_datasets_current/6_86_com_DBLP/TRAIN/problem_TRAIN/problemDoc.json", "-d", "/seed_datasets_current", "-e", "exline", "-t", "300"]
+    image: new-dummy
+    command: ["/usr/bin/python3", "-m", "dummy_ta3.dummy_ta3", "-p", "/seed_datasets_current/49_facebook/TRAIN/problem_TRAIN/problemDoc.json", "-d", "/seed_datasets_current", "-e", "exline", "-t", "300"]
     links:
       - "exline"
     volumes:
