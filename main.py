@@ -9,7 +9,7 @@ from google.protobuf import json_format
 
 import config
 
-import main_utils as utils
+import utils
 import models
 
 from server.server import Server

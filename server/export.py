@@ -6,7 +6,7 @@ import pathlib
 
 from d3m.metadata import pipeline
 
-import main_utils as utils
+import utils
 
 import config
 
