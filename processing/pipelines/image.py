@@ -69,9 +69,10 @@ def create_pipeline(metric: str,
     image_pipeline.add_step(step)
 
 
+
     # step 4 - set up training set
     step = PrimitiveStep(primitive_description=SimpleColumnParserPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.2.produce')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step.add_output('produce')
     step.add_output('produce_target')
     image_pipeline.add_step(step)
