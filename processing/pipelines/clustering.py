@@ -26,8 +26,6 @@ from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.remove_columns import RemoveColumnsPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
-from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
-
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left

@@ -17,8 +17,6 @@ from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
-from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
-
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
 
@@ -29,7 +27,7 @@ def create_pipeline(metric: str) -> Pipeline:
     vertex_nomination_pipeline = Pipeline(context=PipelineContext.TESTING)
     vertex_nomination_pipeline.add_input(name='inputs')
 
-    # step 0 - extract the graphs 
+    # step 0 - extract the graphs
     step = PrimitiveStep(primitive_description=ExlineSingleGraphLoaderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')

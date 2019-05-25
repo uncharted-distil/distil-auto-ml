@@ -26,8 +26,6 @@ from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 
-from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
-
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
