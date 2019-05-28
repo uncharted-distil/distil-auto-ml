@@ -102,7 +102,6 @@ def create_pipeline(metric: str,
     # Append categorical imputer.  Finds missing categorical values and replaces them with an imputed value.
     step = PrimitiveStep(primitive_description=CategoricalImputerPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    #step.add_hyperparameter('strategy', ArgumentType.VALUE, 'constant')
     step.add_output('produce')
     tabular_pipeline.add_step(step)
     previous_step += 1
@@ -116,18 +115,22 @@ def create_pipeline(metric: str,
     previous_step += 1
 
     # Adds a one hot encoder for categoricals of low cardinality.
-    step = PrimitiveStep(primitive_description=OneHotEncoderPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_output('produce')
-    step.add_hyperparameter('max_one_hot', ArgumentType.VALUE, max_one_hot)
-    tabular_pipeline.add_step(step)
-    previous_step += 1
+    if cat_mode == 'one_hot':
+        step = PrimitiveStep(primitive_description=OneHotEncoderPrimitive.metadata.query())
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+        step.add_output('produce')
+        step.add_hyperparameter('max_one_hot', ArgumentType.VALUE, max_one_hot)
+        tabular_pipeline.add_step(step)
+        previous_step += 1
 
     # Adds a binary encoder for categoricals of high cardinality.
     step = PrimitiveStep(primitive_description=BinaryEncoderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
-    step.add_hyperparameter('min_binary', ArgumentType.VALUE, max_one_hot + 1)
+    if cat_mode == 'one_hot':
+        step.add_hyperparameter('min_binary', ArgumentType.VALUE, max_one_hot + 1)
+    else:
+        step.add_hyperparameter('min_binary', ArgumentType.VALUE, 0)
     tabular_pipeline.add_step(step)
     previous_step += 1
 
