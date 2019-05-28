@@ -9,13 +9,13 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from exline.primitives.categorical_imputer import CategoricalImputerPrimitive
-from exline.primitives.ensemble_forest_v2 import EnsembleForestV2Primitive
-from exline.primitives.replace_singletons import ReplaceSingletonsPrimitive
-from exline.primitives.one_hot_encoder import OneHotEncoderPrimitive
-from exline.primitives.binary_encoder import BinaryEncoderPrimitive
-from exline.primitives.text_encoder import TextEncoderPrimitive
-from exline.primitives.enrich_dates import EnrichDatesPrimitive
+from distil.primitives.categorical_imputer import CategoricalImputerPrimitive
+from distil.primitives.ensemble_forest_v2 import EnsembleForestV2Primitive
+from distil.primitives.replace_singletons import ReplaceSingletonsPrimitive
+from distil.primitives.one_hot_encoder import OneHotEncoderPrimitive
+from distil.primitives.binary_encoder import BinaryEncoderPrimitive
+from distil.primitives.text_encoder import TextEncoderPrimitive
+from distil.primitives.enrich_dates import EnrichDatesPrimitive
 
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.remove_columns import RemoveColumnsPrimitive

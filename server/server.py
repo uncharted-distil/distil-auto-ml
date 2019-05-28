@@ -70,8 +70,8 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
     UNIMPLEMENTED_MSG = "Ah, ah, ah, you didn't say the magic word"
 
     def __init__(self):
-        self.logger = logging.getLogger('exline.server.ServerServicer')
-        self.logger.info('Initialized Exline ServerServicer')
+        self.logger = logging.getLogger('distil.server.ServerServicer')
+        self.logger.info('Initialized Distil ServerServicer')
         self.msg = Messaging()
 
     def SearchSolutions(self, request, context):

@@ -22,7 +22,7 @@ from d3m.metadata import pipeline
 class TaskManager():
     def __init__(self):
         self.session = models.get_session(config.DB_LOCATION)
-        self.logger = logging.getLogger('exline.TaskManager')
+        self.logger = logging.getLogger('distil.TaskManager')
         self.logger.info('Initialized TaskManager')
         self.msg = Messaging()
         self.validator = RequestValidator()

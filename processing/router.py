@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
 """
-    exline/router.py
+    distil/router.py
 """
 
 import sys
 import logging
 from copy import deepcopy
-from exline.modeling.metrics import classification_metrics, regression_metrics
+from distil.modeling.metrics import classification_metrics, regression_metrics
 from typing import Sequence, Tuple
 from d3m.metadata import problem as _problem
 

@@ -14,7 +14,7 @@ OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output")
 PORT = os.getenv("PORT", "45042")
 
 # Configurable filename for output logs
-LOG_FILENAME = os.getenv("LOG_FILENAME", "exline.log")
+LOG_FILENAME = os.getenv("LOG_FILENAME", "distil-auto-ml.log")
 
 # User agent to supply to TA3 Systems
 SERVER_USER_AGENT='qntfy_ta2'

@@ -112,7 +112,7 @@ def fit_task(logger, session, task):
 
 def exline_task(logger, session, task):
     try:
-        logger.info('Starting exline task ID {}'.format(task.id))
+        logger.info('Starting distil task ID {}'.format(task.id))
         task.started_at = datetime.datetime.utcnow()
 
         # load the problem supplied by the search request into a d3m Problem type

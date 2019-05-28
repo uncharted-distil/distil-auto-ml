@@ -16,9 +16,9 @@ from common_primitives.construct_predictions import ConstructPredictionsPrimitiv
 from common_primitives.denormalize import DenormalizePrimitive
 from common_primitives.dataframe_image_reader import DataFrameImageReaderPrimitive
 
-from exline.primitives.simple_column_parser import SimpleColumnParserPrimitive
-from exline.primitives.ensemble_forest import EnsembleForestPrimitive
-from exline.primitives.image_transfer import ImageTransferPrimitive
+from distil.primitives.simple_column_parser import SimpleColumnParserPrimitive
+from distil.primitives.ensemble_forest import EnsembleForestPrimitive
+from distil.primitives.image_transfer import ImageTransferPrimitive
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
