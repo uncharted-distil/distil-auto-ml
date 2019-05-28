@@ -9,22 +9,23 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from exline.primitives.simple_imputer import SimpleImputerPrimitive
 from exline.primitives.categorical_imputer import CategoricalImputerPrimitive
-from exline.primitives.standard_scaler import StandardScalerPrimitive
 from exline.primitives.ensemble_forest_v2 import EnsembleForestV2Primitive
 from exline.primitives.replace_singletons import ReplaceSingletonsPrimitive
 from exline.primitives.one_hot_encoder import OneHotEncoderPrimitive
 from exline.primitives.binary_encoder import BinaryEncoderPrimitive
 from exline.primitives.text_encoder import TextEncoderPrimitive
 from exline.primitives.enrich_dates import EnrichDatesPrimitive
-from exline.primitives.missing_indicator import MissingIndicatorPrimitive
 
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.remove_columns import RemoveColumnsPrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
+
+from sklearn_wrap import SKMissingIndicator
+from sklearn_wrap import SKSimpleImputer
+from sklearn_wrap import SKStandardScaler
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
@@ -130,25 +131,33 @@ def create_pipeline(metric: str,
     tabular_pipeline.add_step(step)
     previous_step += 1
 
-    # Appends a missing value transformer for numerical values.
-    step = PrimitiveStep(primitive_description=MissingIndicatorPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_output('produce')
-    tabular_pipeline.add_step(step)
-    previous_step += 1
+    # Adds SK learn missing value indicator
+    # CDB: Won't work until https://gitlab.com/datadrivendiscovery/sklearn-wrap/issues/208 is fixed.
+    # If necessary, work around is to use 'new' for return result and do a horizontal concat of the result.
+    # step = PrimitiveStep(primitive_description=SKMissingIndicator.SKMissingIndicator.metadata.query())
+    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    # step.add_output('produce')
+    # step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
+    # step.add_hyperparameter('return_result', ArgumentType.VALUE, 'append')
+    # tabular_pipeline.add_step(step)
+    # previous_step += 1
 
-    # Appends an imputer for numerical values.
-    step = PrimitiveStep(primitive_description=SimpleImputerPrimitive.metadata.query())
+    # Adds SK learn simple imputer
+    step = PrimitiveStep(primitive_description=SKSimpleImputer.SKSimpleImputer.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
+    step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
+    step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
     tabular_pipeline.add_step(step)
     previous_step += 1
 
     # Append scaler for numerical values.
     if scale:
-        step = PrimitiveStep(primitive_description=StandardScalerPrimitive.metadata.query())
+        step = PrimitiveStep(primitive_description=SKStandardScaler.SKStandardScaler.metadata.query())
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
         step.add_output('produce')
+        step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
+        step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
         tabular_pipeline.add_step(step)
         previous_step += 1
 
