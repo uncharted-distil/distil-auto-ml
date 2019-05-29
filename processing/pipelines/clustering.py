@@ -10,7 +10,6 @@ from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
 from distil.primitives.categorical_imputer import CategoricalImputerPrimitive
-from distil.primitives.standard_scaler import StandardScalerPrimitive
 from distil.primitives.replace_singletons import ReplaceSingletonsPrimitive
 from distil.primitives.one_hot_encoder import OneHotEncoderPrimitive
 from distil.primitives.binary_encoder import BinaryEncoderPrimitive

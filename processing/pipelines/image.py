@@ -17,7 +17,7 @@ from common_primitives.denormalize import DenormalizePrimitive
 from common_primitives.dataframe_image_reader import DataFrameImageReaderPrimitive
 
 from distil.primitives.simple_column_parser import SimpleColumnParserPrimitive
-from distil.primitives.ensemble_forest import EnsembleForestPrimitive
+from distil.primitives.ensemble_forest_old import EnsembleForestOldPrimitive
 from distil.primitives.image_transfer import ImageTransferPrimitive
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
@@ -79,7 +79,7 @@ def create_pipeline(metric: str,
 
 
     # Generates a random forest ensemble model.
-    step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=EnsembleForestPrimitiveOld.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce_target')
     step.add_output('produce')

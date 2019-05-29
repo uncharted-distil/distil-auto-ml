@@ -10,7 +10,7 @@ from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
 from distil.primitives.categorical_imputer import CategoricalImputerPrimitive
-from distil.primitives.ensemble_forest_v2 import EnsembleForestV2Primitive
+from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.replace_singletons import ReplaceSingletonsPrimitive
 from distil.primitives.one_hot_encoder import OneHotEncoderPrimitive
 from distil.primitives.binary_encoder import BinaryEncoderPrimitive
@@ -165,12 +165,11 @@ def create_pipeline(metric: str,
         previous_step += 1
 
     # Generates a random forest ensemble model.
-    step = PrimitiveStep(primitive_description=EnsembleForestV2Primitive.metadata.query())
+    step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
-    # step.add_hyperparameter('fast', ArgumentType.VALUE, True)
     tabular_pipeline.add_step(step)
     previous_step += 1
 

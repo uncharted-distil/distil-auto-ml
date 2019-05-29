@@ -12,7 +12,7 @@ from d3m.metadata.base import ArgumentType
 
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
-from distil.primitives.ensemble_forest import EnsembleForestPrimitive
+from distil.primitives.ensemble_forest_old import EnsembleForestOldPrimitive
 from distil.primitives.audio_transfer import AudioTransferPrimitive
 
 from distil.primitives.audio_loader import AudioDatasetLoaderPrimitive
