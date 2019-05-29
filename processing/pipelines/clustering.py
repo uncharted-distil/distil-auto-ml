@@ -35,7 +35,8 @@ def create_pipeline(metric: str,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False,
-                    num_clusters: int = 100) -> Pipeline:
+                    num_clusters: int = 100,
+                    cluster_col_name = None) -> Pipeline:
     previous_step = 0
     input_val = 'steps.{}.produce'
 
@@ -70,16 +71,6 @@ def create_pipeline(metric: str,
     previous_step += 1
     attributes_step = previous_step
 
-    # Extract targets
-    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
-    step.add_output('produce')
-    target_types = ('https://metadata.datadrivendiscovery.org/types/Target', 'https://metadata.datadrivendiscovery.org/types/TrueTarget')
-    step.add_hyperparameter('semantic_types', ArgumentType.VALUE, target_types)
-    tabular_pipeline.add_step(step)
-    previous_step += 1
-    target_step = previous_step
-
     # Append date enricher.  Looks for date columns and normalizes them.
     step = PrimitiveStep(primitive_description=EnrichDatesPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(attributes_step))
@@ -97,14 +88,6 @@ def create_pipeline(metric: str,
     # Append categorical imputer.  Finds missing categorical values and replaces them with an imputed value.
     step = PrimitiveStep(primitive_description=CategoricalImputerPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_output('produce')
-    tabular_pipeline.add_step(step)
-    previous_step += 1
-
-    # Adds an svm text encoder for text fields.
-    step = PrimitiveStep(primitive_description=TextEncoderPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
     step.add_output('produce')
     tabular_pipeline.add_step(step)
     previous_step += 1
@@ -162,6 +145,8 @@ def create_pipeline(metric: str,
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     step.add_hyperparameter('n_clusters', ArgumentType.VALUE, num_clusters)
+    if cluster_col_name:
+        step.add_hyperparameter('cluster_col_name', ArgumentType.VALUE, cluster_col_name)
     tabular_pipeline.add_step(step)
     previous_step += 1
 
