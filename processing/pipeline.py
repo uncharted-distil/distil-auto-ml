@@ -6,19 +6,19 @@ from d3m.container import dataset
 from d3m import container, exceptions, runtime
 from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 
-from exline.modeling import metrics
+from distil.modeling import metrics
 from processing import router
 
 from processing.pipelines import (collaborative_filtering,
                                   clustering,
                                   graph_matching,
-                                  image,
+                                  #image,
                                   question_answer,
                                   tabular,
                                   text,
                                   timeseries,
                                   link_prediction,
-                                  audio,
+                                  #audio,
                                   vertex_nomination,
                                   community_detection)
 

@@ -12,7 +12,7 @@ COPY server-requirements.txt .
 COPY api api
 RUN pip3 install -r server-requirements.txt
 
-# Out-of-band Exline requirements
+# Out-of-band Distil requirements
 RUN apt update && \
     apt-get install -y ffmpeg build-essential libcap-dev curl && \
     pip3 install --upgrade pip cython==0.29.3 python-prctl==1.7 && \

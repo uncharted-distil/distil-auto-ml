@@ -1,5 +1,5 @@
 d3m_datasets
-exline.egg-info/
+distil.egg-info/
 api/ta2ta3api.egg-info
 *__pycache__*
 third_party/*
@@ -12,4 +12,4 @@ seed_datasets_current
 outputs/*
 output/*
 test.db
-exline.log
+distil.log

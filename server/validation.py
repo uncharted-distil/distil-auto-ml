@@ -9,7 +9,7 @@ import logging
 class RequestValidator:
     def __init__(self):
         self.msg = Messaging()
-        self.logger = logging.getLogger('exline.TaskManager')
+        self.logger = logging.getLogger('distil.TaskManager')
 
     def _validate_solution_id_exists(self, solution_id, session, request):
         solution_id = str(solution_id)

@@ -9,24 +9,23 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from exline.primitives.simple_imputer import SimpleImputerPrimitive
-from exline.primitives.categorical_imputer import CategoricalImputerPrimitive
-from exline.primitives.standard_scaler import StandardScalerPrimitive
-from exline.primitives.ensemble_forest import EnsembleForestPrimitive
-from exline.primitives.replace_singletons import ReplaceSingletonsPrimitive
-from exline.primitives.one_hot_encoder import OneHotEncoderPrimitive
-from exline.primitives.binary_encoder import BinaryEncoderPrimitive
-from exline.primitives.text_encoder import TextEncoderPrimitive
-from exline.primitives.enrich_dates import EnrichDatesPrimitive
-from exline.primitives.missing_indicator import MissingIndicatorPrimitive
-from exline.primitives.simple_column_parser import SimpleColumnParserPrimitive
-from exline.primitives.zero_column_remover import ZeroColumnRemoverPrimitive
+from distil.primitives.categorical_imputer import CategoricalImputerPrimitive
+from distil.primitives.ensemble_forest_v2 import EnsembleForestV2Primitive
+from distil.primitives.replace_singletons import ReplaceSingletonsPrimitive
+from distil.primitives.one_hot_encoder import OneHotEncoderPrimitive
+from distil.primitives.binary_encoder import BinaryEncoderPrimitive
+from distil.primitives.text_encoder import TextEncoderPrimitive
+from distil.primitives.enrich_dates import EnrichDatesPrimitive
 
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.remove_columns import RemoveColumnsPrimitive
+from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
+from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 
-from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
+from sklearn_wrap import SKMissingIndicator
+from sklearn_wrap import SKSimpleImputer
+from sklearn_wrap import SKStandardScaler
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
@@ -42,32 +41,53 @@ def create_pipeline(metric: str,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False) -> Pipeline:
-    previous_step = 0
     input_val = 'steps.{}.produce'
+
 
     # create the basic pipeline
     tabular_pipeline = Pipeline(context=PipelineContext.TESTING)
     tabular_pipeline.add_input(name='inputs')
 
-    # step 0 - extract dataframe from dataset
+    # extract dataframe from dataset
     step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
     tabular_pipeline.add_step(step)
+    previous_step = 0
 
-    # Append column parser.  D3M dataset loader creates a dataframe with all columns set to 'object', this pipeline is
-    # designed to work with string/object, int, float, boolean.  This also shifts the d3mIndex to be the dataframe index and
-    # drop the target.
-    step = PrimitiveStep(primitive_description=SimpleColumnParserPrimitive.metadata.query())
+    # Parse columns.
+    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
-    step.add_output('produce_target')
+    semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
+                      'https://metadata.datadrivendiscovery.org/types/FloatVector')
+    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
     tabular_pipeline.add_step(step)
     previous_step += 1
+    parse_step = previous_step
+
+    # Extract attributes
+    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
+    step.add_output('produce')
+    step.add_hyperparameter('semantic_types', ArgumentType.VALUE, ('https://metadata.datadrivendiscovery.org/types/Attribute',))
+    tabular_pipeline.add_step(step)
+    previous_step += 1
+    attributes_step = previous_step
+
+    # Extract targets
+    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
+    step.add_output('produce')
+    target_types = ('https://metadata.datadrivendiscovery.org/types/Target', 'https://metadata.datadrivendiscovery.org/types/TrueTarget')
+    step.add_hyperparameter('semantic_types', ArgumentType.VALUE, target_types)
+    tabular_pipeline.add_step(step)
+    previous_step += 1
+    target_step = previous_step
 
     # Append date enricher.  Looks for date columns and normalizes them.
     step = PrimitiveStep(primitive_description=EnrichDatesPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(attributes_step))
     step.add_output('produce')
     tabular_pipeline.add_step(step)
     previous_step += 1
@@ -89,76 +109,76 @@ def create_pipeline(metric: str,
     # Adds an svm text encoder for text fields.
     step = PrimitiveStep(primitive_description=TextEncoderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
     step.add_output('produce')
     tabular_pipeline.add_step(step)
     previous_step += 1
 
     # Adds a one hot encoder for categoricals of low cardinality.
-    step = PrimitiveStep(primitive_description=OneHotEncoderPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_output('produce')
-    step.add_hyperparameter('max_one_hot', ArgumentType.VALUE, max_one_hot)
-    tabular_pipeline.add_step(step)
-    previous_step += 1
+    if cat_mode == 'one_hot':
+        step = PrimitiveStep(primitive_description=OneHotEncoderPrimitive.metadata.query())
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+        step.add_output('produce')
+        step.add_hyperparameter('max_one_hot', ArgumentType.VALUE, max_one_hot)
+        tabular_pipeline.add_step(step)
+        previous_step += 1
 
     # Adds a binary encoder for categoricals of high cardinality.
     step = PrimitiveStep(primitive_description=BinaryEncoderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
-    step.add_hyperparameter('min_binary', ArgumentType.VALUE, max_one_hot + 1)
+    if cat_mode == 'one_hot':
+        step.add_hyperparameter('min_binary', ArgumentType.VALUE, max_one_hot + 1)
+    else:
+        step.add_hyperparameter('min_binary', ArgumentType.VALUE, 0)
     tabular_pipeline.add_step(step)
     previous_step += 1
 
-    # Appends a missing value transformer for numerical values.
-    step = PrimitiveStep(primitive_description=MissingIndicatorPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_output('produce')
-    tabular_pipeline.add_step(step)
-    previous_step += 1
+    # Adds SK learn missing value indicator
+    # CDB: Won't work until https://gitlab.com/datadrivendiscovery/sklearn-wrap/issues/208 is fixed.
+    # If necessary, work around is to use 'new' for return result and do a horizontal concat of the result.
+    # step = PrimitiveStep(primitive_description=SKMissingIndicator.SKMissingIndicator.metadata.query())
+    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    # step.add_output('produce')
+    # step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
+    # step.add_hyperparameter('return_result', ArgumentType.VALUE, 'append')
+    # tabular_pipeline.add_step(step)
+    # previous_step += 1
 
-    # Appends an imputer for numerical values.
-    step = PrimitiveStep(primitive_description=SimpleImputerPrimitive.metadata.query())
+    # Adds SK learn simple imputer
+    step = PrimitiveStep(primitive_description=SKSimpleImputer.SKSimpleImputer.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
+    step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
+    step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
     tabular_pipeline.add_step(step)
     previous_step += 1
 
     # Append scaler for numerical values.
     if scale:
-        step = PrimitiveStep(primitive_description=StandardScalerPrimitive.metadata.query())
+        step = PrimitiveStep(primitive_description=SKStandardScaler.SKStandardScaler.metadata.query())
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
         step.add_output('produce')
+        step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
+        step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
         tabular_pipeline.add_step(step)
         previous_step += 1
 
-    # Disabling.  We can't guarantee that data supplied to the model outside the initial train/test step won't end up generating
-    # a different set of zeroed columns, which can lead to a mismatch in the data passed into the trained classifier / regressor.
-    # Not sure if there's a clean way around this.
-    #
-    # Remove any columns that are uniformly zeroes
-    # step = PrimitiveStep(primitive_description=ZeroColumnRemoverPrimitive.metadata.query())
-    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    # step.add_output('produce')
-    # tabular_pipeline.add_step(step)
-    # previous_step += 1
-
     # Generates a random forest ensemble model.
-    step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=EnsembleForestV2Primitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     # step.add_hyperparameter('fast', ArgumentType.VALUE, True)
     tabular_pipeline.add_step(step)
     previous_step += 1
 
-    # convert predictions to expected format
+    # # convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
+    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
     step.add_output('produce')
-    step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
     tabular_pipeline.add_step(step)
     previous_step += 1
 

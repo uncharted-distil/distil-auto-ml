@@ -9,8 +9,8 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from exline.primitives.simple_column_parser import SimpleColumnParserPrimitive
-from exline.primitives.bert_classification import BertClassificationPrimitive
+from distil.primitives.simple_column_parser import SimpleColumnParserPrimitive
+from distil.primitives.bert_classification import BertClassificationPrimitive
 
 from common_primitives.denormalize import DenormalizePrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive

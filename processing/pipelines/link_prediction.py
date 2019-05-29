@@ -9,15 +9,13 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from exline.primitives.load_single_graph import ExlineSingleGraphLoaderPrimitive
-from exline.primitives.link_prediction import ExlineLinkPredictionPrimitive
+from distil.primitives.load_single_graph import DistilSingleGraphLoaderPrimitive
+from distil.primitives.link_prediction import DistilLinkPredictionPrimitive
 
-from exline.primitives.simple_column_parser import SimpleColumnParserPrimitive
+from distil.primitives.simple_column_parser import SimpleColumnParserPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
-
-from exline.preprocessing.utils import MISSING_VALUE_INDICATOR
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
@@ -29,15 +27,15 @@ def create_pipeline(metric: str) -> Pipeline:
     vertex_nomination_pipeline = Pipeline(context=PipelineContext.TESTING)
     vertex_nomination_pipeline.add_input(name='inputs')
 
-    # step 0 - extract the graphs 
-    step = PrimitiveStep(primitive_description=ExlineSingleGraphLoaderPrimitive.metadata.query())
+    # step 0 - extract the graphs
+    step = PrimitiveStep(primitive_description=DistilSingleGraphLoaderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
     step.add_output('produce_target')
     vertex_nomination_pipeline.add_step(step)
 
     # step 1 - nominate
-    step = PrimitiveStep(primitive_description=ExlineLinkPredictionPrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=DistilLinkPredictionPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce_target')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)

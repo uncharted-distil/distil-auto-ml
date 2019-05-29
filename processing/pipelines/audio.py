@@ -12,10 +12,10 @@ from d3m.metadata.base import ArgumentType
 
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
-from exline.primitives.ensemble_forest import EnsembleForestPrimitive
-from exline.primitives.audio_transfer import AudioTransferPrimitive
+from distil.primitives.ensemble_forest import EnsembleForestPrimitive
+from distil.primitives.audio_transfer import AudioTransferPrimitive
 
-from exline.primitives.audio_loader import AudioDatasetLoaderPrimitive
+from distil.primitives.audio_loader import AudioDatasetLoaderPrimitive
 
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
