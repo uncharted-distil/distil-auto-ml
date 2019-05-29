@@ -24,19 +24,13 @@ from common_primitives.construct_predictions import ConstructPredictionsPrimitiv
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 
 from sklearn_wrap import SKMissingIndicator
-from sklearn_wrap import SKSimpleImputer
+from sklearn_wrap import SKImputer
 from sklearn_wrap import SKStandardScaler
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
 # in a naively implemented state for readability for now.
-#
-# Overall implementation relies on passing the entire dataset through the pipeline, with the primitives
-# identifying columns to operate on based on type.  Alternative implementation (that better lines up with
-# D3M approach, but generates more complex pipelines) would be to extract sub-sets by semantic type using
-# a common primitive, apply the type-specific primitive to the sub-set, and then merge the changes
-# (replace or join) back into the original data.
 def create_pipeline(metric: str,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
@@ -135,18 +129,16 @@ def create_pipeline(metric: str,
     previous_step += 1
 
     # Adds SK learn missing value indicator
-    # CDB: Won't work until https://gitlab.com/datadrivendiscovery/sklearn-wrap/issues/208 is fixed.
-    # If necessary, work around is to use 'new' for return result and do a horizontal concat of the result.
-    # step = PrimitiveStep(primitive_description=SKMissingIndicator.SKMissingIndicator.metadata.query())
-    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    # step.add_output('produce')
-    # step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
-    # step.add_hyperparameter('return_result', ArgumentType.VALUE, 'append')
-    # tabular_pipeline.add_step(step)
-    # previous_step += 1
+    step = PrimitiveStep(primitive_description=SKMissingIndicator.SKMissingIndicator.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
+    step.add_hyperparameter('return_result', ArgumentType.VALUE, 'append')
+    tabular_pipeline.add_step(step)
+    previous_step += 1
 
     # Adds SK learn simple imputer
-    step = PrimitiveStep(primitive_description=SKSimpleImputer.SKSimpleImputer.metadata.query())
+    step = PrimitiveStep(primitive_description=SKImputer.SKImputer.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
