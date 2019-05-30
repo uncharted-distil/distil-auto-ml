@@ -10,4 +10,4 @@ docker run \
   --env D3MOUTPUTDIR=$D3MOUTPUTDIR \
   -v $D3MOUTPUTDIR:$D3MOUTPUTDIR \
   -v $D3MINPUTDIR:$D3MINPUTDIR \
-  registry.datadrivendiscovery.org/uncharted_qntfy/ta3ta2_integration/exlineta2:latest
+  registry.datadrivendiscovery.org/uncharted/distil-integration/distil-auto-ml:latest

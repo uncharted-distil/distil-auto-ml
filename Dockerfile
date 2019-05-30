@@ -1,4 +1,4 @@
-FROM registry.datadrivendiscovery.org/jpl/docker_images/complete:ubuntu-bionic-python36-v2019.4.4-20190509-004421
+FROM registry.datadrivendiscovery.org/jpl/docker_images/complete:ubuntu-bionic-python36-v2019.5.8-20190530-050006
 
 ENV PYTHONPATH=$PYTHONPATH:/app
 ENV DEBIAN_FRONTEND=noninteractive
@@ -29,7 +29,7 @@ RUN apt update && \
 RUN rm -rf /var/lib/apt/lists/* /opt/* /tmp/*
 
 # Our primitives
-RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
+RUN pip3 install git+https://github.com/uncharted-distil/distil-primitives.git@collab-filter-cleanup#egg=DistilPrimitives
 
 # Put everything in
 COPY .git /.git
