@@ -8,10 +8,6 @@ services:
       - D3MSTATICDIR=/static
     volumes:
       - ./seed_datasets_current:/seed_datasets_current
-      - ./distil:/app/distil
-      - ./server:/app/server
-      - ./main.py:/app/main.py
-      - ./config.py:/app/config.py
       - ./static:/static
   dummy-ta3:
     image: new-dummy
