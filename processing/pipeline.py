@@ -9,8 +9,9 @@ from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 from distil.modeling import metrics
 from processing import router
 
+import config
+
 from processing.pipelines import (collaborative_filtering,
-                                  clustering,
                                   graph_matching,
                                   image,
                                   question_answer,
@@ -86,7 +87,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
 def fit(pipeline: pipeline.Pipeline, problem: problem.Problem, input_dataset: container.Dataset) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
     hyperparams = None
     random_seed = 0
-    volumes_dir = None
+    volumes_dir = config.D3MSTATICDIR
 
     fitted_runtime, _, result = runtime.fit(
         pipeline, problem, [input_dataset], hyperparams=hyperparams, random_seed=random_seed,
