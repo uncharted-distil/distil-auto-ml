@@ -18,3 +18,6 @@ LOG_FILENAME = os.getenv("LOG_FILENAME", "distil-auto-ml.log")
 
 # User agent to supply to TA3 Systems
 SERVER_USER_AGENT='qntfy_ta2'
+
+# Primitives static file directory
+D3MSTATICDIR = os.getenv("D3MSTATICDIR", '/static')

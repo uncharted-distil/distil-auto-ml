@@ -150,8 +150,8 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
 
 class Server():
     def __init__(self):
-        self.logger = logging.getLogger('xline.server.Server')
-        self.logger.info('Initializing xline gRPC server')
+        self.logger = logging.getLogger('distil.server.Server')
+        self.logger.info('Initializing distil gRPC server')
         self.server_thread = pool.ThreadPool(processes=1,)
 
     def create_server(self, port):

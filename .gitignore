@@ -13,3 +13,4 @@ outputs/*
 output/*
 test.db
 distil.log
+static

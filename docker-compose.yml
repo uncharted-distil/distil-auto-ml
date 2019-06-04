@@ -4,12 +4,15 @@ services:
     build: .
     ports:
       - 45042:45042
+    environment:
+      - D3MSTATICDIR=/static
     volumes:
       - ./seed_datasets_current:/seed_datasets_current
       - ./distil:/app/distil
       - ./server:/app/server
       - ./main.py:/app/main.py
       - ./config.py:/app/config.py
+      - ./static:/static
   dummy-ta3:
     image: new-dummy
     command: ["/usr/bin/python3", "-m", "dummy_ta3.dummy_ta3", "-p", "/seed_datasets_current/49_facebook/TRAIN/problem_TRAIN/problemDoc.json", "-d", "/seed_datasets_current", "-e", "distil", "-t", "300"]
