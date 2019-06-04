@@ -9,8 +9,8 @@ from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 from distil.modeling import metrics
 from processing import router
 
-from processing.pipelines import (collaborative_filtering,
-                                  clustering,
+#from processing.pipelines import (#collaborative_filtering,
+from processing.pipelines import (clustering,
                                   graph_matching,
                                   image,
                                   question_answer,
