@@ -11,7 +11,8 @@ from processing import router
 
 import config
 
-from processing.pipelines import (collaborative_filtering,
+from processing.pipelines import (clustering,
+                                  collaborative_filtering,
                                   graph_matching,
                                   image,
                                   question_answer,
