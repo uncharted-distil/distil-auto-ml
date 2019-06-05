@@ -12,10 +12,10 @@ from d3m.metadata import hyperparams
 from distil.primitives.simple_column_parser import SimpleColumnParserPrimitive
 from distil.primitives.collaborative_filtering import CollaborativeFilteringPrimitive
 
-from common_primitives.denormalize import DenormalizePrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
-from common_primitives.remove_columns import RemoveColumnsPrimitive
+from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
+from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
@@ -28,26 +28,47 @@ def create_pipeline(metric: str) -> Pipeline:
     cf_pipeline = Pipeline(context=PipelineContext.TESTING)
     cf_pipeline.add_input(name='inputs')
 
-    # Extract dataframe from dataset
+   # extract dataframe from dataset
     step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
     cf_pipeline.add_step(step)
+    previous_step = 0
 
-    # Append column parser.  D3M dataset loader creates a dataframe with all columns set to 'object', this pipeline is
-    # designed to work with string/object, int, float, boolean.  This also shifts the d3mIndex to be the dataframe index and
-    # drop the target.
-    step = PrimitiveStep(primitive_description=SimpleColumnParserPrimitive.metadata.query())
+    # Parse columns.
+    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
-    step.add_output('produce_target')
+    semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
+                      'https://metadata.datadrivendiscovery.org/types/FloatVector')
+    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
     cf_pipeline.add_step(step)
     previous_step += 1
+    parse_step = previous_step
+
+    # Extract attributes
+    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
+    step.add_output('produce')
+    step.add_hyperparameter('semantic_types', ArgumentType.VALUE, ('https://metadata.datadrivendiscovery.org/types/Attribute',))
+    cf_pipeline.add_step(step)
+    previous_step += 1
+    attributes_step = previous_step
+
+    # Extract targets
+    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
+    step.add_output('produce')
+    target_types = ('https://metadata.datadrivendiscovery.org/types/Target', 'https://metadata.datadrivendiscovery.org/types/TrueTarget')
+    step.add_hyperparameter('semantic_types', ArgumentType.VALUE, target_types)
+    cf_pipeline.add_step(step)
+    previous_step += 1
+    target_step = previous_step
 
     # Generates collaborative filtering model.
     step = PrimitiveStep(primitive_description=CollaborativeFilteringPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(attributes_step))
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     cf_pipeline.add_step(step)
@@ -56,9 +77,8 @@ def create_pipeline(metric: str) -> Pipeline:
     # convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce_target')
+    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
     step.add_output('produce')
-    step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
     cf_pipeline.add_step(step)
     previous_step += 1
 
