@@ -10,8 +10,10 @@ services:
       - ./seed_datasets_current:/seed_datasets_current
       - ./static:/static
   dummy-ta3:
-    image: new-dummy
-    command: ["/usr/bin/python3", "-m", "dummy_ta3.dummy_ta3", "-p", "/seed_datasets_current/49_facebook/TRAIN/problem_TRAIN/problemDoc.json", "-d", "/seed_datasets_current", "-e", "distil", "-t", "300"]
+    image: registry.gitlab.com/datadrivendiscovery/dummy-ta3/dummy-ta3:2019.4.11
+    environment:
+      - DATASET=${DATASET}
+    command: ["/usr/bin/python3", "-m", "dummy_ta3.dummy_ta3", "-p", "/seed_datasets_current/$DATASET/TRAIN/problem_TRAIN/problemDoc.json", "-d", "/seed_datasets_current", "-e", "distil", "-t", "3000"]
     links:
       - "distil"
     volumes:

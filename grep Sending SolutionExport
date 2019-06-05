@@ -1,0 +1,16 @@
+Attaching to exline_dummy-ta3_1
+[36mdummy-ta3_1  |[0m WARNING:d3m.deprecate:__main__: Calling a deprecated function 'parse_problem_description' in '/TA3/dummy_ta3/dummy_ta3.py' at line 249: use Problem.load class method instead
+[36mdummy-ta3_1  |[0m INFO:__main__:Starting Test
+[36mdummy-ta3_1  |[0m INFO:__main__:Host distil
+[36mdummy-ta3_1  |[0m INFO:__main__:Sending Hello Message
+[36mdummy-ta3_1  |[0m INFO:__main__:Hello Message Received
+[36mdummy-ta3_1  |[0m INFO:__main__:Sending SearchSolution Message
+[36mdummy-ta3_1  |[0m INFO:__main__:Getting SearchSolutionsResults for e45d82fb-f2bb-4a76-990c-708a33cadce6
+[36mdummy-ta3_1  |[0m INFO:__main__:Solution found fb606e3e-30d2-4a1a-8b35-b942c984a91b
+[36mdummy-ta3_1  |[0m INFO:__main__:Sending ScoreSolution fb606e3e-30d2-4a1a-8b35-b942c984a91b
+[36mdummy-ta3_1  |[0m INFO:__main__:Getting ScoreSolutionResults fb606e3e-30d2-4a1a-8b35-b942c984a91b
+[36mdummy-ta3_1  |[0m INFO:__main__:Scored fb606e3e-30d2-4a1a-8b35-b942c984a91b, rank=1.0
+[36mdummy-ta3_1  |[0m INFO:__main__:Sending SolutionExport fb606e3e-30d2-4a1a-8b35-b942c984a91b
+[36mdummy-ta3_1  |[0m INFO:__main__:Finishing Test
+[36mexline_dummy-ta3_1 exited with code 0
+[0m
