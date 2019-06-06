@@ -9,7 +9,7 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from distil.primitives.bert_classification import BertClassificationPrimitive
+from distil.primitives.bert_classification import BertPairClassificationPrimitive
 
 from common_primitives.denormalize import DenormalizePrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
@@ -72,7 +72,7 @@ def create_pipeline(metric: str) -> Pipeline:
     target_step = previous_step
 
     # Generates a bert pair classification model.
-    step = PrimitiveStep(primitive_description=BertClassificationPrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=BertPairClassificationPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(attributes_step))
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
     step.add_output('produce')
