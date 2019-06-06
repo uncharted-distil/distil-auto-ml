@@ -1,0 +1,74 @@
+{
+    "id": "a5abc2ce-77f9-4848-b6ab-11f85042464b",
+    "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
+    "created": "2019-06-06T20:33:49.704847Z",
+    "inputs": [
+        {
+            "name": "inputs"
+        }
+    ],
+    "outputs": [
+        {
+            "data": "steps.1.produce",
+            "name": "output"
+        }
+    ],
+    "steps": [
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "79012210-2463-4f94-9da6-11bdc5a7e6c4",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.data_transformation.load_single_graph.DistilSingleGraphLoader",
+                "name": "Load single graph and dataframe into a parseable object",
+                "digest": "998e7fb69c6e5fb19db52a90222b1a6df5d9256b0e17e9882e851ef8c8886638"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "inputs.0"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                },
+                {
+                    "id": "produce_target"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "064cec55-39dd-45b7-a663-50d3e17e0c42",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.data_transformation.community_detection.DistilCommunityDetection",
+                "name": "CommunityDetection",
+                "digest": "591dc32e4602fde30a3d7682ef02eb5ddae2f8df137737c91b49c6dec447ea53"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce"
+                },
+                "outputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce_target"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "metric": {
+                    "type": "VALUE",
+                    "data": "normalizedMutualInformation"
+                }
+            }
+        }
+    ],
+    "digest": "4abfbaef1573c5349aee7e11c12532dc736375ff29a3ee810fb4193a2cb7a87c"
+}
