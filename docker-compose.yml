@@ -9,6 +9,7 @@ services:
     volumes:
       - ./seed_datasets_current:/seed_datasets_current
       - ./static:/static
+      - ./pipelines:/app/pipelines
   dummy-ta3:
     image: registry.gitlab.com/datadrivendiscovery/dummy-ta3/dummy-ta3:2019.4.11
     environment:
