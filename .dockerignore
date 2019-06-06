@@ -2,3 +2,4 @@ Dockerfile
 *.md
 docker-compose.yml
 seed_datasets_current
+static

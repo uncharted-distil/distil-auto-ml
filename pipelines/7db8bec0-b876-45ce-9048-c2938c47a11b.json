@@ -1,0 +1,209 @@
+{
+    "id": "7db8bec0-b876-45ce-9048-c2938c47a11b",
+    "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
+    "created": "2019-06-06T20:19:30.773270Z",
+    "inputs": [
+        {
+            "name": "inputs"
+        }
+    ],
+    "outputs": [
+        {
+            "data": "steps.6.produce",
+            "name": "output"
+        }
+    ],
+    "steps": [
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "f31f8c1f-d1c5-43e5-a4b2-2ae4a761ef2e",
+                "version": "0.2.0",
+                "python_path": "d3m.primitives.data_transformation.denormalize.Common",
+                "name": "Denormalize datasets",
+                "digest": "3cf3edfbdae9bb9c5ab11dbb6b76eb6c031a061c269d906f88cb232170e0a667"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "inputs.0"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "4b42ce1e-9b98-4a25-b68e-fad13311eb65",
+                "version": "0.3.0",
+                "python_path": "d3m.primitives.data_transformation.dataset_to_dataframe.Common",
+                "name": "Extract a DataFrame from a Dataset",
+                "digest": "748b3f6c9d26a4323a34a6da464c5de3dcab0d784a127819106acef1466e9550"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "8f2e51e8-da59-456d-ae29-53912b2b9f3d",
+                "version": "0.2.0",
+                "python_path": "d3m.primitives.data_preprocessing.image_reader.DataFrameCommon",
+                "name": "Columns image reader",
+                "digest": "4f607ed80b459254b460fc8d4d0bd805de1c85f7ec17bdcd986cef061bb8a0e3"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.1.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "use_columns": {
+                    "type": "VALUE",
+                    "data": [
+                        0,
+                        1
+                    ]
+                },
+                "return_result": {
+                    "type": "VALUE",
+                    "data": "replace"
+                }
+            }
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "782e261e-8e23-4184-9258-5a412c9b32d4",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.data_transformation.encoder.DistilImageTransfer",
+                "name": "Image Transfer",
+                "digest": "e746edd33f88099ffc3b678e361608e8444e6b35a077c5b31e623b8395d474c3"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.2.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "7b67eef9-f14e-4219-bf0c-5222880eac78",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.data_transformation.column_parser.DistilSimpleColumnParser",
+                "name": "Simple column parser",
+                "digest": "c4c9a8d029bfbce6617d76232ce5e34d6dfe50bc43e7d3cc13c72b6e4934ef81"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.1.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                },
+                {
+                    "id": "produce_target"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "8baea8e6-9d3a-46d7-acf1-04fd593dcd37",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.learner.random_forest.DistilEnsembleForestOld",
+                "name": "EnsembleForest",
+                "digest": "9745a89313b6556f18e53707a2083df5f976f612268015f4c1b918784a155f54"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.3.produce"
+                },
+                "outputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.4.produce_target"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "metric": {
+                    "type": "VALUE",
+                    "data": "f1Macro"
+                },
+                "fast": {
+                    "type": "VALUE",
+                    "data": false
+                }
+            }
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "8d38b340-f83f-4877-baaa-162f8e551736",
+                "version": "0.3.0",
+                "python_path": "d3m.primitives.data_transformation.construct_predictions.DataFrameCommon",
+                "name": "Construct pipeline predictions output",
+                "digest": "bc09b1d3e656bbf5ed10a6b13382e8a52ffd18552f5803f28b25b79fbf25ca52"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.5.produce"
+                },
+                "reference": {
+                    "type": "CONTAINER",
+                    "data": "steps.4.produce_target"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "use_columns": {
+                    "type": "VALUE",
+                    "data": [
+                        0,
+                        1
+                    ]
+                }
+            }
+        }
+    ],
+    "digest": "b18fd84e2c0a01d4cc3cd330cdaa83841bb7f681b6cbfc5a1925c486c5747926"
+}

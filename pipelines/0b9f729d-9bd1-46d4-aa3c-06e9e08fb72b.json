@@ -1,0 +1,74 @@
+{
+    "id": "0b9f729d-9bd1-46d4-aa3c-06e9e08fb72b",
+    "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
+    "created": "2019-06-06T20:19:30.560167Z",
+    "inputs": [
+        {
+            "name": "inputs"
+        }
+    ],
+    "outputs": [
+        {
+            "data": "steps.1.produce",
+            "name": "output"
+        }
+    ],
+    "steps": [
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "ae0797506-ea7b-4a7f-a7e4-2f91e2082f05",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.data_transformation.load_graphs.DistilGraphLoader",
+                "name": "Load graphs into a parseable object",
+                "digest": "813b4755156ceb3a52dc8838479563c8377406592e0f739f686826f5576211e9"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "inputs.0"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                },
+                {
+                    "id": "produce_target"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "8baea8e6-9d3a-46d7-acf1-04fd593dcd37",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.data_transformation.seeded_graph_matcher.DistilSeededGraphMatcher",
+                "name": "SeededGraphMatcher",
+                "digest": "9745a89313b6556f18e53707a2083df5f976f612268015f4c1b918784a155f54"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce"
+                },
+                "outputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce_target"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "metric": {
+                    "type": "VALUE",
+                    "data": "f1Macro"
+                }
+            }
+        }
+    ],
+    "digest": "64b3e0fa496b80c73677a278b6b2463b7af42bb78b9432dd88e85d51bb2c9043"
+}
