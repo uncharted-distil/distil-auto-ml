@@ -55,7 +55,7 @@ def create_pipeline(metric: str,
     audio_pipeline.add_step(step)
 
     # step 2 -- Generates a random forest ensemble model.
-    step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=EnsembleForestOldPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce_target')
     step.add_output('produce')

@@ -4,7 +4,7 @@
 cd ..
 
 # Start TA2
-docker-compose up -d distil 
+docker-compose up -d distil
 
 # List all the datasets there be in seed_datasets
 for dir in seed_datasets_current/*
