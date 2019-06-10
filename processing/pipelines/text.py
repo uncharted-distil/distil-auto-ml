@@ -20,7 +20,7 @@ from distil.primitives.simple_column_parser import SimpleColumnParserPrimitive
 
 from common_primitives.denormalize import DenormalizePrimitive
 
-from distil.primitives.text_reader import TextReaderPrimitive
+from common_primitives.text_reader import TextReaderPrimitive
 
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
