@@ -12,9 +12,7 @@ from d3m.metadata import hyperparams
 from distil.primitives.load_single_graph import DistilSingleGraphLoaderPrimitive
 from distil.primitives.link_prediction import DistilLinkPredictionPrimitive
 
-from distil.primitives.simple_column_parser import SimpleColumnParserPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
-
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
@@ -34,7 +32,7 @@ def create_pipeline(metric: str) -> Pipeline:
     step.add_output('produce_target')
     vertex_nomination_pipeline.add_step(step)
 
-    # step 1 - nominate
+    # step 1 - predict links
     step = PrimitiveStep(primitive_description=DistilLinkPredictionPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce_target')

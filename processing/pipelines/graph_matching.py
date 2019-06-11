@@ -12,9 +12,7 @@ from d3m.metadata import hyperparams
 from distil.primitives.load_graphs import DistilGraphLoaderPrimitive
 from distil.primitives.seeded_graph_matcher import DistilSeededGraphMatchingPrimitive
 
-from distil.primitives.simple_column_parser import SimpleColumnParserPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
-
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)

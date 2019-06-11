@@ -12,7 +12,7 @@ from d3m.metadata.base import ArgumentType
 
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
-from distil.primitives.ensemble_forest_old import EnsembleForestOldPrimitive
+from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.audio_transfer import AudioTransferPrimitive
 
 from distil.primitives.audio_loader import AudioDatasetLoaderPrimitive
@@ -39,6 +39,7 @@ def create_pipeline(metric: str,
     audio_pipeline = Pipeline(context=PipelineContext.TESTING)
     audio_pipeline.add_input(name='inputs')
 
+
     # step 0
     step = PrimitiveStep(primitive_description=AudioDatasetLoaderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
@@ -48,14 +49,15 @@ def create_pipeline(metric: str,
     audio_pipeline.add_step(step)
 
 
-    # step 1 - featurize images
+    # step 1 - featurize
     step = PrimitiveStep(primitive_description=AudioTransferPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce_collection')
     step.add_output('produce')
     audio_pipeline.add_step(step)
 
+
     # step 2 -- Generates a random forest ensemble model.
-    step = PrimitiveStep(primitive_description=EnsembleForestOldPrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce_target')
     step.add_output('produce')

@@ -9,19 +9,12 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-
 from distil.primitives.text_classifier import TextClassifierPrimitive
 
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
-
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
-
-from distil.primitives.simple_column_parser import SimpleColumnParserPrimitive
-
 from common_primitives.denormalize import DenormalizePrimitive
-
 from common_primitives.text_reader import TextReaderPrimitive
-
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 
@@ -80,7 +73,6 @@ def create_pipeline(metric: str,
                       'https://metadata.datadrivendiscovery.org/types/FloatVector')
     step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
     text_pipeline.add_step(step)
-
 
 
     # step 4 - Extract attributes
