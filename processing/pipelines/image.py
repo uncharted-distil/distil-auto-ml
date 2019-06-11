@@ -14,6 +14,8 @@ from common_primitives.construct_predictions import ConstructPredictionsPrimitiv
 from common_primitives.denormalize import DenormalizePrimitive
 from common_primitives.dataframe_image_reader import DataFrameImageReaderPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
+from common_primitives.column_parser import ColumnParserPrimitive
+
 
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.image_transfer import ImageTransferPrimitive
@@ -72,7 +74,7 @@ def create_pipeline(metric: str,
     semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
                       'https://metadata.datadrivendiscovery.org/types/FloatVector')
     step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
-    text_pipeline.add_step(step)
+    image_pipeline.add_step(step)
 
 
     # step 5 - Extract attributes
