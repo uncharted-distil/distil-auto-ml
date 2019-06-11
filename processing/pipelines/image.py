@@ -65,51 +65,52 @@ def create_pipeline(metric: str,
     image_pipeline.add_step(step)
 
 
-    """
-    # step 4 - set up training set
-    step = PrimitiveStep(primitive_description=SimpleColumnParserPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
+    # step 4 - Parse columns
+    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
     step.add_output('produce')
-    step.add_output('produce_target')
-    image_pipeline.add_step(step)
+    semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
+                      'https://metadata.datadrivendiscovery.org/types/FloatVector')
+    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
+    text_pipeline.add_step(step)
 
-    """
-    # step 4 - Extract attributes
+
+    # step 5 - Extract attributes
     step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
     step.add_output('produce')
     step.add_hyperparameter('semantic_types', ArgumentType.VALUE, ('https://metadata.datadrivendiscovery.org/types/Attribute',))
     image_pipeline.add_step(step)
     
 
-    # step 5 - Extract targets
+    # step 6 - Extract targets
     step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
     step.add_output('produce')
     target_types = ('https://metadata.datadrivendiscovery.org/types/Target', 'https://metadata.datadrivendiscovery.org/types/TrueTarget')
     step.add_hyperparameter('semantic_types', ArgumentType.VALUE, target_types)
     image_pipeline.add_step(step)
 
 
-    # Generates a random forest ensemble model.
+    # step 7 - Generates a random forest ensemble model.
     step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.5.produce')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.6.produce')
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     image_pipeline.add_step(step)
 
 
-    # step 5 - convert predictions to expected format
+    # step 8 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.6.produce')
-    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.5.produce')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.7.produce')
+    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.6.produce')
     step.add_output('produce')
     step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
     image_pipeline.add_step(step)
 
 
     # Adding output step to the pipeline
-    image_pipeline.add_output(name='output', data_reference='steps.7.produce')
+    image_pipeline.add_output(name='output', data_reference='steps.8.produce')
 
     return image_pipeline
