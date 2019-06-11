@@ -9,7 +9,6 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from distil.primitives.simple_column_parser import SimpleColumnParserPrimitive
 from distil.primitives.collaborative_filtering import CollaborativeFilteringPrimitive
 
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
