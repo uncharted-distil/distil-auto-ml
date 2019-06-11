@@ -22,6 +22,12 @@ from common_primitives.denormalize import DenormalizePrimitive
 
 from common_primitives.text_reader import TextReaderPrimitive
 
+from common_primitives.column_parser import ColumnParserPrimitive
+from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
+
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
@@ -56,6 +62,7 @@ def create_pipeline(metric: str,
     step.add_output('produce')
     text_pipeline.add_step(step)
 
+
     # step 2 - read text
     step = PrimitiveStep(primitive_description=TextReaderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
@@ -64,34 +71,55 @@ def create_pipeline(metric: str,
     step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
     text_pipeline.add_step(step)
 
-    # step 3 - set up training set
-    step = PrimitiveStep(primitive_description=SimpleColumnParserPrimitive.metadata.query())
+
+    # step 3 - Parse columns.
+    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.2.produce')
     step.add_output('produce')
-    step.add_output('produce_target')
+    semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
+                      'https://metadata.datadrivendiscovery.org/types/FloatVector')
+    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
     text_pipeline.add_step(step)
 
 
-    # step 4 - generates a text classification model.
-    step = PrimitiveStep(primitive_description=TextClassifierPrimitive.metadata.query())
+
+    # step 4 - Extract attributes
+    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce_target')
+    step.add_output('produce')
+    step.add_hyperparameter('semantic_types', ArgumentType.VALUE, ('https://metadata.datadrivendiscovery.org/types/Attribute',))
+    text_pipeline.add_step(step)
+    
+
+    # step 5 - Extract targets
+    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
+    step.add_output('produce')
+    target_types = ('https://metadata.datadrivendiscovery.org/types/Target', 'https://metadata.datadrivendiscovery.org/types/TrueTarget')
+    step.add_hyperparameter('semantic_types', ArgumentType.VALUE, target_types)
+    text_pipeline.add_step(step)
+    
+
+    # step 6 - generates a text classification model.
+    step = PrimitiveStep(primitive_description=TextClassifierPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.5.produce')
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     step.add_hyperparameter('fast', ArgumentType.VALUE, True)
     text_pipeline.add_step(step)
 
 
-    # step 5 - convert predictions to expected format
+    # step 7 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
-    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce_target')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.6.produce')
+    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
     step.add_output('produce')
     step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
     text_pipeline.add_step(step)
 
 
     # Adding output step to the pipeline
-    text_pipeline.add_output(name='output', data_reference='steps.5.produce')
+    text_pipeline.add_output(name='output', data_reference='steps.7.produce')
 
     return text_pipeline
