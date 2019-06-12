@@ -99,7 +99,7 @@ def create_pipeline(metric: str,
 
     # step 7 - Generates a random forest ensemble model.
     step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.5.produce')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.6.produce')
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
