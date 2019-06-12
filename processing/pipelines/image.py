@@ -109,7 +109,7 @@ def create_pipeline(metric: str,
     # step 8 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.7.produce')
-    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.6.produce')
+    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step.add_output('produce')
     step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
     image_pipeline.add_step(step)
