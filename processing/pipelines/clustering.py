@@ -118,6 +118,8 @@ def create_pipeline(metric: str,
     step.add_output('produce')
     step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
     step.add_hyperparameter('return_result', ArgumentType.VALUE, 'append')
+    step.add_hyperparameter('error_on_new', ArgumentType.VALUE, False)
+    step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
     tabular_pipeline.add_step(step)
     previous_step += 1
 
