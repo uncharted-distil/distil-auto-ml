@@ -78,17 +78,9 @@ def create_pipeline(metric: str,
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
     step.add_output('produce')
     image_pipeline.add_step(step)
-
-
-    # step 5 - extract attributes
-    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
-    step.add_output('produce')
-    step.add_hyperparameter('semantic_types', ArgumentType.VALUE, ('https://metadata.datadrivendiscovery.org/types/Attribute',))
-    image_pipeline.add_step(step)
     
 
-    # step 6 - extract targets
+    # step 5 - extract targets
     step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
     step.add_output('produce')
@@ -97,18 +89,18 @@ def create_pipeline(metric: str,
     image_pipeline.add_step(step)
 
 
-    # step 7 - Generates a random forest ensemble model.
+    # step 6 - Generates a random forest ensemble model.
     step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.6.produce')
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.5.produce')
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     image_pipeline.add_step(step)
 
 
-    # step 8 - convert predictions to expected format
+    # step 7 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.7.produce')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.6.produce')
     step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step.add_output('produce')
     step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
@@ -116,6 +108,6 @@ def create_pipeline(metric: str,
 
 
     # Adding output step to the pipeline
-    image_pipeline.add_output(name='output', data_reference='steps.8.produce')
+    image_pipeline.add_output(name='output', data_reference='steps.7.produce')
 
     return image_pipeline
