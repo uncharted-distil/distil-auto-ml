@@ -36,8 +36,6 @@ def create_pipeline(metric: str,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False) -> Pipeline:
-    previous_step = 0
-    input_val = 'steps.{}.produce'
 
     # create the basic pipeline
     text_pipeline = Pipeline(context=PipelineContext.TESTING)

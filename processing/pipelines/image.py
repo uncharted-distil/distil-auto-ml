@@ -39,11 +39,13 @@ def create_pipeline(metric: str,
     image_pipeline = Pipeline(context=PipelineContext.TESTING)
     image_pipeline.add_input(name='inputs')
 
+
     # step 0 - denormalize dataframe (N.B.: injects semantic type information)
     step = PrimitiveStep(primitive_description=DenormalizePrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
     image_pipeline.add_step(step)
+
 
     # step 1 - extract dataframe from dataset
     step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query())
@@ -51,25 +53,10 @@ def create_pipeline(metric: str,
     step.add_output('produce')
     image_pipeline.add_step(step)
 
-    # step 2 - read images
-    step = PrimitiveStep(primitive_description=DataFrameImageReaderPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
-    step.add_output('produce')
-    step.add_hyperparameter('use_columns', ArgumentType.VALUE,[0,1])
-    step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
-    image_pipeline.add_step(step)
 
-
-    # step 3 - featurize images
-    step = PrimitiveStep(primitive_description=ImageTransferPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.2.produce')
-    step.add_output('produce')
-    image_pipeline.add_step(step)
-
-
-    # step 4 - Parse columns
+    # step 2 - Parse columns
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step.add_output('produce')
     semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
                       'https://metadata.datadrivendiscovery.org/types/FloatVector')
@@ -77,9 +64,25 @@ def create_pipeline(metric: str,
     image_pipeline.add_step(step)
 
 
+    # step 3 - read images
+    step = PrimitiveStep(primitive_description=DataFrameImageReaderPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.2.produce')
+    step.add_output('produce')
+    step.add_hyperparameter('use_columns', ArgumentType.VALUE,[0,1])
+    step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
+    image_pipeline.add_step(step)
+
+
+    # step 4 - featurize images
+    step = PrimitiveStep(primitive_description=ImageTransferPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
+    step.add_output('produce')
+    image_pipeline.add_step(step)
+
+
     # step 5 - Extract attributes
     step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.2.produce')
     step.add_output('produce')
     step.add_hyperparameter('semantic_types', ArgumentType.VALUE, ('https://metadata.datadrivendiscovery.org/types/Attribute',))
     image_pipeline.add_step(step)
@@ -87,7 +90,7 @@ def create_pipeline(metric: str,
 
     # step 6 - Extract targets
     step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.2.produce')
     step.add_output('produce')
     target_types = ('https://metadata.datadrivendiscovery.org/types/Target', 'https://metadata.datadrivendiscovery.org/types/TrueTarget')
     step.add_hyperparameter('semantic_types', ArgumentType.VALUE, target_types)
