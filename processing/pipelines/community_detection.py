@@ -13,7 +13,6 @@ from distil.primitives.load_single_graph import DistilSingleGraphLoaderPrimitive
 from distil.primitives.community_detection import DistilCommunityDetectionPrimitive
 
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
-
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
