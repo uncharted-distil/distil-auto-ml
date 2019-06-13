@@ -53,7 +53,7 @@ def create_pipeline(metric: str) -> Pipeline:
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step.add_output('produce')
     step.add_hyperparameter('semantic_types', ArgumentType.VALUE, ('https://metadata.datadrivendiscovery.org/types/Attribute',))
-    cf_pipeline.add_step(step)
+    ts_pipeline.add_step(step)
 
     # 3- Extract targets
     step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
@@ -61,7 +61,7 @@ def create_pipeline(metric: str) -> Pipeline:
     step.add_output('produce')
     target_types = ('https://metadata.datadrivendiscovery.org/types/Target', 'https://metadata.datadrivendiscovery.org/types/TrueTarget')
     step.add_hyperparameter('semantic_types', ArgumentType.VALUE, target_types)
-    cf_pipeline.add_step(step)
+    ts_pipeline.add_step(step)
     previous_step += 1
     target_step = previous_step
 
