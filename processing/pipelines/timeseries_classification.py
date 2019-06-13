@@ -24,7 +24,6 @@ PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1
 
 
 def create_pipeline(metric: str) -> Pipeline:
-    previous_step = 0
     input_val = 'steps.{}.produce'
 
     # create the basic pipeline
@@ -36,7 +35,6 @@ def create_pipeline(metric: str) -> Pipeline:
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
     step.add_output('produce_collection')
-    step.add_hyperparameter('sample', ArgumentType.VALUE, 1.0)
     ts_pipeline.add_step(step)
 
     # 1 - Parse columns.
@@ -62,8 +60,6 @@ def create_pipeline(metric: str) -> Pipeline:
     target_types = ('https://metadata.datadrivendiscovery.org/types/Target', 'https://metadata.datadrivendiscovery.org/types/TrueTarget')
     step.add_hyperparameter('semantic_types', ArgumentType.VALUE, target_types)
     ts_pipeline.add_step(step)
-    previous_step += 1
-    target_step = previous_step
 
     # 4 - Reformats timeseries data if sparse, truncates if required
     step = PrimitiveStep(primitive_description=TimeSeriesReshaperPrimitive.metadata.query())
@@ -73,13 +69,13 @@ def create_pipeline(metric: str) -> Pipeline:
 
     # 5 - Classification / regression of series data
     step = PrimitiveStep(primitive_description=TimeSeriesNeighboursPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.2.produce')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     ts_pipeline.add_step(step)
 
-    # step 4 - convert predictions to expected format
+    # step 6 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.5.produce')
     step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
@@ -87,6 +83,6 @@ def create_pipeline(metric: str) -> Pipeline:
     ts_pipeline.add_step(step)
 
     # Adding output step to the pipeline
-    ts_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
+    ts_pipeline.add_output(name='output', data_reference='steps.6.produce')
 
     return ts_pipeline

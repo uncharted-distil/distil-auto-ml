@@ -25,7 +25,7 @@ def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
     resource_types = get_resource_types(dataset_doc)
     task_type = problem_desc['problem']['task_type']
 
-    if task_type not in [_problem.TaskType.REGRESSION, _problem.TaskType.CLASSIFICATION, _problem.TaskType.TIME_SERIES_FORECASTING]:
+    if task_type not in [_problem.TaskType.REGRESSION, _problem.TaskType.CLASSIFICATION]:
         return False
     elif resource_types == ['table']:
         return True
@@ -38,8 +38,13 @@ def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
 def is_multitable(dataset_doc: dict) -> bool:
     return ['table', 'table'] == get_resource_types(dataset_doc)
 
-def is_timeseries(dataset_doc: dict) -> bool:
-    return ['table', 'timeseries'] == get_resource_types(dataset_doc)
+def is_timeseries_classification(dataset_doc: dict, problem: dict) -> bool:
+    timeseries_resource = ['table', 'timeseries'] == get_resource_types(dataset_doc)
+    classification_task = problem['problem']['task_type'] == _problem.TaskType.CLASSIFICATION
+    return timeseries_resource and classification_task
+
+def is_timeseries_forecasting(problem: dict) -> bool:
+    return problem['problem']['task_type'] == _problem.TaskType.TIME_SERIES_FORECASTING
 
 def is_question_answering(dataset_doc: dict) -> bool:
     res_paths = sorted([r['resPath'] for r in dataset_doc['dataResources']])
@@ -137,13 +142,16 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
             "all_float"  : all_float,
         }
 
-    elif is_timeseries(dataset_doc):
-        return 'timeseries', {
+    elif is_timeseries_classification(dataset_doc, problem):
+        return 'timeseries_classification', {
             "metrics"       : ['euclidean', 'cityblock', 'dtw'],
-            "diffusion"     : metric in classification_metrics,
+            "diffusion"     : True,
             "forest"        : True,
             "ensemble_size" : 3,
         }
+
+    elif is_timeseries_forecasting(problem):
+        return 'timeseries_forecasting', {}        
 
     elif is_audio(dataset_doc):
         return 'audio', {}
