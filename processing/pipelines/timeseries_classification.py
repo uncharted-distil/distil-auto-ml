@@ -24,7 +24,6 @@ PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1
 
 
 def create_pipeline(metric: str) -> Pipeline:
-    previous_step = 0
     input_val = 'steps.{}.produce'
 
     # create the basic pipeline
@@ -76,7 +75,7 @@ def create_pipeline(metric: str) -> Pipeline:
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     ts_pipeline.add_step(step)
 
-    # step 4 - convert predictions to expected format
+    # step 6 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.5.produce')
     step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
@@ -84,6 +83,6 @@ def create_pipeline(metric: str) -> Pipeline:
     ts_pipeline.add_step(step)
 
     # Adding output step to the pipeline
-    ts_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
+    ts_pipeline.add_output(name='output', data_reference='steps.6.produce')
 
     return ts_pipeline
