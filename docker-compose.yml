@@ -10,6 +10,7 @@ services:
       - ./seed_datasets_current:/seed_datasets_current
       - ./static:/static
       - ./pipelines:/app/pipelines
+      - ./export_pipelines.py:/app/export_pipelines.py
   dummy-ta3:
     image: registry.gitlab.com/datadrivendiscovery/dummy-ta3/dummy-ta3:2019.6.11
     environment:

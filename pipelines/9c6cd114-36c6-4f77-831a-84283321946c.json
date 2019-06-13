@@ -1,0 +1,74 @@
+{
+    "id": "9c6cd114-36c6-4f77-831a-84283321946c",
+    "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
+    "created": "2019-06-13T23:48:24.794701Z",
+    "inputs": [
+        {
+            "name": "inputs"
+        }
+    ],
+    "outputs": [
+        {
+            "data": "steps.1.produce",
+            "name": "output"
+        }
+    ],
+    "steps": [
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "79012210-2463-4f94-9da6-11bdc5a7e6c4",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.data_transformation.load_single_graph.DistilSingleGraphLoader",
+                "name": "Load single graph and dataframe into a parseable object",
+                "digest": "c0e4f6bcfe77ff4707e7bc29fcb9d4edc71660641791c4599ed64b5df2d11b95"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "inputs.0"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                },
+                {
+                    "id": "produce_target"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "0130828c-1ac0-47a9-a167-f05bae5a3146",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.data_transformation.vertex_nomination.DistilVertexNomination",
+                "name": "VertexNomination",
+                "digest": "073f79b5cbdb0087fca926fb927b777d37e84daad82bf0a4cce36e34980b5d55"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce"
+                },
+                "outputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce_target"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "metric": {
+                    "type": "VALUE",
+                    "data": "accuracy"
+                }
+            }
+        }
+    ],
+    "digest": "bbbe589ec07ac5d5d6475143e70d2ef2b7675dab1494b886abf1e96bb2354345"
+}

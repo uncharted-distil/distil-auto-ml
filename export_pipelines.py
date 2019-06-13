@@ -49,11 +49,11 @@ META = {
 
 # Gotta update that meta somehow
 def set_meta(dataset):
-    meta = copy.copy(META)
+    meta = copy.deepcopy(META)
     for k, v in meta.items():
         if type(v) == str:
             meta[k] = meta[k].format(dataset)
-        if type(v) == list:
+        elif type(v) == list:
             meta[k][0] = meta[k][0].format(dataset)
     return meta
 
