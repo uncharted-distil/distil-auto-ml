@@ -25,7 +25,8 @@ PIPE_TO_DATASET = {
     'link_prediction': ('59_umls', 'accuracy'),
     'question_answer': ('32_wikiqa', 'f1'),
     'text': ('30_personae', 'f1'),
-    'timeseries': ('56_sunspots_monthly', 'rootMeanSquaredError'),
+    'timeseries_forecasting': ('56_sunspots_monthly', 'rootMeanSquaredError'),
+    'timeseries_classification': ('LL1_50words', 'f1Macro'),
     'vertex_nomination': ('LL1_net_nomination_seed', 'accuracy'),
 }
 
