@@ -28,7 +28,23 @@ class Messaging:
         m = core_pb2.GetSearchSolutionsResultsResponse(
             solution_id=solution_id,
             progress=progess_msg,
-            internal_score=0.0)
+            internal_score=0.0,
+            scores = [core_pb2.SolutionSearchScore(
+                scoring_configuration=core_pb2.ScoringConfiguration(
+                    method=core_pb2.RANKING
+                ),
+                scores=[core_pb2.Score(
+                    metric=problem_pb2.ProblemPerformanceMetric(
+                        metric=problem_pb2.RANK,
+                    ),
+                    value=value_pb2.Value(
+                        raw=value_pb2.ValueRaw(
+                            int64=1
+                        )
+                    )
+                )]
+            )]
+        )
         return m
 
     def search_solutions_response(self, search_id):
@@ -59,17 +75,17 @@ class Messaging:
             dataset_uri = self.get_dataset_uri(request)
         except:
             dataset_uri = None
-        
+
         folds = request.configuration.folds
         train_test_ratio = request.configuration.train_test_ratio
         shuffle = request.configuration.shuffle
         random_seed = request.configuration.random_seed
         stratified = request.configuration.stratified
-        
+
         r = (solution_id, dataset_uri, metrics,
         method, folds, train_test_ratio,
         shuffle, random_seed, stratified)
-        
+
         return r
 
     def make_get_score_solution_results_response(self, scores, progess_msg):
@@ -90,7 +106,7 @@ class Messaging:
             raw=raw)
         score = core_pb2.Score(
             metric=metric,
-            value=val) 
+            value=val)
         return score
 
     def make_hello_response_message(self):
@@ -99,10 +115,10 @@ class Messaging:
 
     def get_solution_id(self, message):
         return message.solution_id
-    
+
     def get_fit_solution_id(self, message):
         return message.solution_id
-        
+
     def get_fitted_solution_id(self, message):
         return message.fitted_solution_id
 

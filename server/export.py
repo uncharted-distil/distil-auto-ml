@@ -61,7 +61,8 @@ def export(solution_task, rank):
 
     D3MOUTPUTDIR points to an output directory. Some sub-directories of this directory have a predefined role and structure. All other locations can be used arbitrary for TA2-TA3 communication or for communication with the data mart. (Multiple systems are sharing this read-write directory.) Defined directories:
 
-        pipelines_ranked - a directory with ranked pipelines to be evaluated, named <pipeline id>.json; these files should have additional field pipeline_rank
+        pipelines_ranked - a directory with ranked pipelines to be evaluated, named <pipeline id>.json and <pipeline id>.rank.  The rank
+                           the rank file is a text file that contains a single value, which is the rank for the pipeline.
         pipelines_scored - a directory with successfully scored pipelines during the search, named <pipeline id>.json
         pipeline_runs - a directory with pipeline run records in YAML format, multiple can be stored in the same file, named <pipeline run id>.yml
     """
@@ -71,8 +72,6 @@ def export(solution_task, rank):
         pipeline_json = json.loads(solution_task.pipeline)
     else:
         pipeline_json = fit_solution_task.pipeline
-    # Set rank
-    pipeline_json['pipeline_rank'] = rank
     # Set name
     name = pipeline_json.get('name', False)
     if not name:
@@ -80,12 +79,18 @@ def export(solution_task, rank):
     pipeline_json['name'] = name
     # Confirm is valid
     #pipeline.PIPELINE_SCHEMA_VALIDATOR.validate(pipeline_json)
-    # Write
+
+    # Write out pipelines_ranked
+    # first the pipeline
     pipeline_ranked_dir = pathlib.Path(D3MOUTPUTDIR + '/pipelines_ranked')
     pipeline_ranked_dir.mkdir(parents=True, exist_ok=True)
     pipeline_file = pathlib.Path(pipeline_ranked_dir, '{}.json'.format(solution_task.id))
     with open(pipeline_file, 'w') as f:
         f.write(json.dumps(pipeline_json, sort_keys=True, indent=4))
+    # next the associated rank
+    pipeline_file = pathlib.Path(pipeline_ranked_dir, '{}.rank'.format(solution_task.id))
+    with open(pipeline_file, 'w') as f:
+        f.write(str(rank))
 
     # WRITE TO pipelines_scored
     # Write
