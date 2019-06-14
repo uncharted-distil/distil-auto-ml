@@ -65,6 +65,9 @@ def is_community_detection(problem: dict) -> bool:
 def is_clustering(problem: dict) -> bool:
     return problem['problem']['task_type'] == _problem.TaskType.CLUSTERING
 
+def is_vertex_classification(problem: dict) -> bool:
+    return problem['problem']['task_type'] == _problem.TaskType.VERTEX_CLASSIFICATION
+
 def is_vertex_nomination(problem: dict) -> bool:
     return problem['problem']['task_type'] == _problem.TaskType.VERTEX_NOMINATION
 
@@ -161,6 +164,9 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
 
     elif is_vertex_nomination(problem):
         return 'vertex_nomination', {}
+
+    elif is_vertex_classification(problem):
+        return 'vertex_classification', {}
 
     elif is_collaborative_filtering(problem):
         return 'collaborative_filtering', {}
