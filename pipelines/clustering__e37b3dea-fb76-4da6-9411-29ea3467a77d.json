@@ -1,7 +1,7 @@
 {
-    "id": "bc2add91-8b90-49b1-a365-919601453be2",
+    "id": "e37b3dea-fb76-4da6-9411-29ea3467a77d",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-14T21:12:04.856841Z",
+    "created": "2019-06-15T16:50:16.274354Z",
     "inputs": [
         {
             "name": "inputs"
@@ -9,7 +9,7 @@
     ],
     "outputs": [
         {
-            "data": "steps.13.produce",
+            "data": "steps.11.produce",
             "name": "output"
         }
     ],
@@ -99,41 +99,11 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "4503a4c6-42f7-45a1-a1d4-ed69699cf5e1",
-                "version": "0.2.0",
-                "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
-                "name": "Extracts columns by semantic type",
-                "digest": "890f23a0073f54b86905edb56f44b576a0a4f4a81a06e3b30e0c490757780e64"
-            },
-            "arguments": {
-                "inputs": {
-                    "type": "CONTAINER",
-                    "data": "steps.1.produce"
-                }
-            },
-            "outputs": [
-                {
-                    "id": "produce"
-                }
-            ],
-            "hyperparams": {
-                "semantic_types": {
-                    "type": "VALUE",
-                    "data": [
-                        "https://metadata.datadrivendiscovery.org/types/Target",
-                        "https://metadata.datadrivendiscovery.org/types/TrueTarget"
-                    ]
-                }
-            }
-        },
-        {
-            "type": "PRIMITIVE",
-            "primitive": {
                 "id": "b1367f5b-bab1-4dfc-a1a9-6a56430e516a",
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilEnrichDates",
                 "name": "Enrich dates",
-                "digest": "4fdc02fd0053df625a9ac7f9bb8c52835294c40a9c97783022d6811e9941fc39"
+                "digest": "e59540c0a5fc7c0942e25dec8ea2847bb4cf94199167c827ec6be2aecec743b4"
             },
             "arguments": {
                 "inputs": {
@@ -154,7 +124,28 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilReplaceSingletons",
                 "name": "Replace singeltons",
-                "digest": "671a3d701b80cadac9ca8698dedfcb54d5a4c644596f1c2e6147916532aaf3a4"
+                "digest": "74549ebacecc2d51aee808cbbbe8dcab8da7a92b2123236a9b29ac476f937ca6"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.3.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "0a9936f3-7784-4697-82f0-2a5fcc744c16",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.data_transformation.imputer.DistilCategoricalImputer",
+                "name": "Categorical imputer",
+                "digest": "48c385968e3f2c9e5caa5ed9ee4cbefacf32c5f6aa28254f1b463a4e275aec76"
             },
             "arguments": {
                 "inputs": {
@@ -171,62 +162,16 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "0a9936f3-7784-4697-82f0-2a5fcc744c16",
+                "id": "d3d421cb-9601-43f0-83d9-91a9c4199a06",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.imputer.DistilCategoricalImputer",
-                "name": "Categorical imputer",
-                "digest": "8cdeb7ae488ca12959806ae365890ceb3ebc34bd43c9f939058a854b86f379cd"
+                "python_path": "d3m.primitives.data_transformation.one_hot_encoder.DistilOneHotEncoder",
+                "name": "One-hot encoder",
+                "digest": "e66c63fbfd090b70ca180647011159c0230914113fb15454c636a9219f74689b"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
                     "data": "steps.5.produce"
-                }
-            },
-            "outputs": [
-                {
-                    "id": "produce"
-                }
-            ]
-        },
-        {
-            "type": "PRIMITIVE",
-            "primitive": {
-                "id": "09f252eb-215d-4e0b-9a60-fcd967f5e708",
-                "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.encoder.DistilTextEncoder",
-                "name": "Text encoder",
-                "digest": "817d3e26f46116754413f4e9347d85509f0730aeb3fc8f8066640d5f512de04f"
-            },
-            "arguments": {
-                "inputs": {
-                    "type": "CONTAINER",
-                    "data": "steps.6.produce"
-                },
-                "outputs": {
-                    "type": "CONTAINER",
-                    "data": "steps.3.produce"
-                }
-            },
-            "outputs": [
-                {
-                    "id": "produce"
-                }
-            ]
-        },
-        {
-            "type": "PRIMITIVE",
-            "primitive": {
-                "id": "d3d421cb-9601-43f0-83d9-91a9c4199a06",
-                "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.one_hot_encoder.DistilOneHotEncoder",
-                "name": "One-hot encoder",
-                "digest": "1afb377134cc9d2a28b3db25b38c4d4673aae0546b0222bc8c4b765003613a36"
-            },
-            "arguments": {
-                "inputs": {
-                    "type": "CONTAINER",
-                    "data": "steps.7.produce"
                 }
             },
             "outputs": [
@@ -248,12 +193,12 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.encoder.DistilBinaryEncoder",
                 "name": "Binary encoder",
-                "digest": "6389a9c4d8bf50ef508e824227a63e4d098776608c63ff97bdd5121f9929140e"
+                "digest": "07673fecf02ba72e3263194246c0a25463f3e57e8b6157359444bc64557c8944"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.8.produce"
+                    "data": "steps.6.produce"
                 }
             },
             "outputs": [
@@ -280,7 +225,7 @@
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.9.produce"
+                    "data": "steps.7.produce"
                 }
             },
             "outputs": [
@@ -319,7 +264,7 @@
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.10.produce"
+                    "data": "steps.8.produce"
                 }
             },
             "outputs": [
@@ -341,20 +286,16 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "e0ad06ce-b484-46b0-a478-c567e1ea7e02",
+                "id": "3b09024e-a83b-418c-8ff4-cf3d30a9609e",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.learner.random_forest.DistilEnsembleForest",
-                "name": "EnsembleForest",
-                "digest": "076ef68b0df6bfda244f03dc6e7a3a6aab6d79eba5cba4a7c3073bd1a20b7ae1"
+                "python_path": "d3m.primitives.clustering.k_means.DistilKMeans",
+                "name": "K means",
+                "digest": "30d8fe627ec4f415039d999bf49ad845c17aa459b5e10d7d29b1246627468ab5"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.11.produce"
-                },
-                "outputs": {
-                    "type": "CONTAINER",
-                    "data": "steps.3.produce"
+                    "data": "steps.9.produce"
                 }
             },
             "outputs": [
@@ -363,9 +304,13 @@
                 }
             ],
             "hyperparams": {
-                "metric": {
+                "n_clusters": {
                     "type": "VALUE",
-                    "data": "f1Macro"
+                    "data": 100
+                },
+                "cluster_col_name": {
+                    "type": "VALUE",
+                    "data": "Class"
                 }
             }
         },
@@ -381,7 +326,7 @@
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.12.produce"
+                    "data": "steps.10.produce"
                 },
                 "reference": {
                     "type": "CONTAINER",
@@ -395,5 +340,5 @@
             ]
         }
     ],
-    "digest": "f633b1525db6d5eed814869918b2735400d5105496744881924b5acffbe3c35e"
+    "digest": "b7b7d987ba00eaa93a5f8acd28e5fbb3fab8142124aaf25ac8dbe5b5f80b7115"
 }

@@ -1,7 +1,7 @@
 {
-    "id": "c3275364-be52-4f07-a705-b989ef71740a",
+    "id": "984147f7-bfd2-43b7-96e9-ff7a1315f1c9",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-14T21:12:04.794503Z",
+    "created": "2019-06-15T16:50:15.245705Z",
     "inputs": [
         {
             "name": "inputs"
@@ -9,7 +9,7 @@
     ],
     "outputs": [
         {
-            "data": "steps.6.produce",
+            "data": "steps.7.produce",
             "name": "output"
         }
     ],
@@ -59,6 +59,40 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
+                "id": "0b21fcca-8b35-457d-a65d-36294c6f80a2",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.data_preprocessing.text_reader.DataFrameCommon",
+                "name": "Columns text reader",
+                "digest": "25adef81b01877dd554c69997a7c63da746683f3972611769ec7d6b41dc8c599"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.1.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "use_columns": {
+                    "type": "VALUE",
+                    "data": [
+                        0,
+                        1
+                    ]
+                },
+                "return_result": {
+                    "type": "VALUE",
+                    "data": "replace"
+                }
+            }
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
                 "id": "d510cb7a-1782-4f51-b44c-58f0236e47c7",
                 "version": "0.5.0",
                 "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
@@ -68,7 +102,7 @@
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.1.produce"
+                    "data": "steps.2.produce"
                 }
             },
             "outputs": [
@@ -100,7 +134,7 @@
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.2.produce"
+                    "data": "steps.3.produce"
                 }
             },
             "outputs": [
@@ -129,7 +163,7 @@
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.2.produce"
+                    "data": "steps.3.produce"
                 }
             },
             "outputs": [
@@ -150,20 +184,20 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "7c305f3a-442a-41ad-b9db-8c437753b119",
+                "id": "24f51246-7487-454e-8d69-7cdf289994d1",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.classification.bert_classifier.DistilBertPairClassification",
-                "name": "BERT pair classification",
-                "digest": "5d8ca1a46e54d449c602956379693ae42e5ac1e3d2b14cffd3793e4450c0f3f6"
+                "python_path": "d3m.primitives.learner.text_classifier.DistilTextClassifier",
+                "name": "Text Classifier",
+                "digest": "81b79f524ab55eebe5c560c56689c1d83cc39ff2c75c58d41e4682139e9ed54e"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.3.produce"
+                    "data": "steps.4.produce"
                 },
                 "outputs": {
                     "type": "CONTAINER",
-                    "data": "steps.4.produce"
+                    "data": "steps.5.produce"
                 }
             },
             "outputs": [
@@ -175,6 +209,10 @@
                 "metric": {
                     "type": "VALUE",
                     "data": "f1"
+                },
+                "fast": {
+                    "type": "VALUE",
+                    "data": true
                 }
             }
         },
@@ -190,19 +228,28 @@
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.5.produce"
+                    "data": "steps.6.produce"
                 },
                 "reference": {
                     "type": "CONTAINER",
-                    "data": "steps.2.produce"
+                    "data": "steps.3.produce"
                 }
             },
             "outputs": [
                 {
                     "id": "produce"
                 }
-            ]
+            ],
+            "hyperparams": {
+                "use_columns": {
+                    "type": "VALUE",
+                    "data": [
+                        0,
+                        1
+                    ]
+                }
+            }
         }
     ],
-    "digest": "450f1ba3a9cb018dc7fbd1735e50a5d218987fa8bd649cc9c288e822d3c4d0ad"
+    "digest": "b2f3661af700fe34d351353ab09564758cab8e793fa9375855e595ca4955aae0"
 }

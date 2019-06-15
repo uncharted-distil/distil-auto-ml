@@ -84,7 +84,7 @@ def generate_file_info():
 
         # grab the pipeline name and map it to the file
         pipeline_name, pipeline_id = f.split('__')
-        pipeline_filenames[pipeline_name] = f
+        pipeline_filenames[pipeline_name] = os.path.join(META_DIR, f.replace('.json', ''))
     return hashes, pipeline_filenames
 
 if __name__ == '__main__':
@@ -113,14 +113,15 @@ if __name__ == '__main__':
 
             id = pipe_json['id']
             filename = p + '__' + id
-            json_filename = os.path.join(META_DIR, filename + '.json')
-            meta_filename = os.path.join(META_DIR, filename + '.meta')
 
             # check if there are existing files asssociated with this pipeline type
             # and delete
-            if pipe in pipeline_filenames:
-                os.remove(json_filename)
-                os.remove(meta_filename)
+            if p in pipeline_filenames:
+                os.remove(os.path.join(pipeline_filenames[p] + '.json'))
+                os.remove(os.path.join(pipeline_filenames[p] + '.meta'))
+
+            json_filename = os.path.join(META_DIR, filename + '.json')
+            meta_filename = os.path.join(META_DIR, filename + '.meta')
 
             with open(json_filename, 'w') as f:
                     f.write(json.dumps(pipe_json, indent=4))
