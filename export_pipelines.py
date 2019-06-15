@@ -16,19 +16,22 @@ META_DIR = 'pipelines'
 # Map of default datasets to configure .meta files
 # and metric for pipeline config
 PIPE_TO_DATASET = {
-    'tabular': ('185_baseball', 'f1Macro'),
-    'audio': ('31_urbansound', 'accuracy'),
-    'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation'),
-    'collaborative_filtering': ('60_jester', 'meanAbsoluteError'),
-    'community_detection': ('6_70_com_amazon', 'normalizedMutualInformation'),
-    'graph_matching': ('49_facebook', 'accuracy'),
-    'image': ('22_handgeometry', 'meanSquaredError'),
-    'link_prediction': ('59_umls', 'accuracy'),
-    'question_answer': ('32_wikiqa', 'f1'),
-    'text': ('30_personae', 'f1'),
-    'timeseries_forecasting': ('56_sunspots_monthly', 'rootMeanSquaredError'),
-    'timeseries_classification': ('LL1_50words', 'f1Macro'),
-    'vertex_nomination': ('LL1_net_nomination_seed', 'accuracy'),
+    'tabular': ('185_baseball', 'f1Macro', {}),
+    'audio': ('31_urbansound', 'accuracy', {}),
+    'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', {
+        'num_clusters': 100,
+        'cluster_col_name': 'Class'
+    }),
+    'collaborative_filtering': ('60_jester', 'meanAbsoluteError', {}),
+    'community_detection': ('6_70_com_amazon', 'normalizedMutualInformation', {}),
+    'graph_matching': ('49_facebook', 'accuracy', {}),
+    'image': ('22_handgeometry', 'meanSquaredError', {}),
+    'link_prediction': ('59_umls', 'accuracy', {}),
+    'question_answer': ('32_wikiqa', 'f1', {}),
+    'text': ('30_personae', 'f1', {}),
+    'timeseries_forecasting': ('56_sunspots_monthly', 'rootMeanSquaredError', {}),
+    'timeseries_classification': ('LL1_50words', 'f1Macro', {}),
+    'vertex_nomination': ('LL1_net_nomination_seed', 'accuracy', {}),
 }
 
 # Skeleton of .meta data
@@ -92,8 +95,8 @@ if __name__ == '__main__':
         print("Handling {}...".format(p))
         lib = importlib.import_module('processing.pipelines.' + p)
         try:
-            dataset_to_use, metric = PIPE_TO_DATASET[p]
-            pipe_json = lib.create_pipeline(metric=metric).to_json_structure()
+            dataset_to_use, metric, hyperparams = PIPE_TO_DATASET[p]
+            pipe_json = lib.create_pipeline(metric=metric, **hyperparams).to_json_structure()
 
             hash = generate_hash(pipe_json)
             print(f'Hash for {pipe}: {hash}')
