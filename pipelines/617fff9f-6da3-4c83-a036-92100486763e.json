@@ -1,7 +1,7 @@
 {
-    "id": "65d39f3b-7023-4b50-b31b-9cf0dc2abc43",
+    "id": "617fff9f-6da3-4c83-a036-92100486763e",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-14T18:25:41.007803Z",
+    "created": "2019-06-14T21:12:03.097844Z",
     "inputs": [
         {
             "name": "inputs"
@@ -45,7 +45,7 @@
                 "version": "0.5.0",
                 "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
                 "name": "Parses strings into their types",
-                "digest": "312cacc014497dd674e34765f6eb54430e594c591e760da0383c87844753d2ce"
+                "digest": "a508c4d066c6c1671afbd68bc0bc929c1aac8bad68abb0c94de5582171571cc3"
             },
             "arguments": {
                 "inputs": {
@@ -77,7 +77,7 @@
                 "version": "0.2.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "297a4943484bcd532650d5727e23b3d11ca702688d7b64dfb5df8bf1282eaa47"
+                "digest": "890f23a0073f54b86905edb56f44b576a0a4f4a81a06e3b30e0c490757780e64"
             },
             "arguments": {
                 "inputs": {
@@ -106,7 +106,7 @@
                 "version": "0.2.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "297a4943484bcd532650d5727e23b3d11ca702688d7b64dfb5df8bf1282eaa47"
+                "digest": "890f23a0073f54b86905edb56f44b576a0a4f4a81a06e3b30e0c490757780e64"
             },
             "arguments": {
                 "inputs": {
@@ -188,7 +188,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.construct_predictions.DataFrameCommon",
                 "name": "Construct pipeline predictions output",
-                "digest": "cfb2d595652c4ae0d24e67d4cb8e4916c9f3c2753eaccc2935263d054b3682fa"
+                "digest": "b8a061628cded425929ae2f3f332afe652ed8bf0bf54cb762740ff0b60805961"
             },
             "arguments": {
                 "inputs": {
@@ -207,5 +207,5 @@
             ]
         }
     ],
-    "digest": "327a874729ba94c5240b70e12dd970dd5d346ac49e0ce02515347931ae566158"
+    "digest": "e1077ea13ab6e484b329009b2c12e35070c3dd26113ac22e900d8a7f56f3adcb"
 }

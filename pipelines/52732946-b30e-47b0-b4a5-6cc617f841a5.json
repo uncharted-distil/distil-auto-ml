@@ -1,7 +1,7 @@
 {
-    "id": "dfa31934-a64a-450e-a82e-05e9f3363594",
+    "id": "52732946-b30e-47b0-b4a5-6cc617f841a5",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-13T23:48:21.223893Z",
+    "created": "2019-06-14T21:12:03.458302Z",
     "inputs": [
         {
             "name": "inputs"
@@ -41,11 +41,11 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "064cec55-39dd-45b7-a663-50d3e17e0c42",
+                "id": "0130828c-1ac0-47a9-a167-f05bae5a3146",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.community_detection.DistilCommunityDetection",
-                "name": "CommunityDetection",
-                "digest": "82b1eb9aaeff87ab955d9270979515d357d76c34299cf961520f4095fabd9ebd"
+                "python_path": "d3m.primitives.data_transformation.vertex_nomination.DistilVertexNomination",
+                "name": "VertexNomination",
+                "digest": "073f79b5cbdb0087fca926fb927b777d37e84daad82bf0a4cce36e34980b5d55"
             },
             "arguments": {
                 "inputs": {
@@ -65,10 +65,10 @@
             "hyperparams": {
                 "metric": {
                     "type": "VALUE",
-                    "data": "normalizedMutualInformation"
+                    "data": "accuracy"
                 }
             }
         }
     ],
-    "digest": "5cada6d216a3cec9b382e783bb08f7219b38352c592da853861b6b8e7144c29d"
+    "digest": "8472edfaecf8f12ac21624e01e2b35d8316b64ab59d95552a935c21bb6d3d2ea"
 }

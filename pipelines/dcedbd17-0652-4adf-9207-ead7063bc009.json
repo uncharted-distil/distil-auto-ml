@@ -1,7 +1,7 @@
 {
-    "id": "cd812436-0151-494a-9519-1008754dd7f5",
+    "id": "dcedbd17-0652-4adf-9207-ead7063bc009",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-13T23:48:25.210460Z",
+    "created": "2019-06-14T21:11:40.132828Z",
     "inputs": [
         {
             "name": "inputs"
@@ -41,11 +41,11 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "fc138210-c317-4528-81ae-5eed3a1a0267",
+                "id": "064cec55-39dd-45b7-a663-50d3e17e0c42",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.link_prediction.DistilLinkPrediction",
-                "name": "LinkPrediction",
-                "digest": "aef9646032a7d690f597d701bd65b985603698a212e41b3c290ffd0a816c1566"
+                "python_path": "d3m.primitives.data_transformation.community_detection.DistilCommunityDetection",
+                "name": "CommunityDetection",
+                "digest": "82b1eb9aaeff87ab955d9270979515d357d76c34299cf961520f4095fabd9ebd"
             },
             "arguments": {
                 "inputs": {
@@ -65,10 +65,10 @@
             "hyperparams": {
                 "metric": {
                     "type": "VALUE",
-                    "data": "accuracy"
+                    "data": "normalizedMutualInformation"
                 }
             }
         }
     ],
-    "digest": "44787cdb8701fa203e649c4d8fab3ad9b1e9ee44175f9dcddace65c1c168e440"
+    "digest": "4a75c33b4b89354dae532bae5e022fa3a022e8126694e6ad84ecd24fe3954538"
 }

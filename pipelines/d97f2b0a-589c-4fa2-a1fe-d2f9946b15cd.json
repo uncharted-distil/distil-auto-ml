@@ -1,7 +1,7 @@
 {
-    "id": "652547b2-aabc-438f-845b-1cd44b32b447",
+    "id": "d97f2b0a-589c-4fa2-a1fe-d2f9946b15cd",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-14T18:27:03.585896Z",
+    "created": "2019-06-14T21:12:01.356632Z",
     "inputs": [
         {
             "name": "inputs"
@@ -100,7 +100,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.construct_predictions.DataFrameCommon",
                 "name": "Construct pipeline predictions output",
-                "digest": "cfb2d595652c4ae0d24e67d4cb8e4916c9f3c2753eaccc2935263d054b3682fa"
+                "digest": "b8a061628cded425929ae2f3f332afe652ed8bf0bf54cb762740ff0b60805961"
             },
             "arguments": {
                 "inputs": {
@@ -128,5 +128,5 @@
             }
         }
     ],
-    "digest": "629e2ed1d43d30ac76f285fa850cbbbb9cb31bdf61b0e4a132330c9dd5cfd7d1"
+    "digest": "912a3bffb17d5cb27e887d2aa6a1fdd0dac6235dd3e6b99018fa36c83202a0c3"
 }
