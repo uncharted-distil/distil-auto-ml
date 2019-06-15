@@ -4,6 +4,7 @@ import copy
 import json
 import logging
 import importlib
+import hashlib
 
 # Make the output a bit quieter...
 l = logging.getLogger()
@@ -58,7 +59,29 @@ def set_meta(dataset):
     return meta
 
 
+def generate_hash(pipe_json):
+    # generate a hash from invariant pipeline data
+    pipe_json_mod = copy.deepcopy(pipe_json)
+    pipe_json_mod['id'] = ''
+    pipe_json_mod['created'] = ''
+    pipe_json_mod['digest'] = ''
+    return hashlib.md5(json.dumps(pipe_json_mod,sort_keys=True).encode('utf8')).hexdigest()
+
+
+def generate_existing_hashes():
+    print('Generating hashes of existing files....')
+    # open the existing pipeline dir and generate hashes for each
+    files = [f for f in os.listdir(META_DIR) if '.json' in f]
+    hashes = set()
+    for f in files:
+        with open(os.path.join(META_DIR, f)) as json_data:
+            hashes.add(generate_hash(json.load(json_data)))
+    return hashes
+
 if __name__ == '__main__':
+    # create a hash of the existing invariant pipeline file contents
+    pipeline_hashes = generate_existing_hashes()
+
     # List all the pipelines
     PIPELINES_DIR = 'processing/pipelines'
     pipelines = [f for f in os.listdir(PIPELINES_DIR) if '.py' in f]
@@ -66,12 +89,18 @@ if __name__ == '__main__':
     # For each pipeline, load it and export it
     for pipe in pipelines:
         p = pipe.replace('.py', '')
-        print("Handling {}...".format(p))        
+        print("Handling {}...".format(p))
         lib = importlib.import_module('processing.pipelines.' + p)
         try:
-            # Get the pipeline json and id, write it out
             dataset_to_use, metric = PIPE_TO_DATASET[p]
             pipe_json = lib.create_pipeline(metric=metric).to_json_structure()
+
+            hash = generate_hash(pipe_json)
+            print(f'Hash for {pipe}: {hash}')
+            if hash in pipeline_hashes:
+                print(f'Skipping unchanged pipeline for {pipe}')
+                continue
+
             id = pipe_json['id']
             with open(os.path.join(META_DIR, id + '.json'), 'w') as f:
                     f.write(json.dumps(pipe_json, indent=4))
