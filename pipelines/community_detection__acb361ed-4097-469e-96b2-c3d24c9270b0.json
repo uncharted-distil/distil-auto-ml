@@ -1,7 +1,7 @@
 {
-    "id": "86d1e046-4b88-4666-93bc-24b62101d242",
+    "id": "acb361ed-4097-469e-96b2-c3d24c9270b0",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-15T16:50:15.386816Z",
+    "created": "2019-06-15T19:35:50.511097Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.load_single_graph.DistilSingleGraphLoader",
                 "name": "Load single graph and dataframe into a parseable object",
-                "digest": "09fe82afd90cccf574b41be164818cdddc37ba270c3b6183e7b79366d63a8ef4"
+                "digest": "94cc2211aed72dde4f1265ae2fb141f27f987667c0b44c47516713f94177e53b"
             },
             "arguments": {
                 "inputs": {
@@ -41,11 +41,11 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "0130828c-1ac0-47a9-a167-f05bae5a3146",
+                "id": "064cec55-39dd-45b7-a663-50d3e17e0c42",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.vertex_nomination.DistilVertexNomination",
-                "name": "VertexNomination",
-                "digest": "53ae561acbf57b6dd88a4c57b7431300abd8974f0c4d23d4f97f161e5b7ba1e2"
+                "python_path": "d3m.primitives.data_transformation.community_detection.DistilCommunityDetection",
+                "name": "CommunityDetection",
+                "digest": "eba7213129b3a00c5d91dc40d6a2a3d19c091ed5a51207b590d60711c656db92"
             },
             "arguments": {
                 "inputs": {
@@ -65,10 +65,10 @@
             "hyperparams": {
                 "metric": {
                     "type": "VALUE",
-                    "data": "accuracy"
+                    "data": "normalizedMutualInformation"
                 }
             }
         }
     ],
-    "digest": "cd2d77b8d2f08bec7c8bee0a205b59f2aef099a8a2007cd996e089ba3acc01e7"
+    "digest": "83deb567733709f9b7deda6d156c7e6ff407a504475dab110b80fb61773844a6"
 }

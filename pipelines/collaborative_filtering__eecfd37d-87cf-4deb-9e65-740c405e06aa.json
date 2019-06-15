@@ -1,7 +1,7 @@
 {
-    "id": "de303642-68e4-4e57-9e8c-de791e6cddb8",
+    "id": "eecfd37d-87cf-4deb-9e65-740c405e06aa",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-15T16:49:51.210492Z",
+    "created": "2019-06-15T19:35:50.016518Z",
     "inputs": [
         {
             "name": "inputs"
@@ -133,7 +133,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.learner.collaborative_filtering_link_prediction.DistilCollaborativeFiltering",
                 "name": "Collaborative filtering",
-                "digest": "bbe1ab23ed3ff46cab0c7f66d082293fb94e6bb53d67e410ddedd8c2509e23f3"
+                "digest": "59ff610f854b72603ab73b93e68c11f896c5dae4fc4cebc80c75d623730e59df"
             },
             "arguments": {
                 "inputs": {
@@ -183,5 +183,5 @@
             ]
         }
     ],
-    "digest": "d190558a0ebab6794a35d8643b204b8a1e3523823cf1413ada0bd506cf110264"
+    "digest": "05a0722b25bd749a2ded5c4c42685147de88254f80c14cbd0ab8fc8b46e6690e"
 }

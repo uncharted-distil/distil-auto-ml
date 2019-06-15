@@ -1,7 +1,7 @@
 {
-    "id": "a9019164-09c7-4c4a-b49d-139270ed2328",
+    "id": "28520ddb-a161-4afa-87eb-a4cfb6e1b037",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-15T16:50:16.623752Z",
+    "created": "2019-06-15T19:36:15.109904Z",
     "inputs": [
         {
             "name": "inputs"
@@ -154,7 +154,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.classification.bert_classifier.DistilBertPairClassification",
                 "name": "BERT pair classification",
-                "digest": "415e8baa22fc3ebea54fb4d7dd2f7177c8be506e5e99d0877b6c8fc008243f91"
+                "digest": "960febddafd19c989bd9c013e8905254315b44833a6c0be14498292b362066af"
             },
             "arguments": {
                 "inputs": {
@@ -204,5 +204,5 @@
             ]
         }
     ],
-    "digest": "6e860d4d208fce72fa528749d4dc597527a36d9d1994d913f8d493d311ae5074"
+    "digest": "b2d21761dff6432e2a615226a2e9cc7790cabece9f4843f4f19b54a82fb561be"
 }
