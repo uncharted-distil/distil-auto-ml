@@ -71,19 +71,26 @@ def generate_hash(pipe_json):
     return hashlib.md5(json.dumps(pipe_json_mod,sort_keys=True).encode('utf8')).hexdigest()
 
 
-def generate_existing_hashes():
+def generate_file_info():
     print('Generating hashes of existing files....')
     # open the existing pipeline dir and generate hashes for each
     files = [f for f in os.listdir(META_DIR) if '.json' in f]
     hashes = set()
+    pipeline_filenames = {}
     for f in files:
+        # generate a hash for the file
         with open(os.path.join(META_DIR, f)) as json_data:
             hashes.add(generate_hash(json.load(json_data)))
-    return hashes
+
+        # grab the pipeline name and map it to the file
+        pipeline_name, pipeline_id = f.split('__')
+        pipeline_filenames[pipeline_name] = f
+    return hashes, pipeline_filenames
 
 if __name__ == '__main__':
-    # create a hash of the existing invariant pipeline file contents
-    pipeline_hashes = generate_existing_hashes()
+    # create a hash of the existing invariant pipeline file contents, and a map
+    # of pipeline names to pipeline file names
+    pipeline_hashes, pipeline_filenames = generate_file_info()
 
     # List all the pipelines
     PIPELINES_DIR = 'processing/pipelines'
@@ -105,12 +112,22 @@ if __name__ == '__main__':
                 continue
 
             id = pipe_json['id']
-            with open(os.path.join(META_DIR, id + '.json'), 'w') as f:
+            filename = p + '__' + id
+            json_filename = os.path.join(META_DIR, filename + '.json')
+            meta_filename = os.path.join(META_DIR, filename + '.meta')
+
+            # check if there are existing files asssociated with this pipeline type
+            # and delete
+            if pipe in pipeline_filenames:
+                os.remove(json_filename)
+                os.remove(meta_filename)
+
+            with open(json_filename, 'w') as f:
                     f.write(json.dumps(pipe_json, indent=4))
                     f.write('\n')
             # Get meta alongside pipeline
             meta = set_meta(dataset_to_use)
-            with open(os.path.join(META_DIR, id + '.meta'), 'w') as f:
+            with open(meta_filename, 'w') as f:
                 f.write(json.dumps(meta, indent=4))
                 f.write('\n')
         except Exception as e:

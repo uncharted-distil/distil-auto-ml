@@ -53,14 +53,21 @@ for p in primitive_files:
         for s in v['steps']:
             pipe_prim = s['primitive']['python_path']
             if pipe_prim == key:
+                    # Incoming filenames are <pipeline type>__<pipeline id>.json
+                    # Format for deploy is <pipeline id>.json
+                    pipeline_id = k.split('__')[1]
+
                     old_pipeline_path = [p for p in pipeline_files if k in p][0]
-                    new_pipeline_path = os.path.join(folder_path, 'pipelines', k)
+                    new_pipeline_path = os.path.join(folder_path, 'pipelines', pipeline_id)
+
                     old_meta_path = [p for p in meta_files if k.replace('.json', '') in p][0]
-                    new_meta_path = os.path.join(folder_path, 'pipelines', k.replace('json', 'meta'))
+                    new_meta_path = os.path.join(folder_path, 'pipelines', pipeline_id.replace('json', 'meta'))
+
                     dir_name, _ = os.path.split(new_pipeline_path)
                     os.makedirs(dir_name, exist_ok=True)
-                    pipeline_root_path = os.path.join(folder_path, 'pipelines')
+
                     # only copy one pipeline file for any given primitive
+                    pipeline_root_path = os.path.join(folder_path, 'pipelines')
                     if os.path.isdir(pipeline_root_path) and not os.listdir(pipeline_root_path):
                         shutil.copy(old_pipeline_path, new_pipeline_path)
                         shutil.copy(old_meta_path, new_meta_path)
