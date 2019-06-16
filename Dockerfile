@@ -10,6 +10,7 @@ COPY api api
 RUN pip3 install -r server-requirements.txt
 
 # Our primitives
+ARG CACHEBUSTER=0
 RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
 COPY . .
