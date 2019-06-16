@@ -1,7 +1,7 @@
 {
-    "id": "33a89e3b-6180-446a-815e-7163fbbc024e",
+    "id": "ce0b3976-b310-4302-af64-e2f06be7b8e4",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-15T19:36:13.663662Z",
+    "created": "2019-06-16T02:01:55.895537Z",
     "inputs": [
         {
             "name": "inputs"
@@ -188,7 +188,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.learner.text_classifier.DistilTextClassifier",
                 "name": "Text Classifier",
-                "digest": "05075715cfd614f220a34dc38143d0cf3a5b8923f7aca59cf6a46a4d5af992d0"
+                "digest": "e65b9220ba57ad7e9ae4e2da6a9585f489544d7cc6b2af9482f4d276520ea2c7"
             },
             "arguments": {
                 "inputs": {
@@ -251,5 +251,5 @@
             }
         }
     ],
-    "digest": "d908ad34a222d75fe2270d35e3c3cba48a84e35dd6e0ac8e2a692eeea3123bf9"
+    "digest": "87a257c117c96f47765028aff2048e70eeba584b222854f55bbff0a235474a59"
 }

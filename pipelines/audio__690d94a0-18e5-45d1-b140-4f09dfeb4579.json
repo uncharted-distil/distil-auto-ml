@@ -1,7 +1,7 @@
 {
-    "id": "cf7e6012-ff12-448f-97f6-f09f5581c90e",
+    "id": "690d94a0-18e5-45d1-b140-4f09dfeb4579",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-15T19:36:11.724464Z",
+    "created": "2019-06-16T02:01:53.900917Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_preprocessing.audio_loader.DistilAudioDatasetLoader",
                 "name": "Load audio collection from dataset into a single dataframe",
-                "digest": "f3017f68091e27027b43923d1b8e1e31f5ab204f6f2abd607ae26b43dc60263b"
+                "digest": "e4337113ac09af1a0605785bdd26950192caf71f9a788af7e947cff77b28e91f"
             },
             "arguments": {
                 "inputs": {
@@ -48,7 +48,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.feature_extraction.audio_transfer.DistilAudioTransfer",
                 "name": "Audio Transfer",
-                "digest": "fba19596043c464fc8a5be0311a408135b555c640659ed1a4f7f8251c27e124b"
+                "digest": "2e722274f3d74ca624af744e1371359f54718025aadfeef9f2bccab2a42310c0"
             },
             "arguments": {
                 "inputs": {
@@ -69,7 +69,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.learner.random_forest.DistilEnsembleForest",
                 "name": "EnsembleForest",
-                "digest": "b34575fefc5161fd77822eca6c298ba6dceaa8c73597feedeeb70b3e44370598"
+                "digest": "d7d29fbf6df7b7b2569e738fdf855997450f773ce9fee5bf0f28dce20df3c7c9"
             },
             "arguments": {
                 "inputs": {
@@ -128,5 +128,5 @@
             }
         }
     ],
-    "digest": "6eb34082fd1e4326eedd89efd44d43fad5cda1de949fedab091e4fcf90b3fe02"
+    "digest": "419717fb06a355b4df37adc314bf451b82c2eca93aac6b5cbcb89bcee91760f0"
 }

@@ -1,7 +1,7 @@
 {
-    "id": "70c7011e-0b1e-4c6a-8a06-d91e5c90f0f1",
+    "id": "eace0482-2ce5-4989-8f48-cea3d33f0a17",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-15T19:36:15.171171Z",
+    "created": "2019-06-16T02:01:57.486002Z",
     "inputs": [
         {
             "name": "inputs"
@@ -133,7 +133,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilEnrichDates",
                 "name": "Enrich dates",
-                "digest": "9f363b9924fe3ecfe5f5c72cfa872b2d08a3e9a0f9356eac2c9ae9b9ce3511eb"
+                "digest": "0366ead7efde2594cc79f1ab9d8cdacfc1bb031d355866c104aec072032c2b31"
             },
             "arguments": {
                 "inputs": {
@@ -154,7 +154,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilReplaceSingletons",
                 "name": "Replace singeltons",
-                "digest": "16b6e3a1b0408334c90908d99ff18e1e2d1cfa19ab2c7c8a9ea081a8f8535707"
+                "digest": "932c85a50e601d93eee81719ec27db2c702abef6b81e66af0e6a147c2b9e2112"
             },
             "arguments": {
                 "inputs": {
@@ -175,7 +175,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.imputer.DistilCategoricalImputer",
                 "name": "Categorical imputer",
-                "digest": "d73b1c2eba681b583d2e460d76dd55c201a08839d9af986da83b9a6812befbc2"
+                "digest": "03d10586a266d010771e46863a1dee62b4a9e51a6b6cbd2a982a7d1570fa71af"
             },
             "arguments": {
                 "inputs": {
@@ -196,7 +196,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.encoder.DistilTextEncoder",
                 "name": "Text encoder",
-                "digest": "31abefe96998f7a5eecfbce583569ddabab39f1257766de6bc9d9ae3da456ad7"
+                "digest": "758c50b2eb9809136390cfdf69b63f9ccdd7108e905c6e2fefd19d7601c6cc3d"
             },
             "arguments": {
                 "inputs": {
@@ -221,7 +221,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.one_hot_encoder.DistilOneHotEncoder",
                 "name": "One-hot encoder",
-                "digest": "45e75f14333dc0e2f7bcbb14e441ebd690240ebd367eeafedd76c8511e0a6f70"
+                "digest": "77fd22576bf4e98dc856f63e5ce9668a9560e287fc8c76ac46ff1154cf271257"
             },
             "arguments": {
                 "inputs": {
@@ -248,7 +248,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.encoder.DistilBinaryEncoder",
                 "name": "Binary encoder",
-                "digest": "92d3a724c0765e4b3805cdba97ae485a0f4b5a42ea4ae0bc8d1bbeb3bc94a01b"
+                "digest": "c8c5bfe7e5fa4940e51120d2190e7f5754317a6d9e65246799081ded608c8109"
             },
             "arguments": {
                 "inputs": {
@@ -345,7 +345,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.learner.random_forest.DistilEnsembleForest",
                 "name": "EnsembleForest",
-                "digest": "b34575fefc5161fd77822eca6c298ba6dceaa8c73597feedeeb70b3e44370598"
+                "digest": "d7d29fbf6df7b7b2569e738fdf855997450f773ce9fee5bf0f28dce20df3c7c9"
             },
             "arguments": {
                 "inputs": {
@@ -395,5 +395,5 @@
             ]
         }
     ],
-    "digest": "d60c4ed286fc216222a2683b4ea6fd4dbc67694cd945e9ac04099924ab829118"
+    "digest": "d98bbe26dbfc30062cc34106a0b996d94022b64c7f445f069da5e5645b865445"
 }

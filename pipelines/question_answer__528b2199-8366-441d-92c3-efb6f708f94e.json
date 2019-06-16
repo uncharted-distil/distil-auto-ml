@@ -1,7 +1,7 @@
 {
-    "id": "c5a758a4-07ac-45e3-8bfb-d776f1fa328c",
+    "id": "528b2199-8366-441d-92c3-efb6f708f94e",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-15T19:36:13.127573Z",
+    "created": "2019-06-16T02:01:57.419729Z",
     "inputs": [
         {
             "name": "inputs"
@@ -9,7 +9,7 @@
     ],
     "outputs": [
         {
-            "data": "steps.7.produce",
+            "data": "steps.6.produce",
             "name": "output"
         }
     ],
@@ -59,40 +59,6 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "8f2e51e8-da59-456d-ae29-53912b2b9f3d",
-                "version": "0.2.0",
-                "python_path": "d3m.primitives.data_preprocessing.image_reader.DataFrameCommon",
-                "name": "Columns image reader",
-                "digest": "3ab0d1bcbcf1a9ef00b99fe395edf28db107b26fcdce6e108b86d8b437d03ead"
-            },
-            "arguments": {
-                "inputs": {
-                    "type": "CONTAINER",
-                    "data": "steps.1.produce"
-                }
-            },
-            "outputs": [
-                {
-                    "id": "produce"
-                }
-            ],
-            "hyperparams": {
-                "use_columns": {
-                    "type": "VALUE",
-                    "data": [
-                        0,
-                        1
-                    ]
-                },
-                "return_result": {
-                    "type": "VALUE",
-                    "data": "replace"
-                }
-            }
-        },
-        {
-            "type": "PRIMITIVE",
-            "primitive": {
                 "id": "d510cb7a-1782-4f51-b44c-58f0236e47c7",
                 "version": "0.5.0",
                 "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
@@ -102,7 +68,7 @@
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.2.produce"
+                    "data": "steps.1.produce"
                 }
             },
             "outputs": [
@@ -125,23 +91,31 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "782e261e-8e23-4184-9258-5a412c9b32d4",
-                "version": "0.1.0",
-                "python_path": "d3m.primitives.feature_extraction.image_transfer.DistilImageTransfer",
-                "name": "Image Transfer",
-                "digest": "0ec1a0d6f2b7ccee358e1d91de1b6c6670e73b2876d665cc1ccbac4908c0db99"
+                "id": "4503a4c6-42f7-45a1-a1d4-ed69699cf5e1",
+                "version": "0.2.0",
+                "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
+                "name": "Extracts columns by semantic type",
+                "digest": "890f23a0073f54b86905edb56f44b576a0a4f4a81a06e3b30e0c490757780e64"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.3.produce"
+                    "data": "steps.2.produce"
                 }
             },
             "outputs": [
                 {
                     "id": "produce"
                 }
-            ]
+            ],
+            "hyperparams": {
+                "semantic_types": {
+                    "type": "VALUE",
+                    "data": [
+                        "https://metadata.datadrivendiscovery.org/types/Attribute"
+                    ]
+                }
+            }
         },
         {
             "type": "PRIMITIVE",
@@ -155,7 +129,7 @@
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.3.produce"
+                    "data": "steps.2.produce"
                 }
             },
             "outputs": [
@@ -176,20 +150,20 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "e0ad06ce-b484-46b0-a478-c567e1ea7e02",
+                "id": "7c305f3a-442a-41ad-b9db-8c437753b119",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.learner.random_forest.DistilEnsembleForest",
-                "name": "EnsembleForest",
-                "digest": "b34575fefc5161fd77822eca6c298ba6dceaa8c73597feedeeb70b3e44370598"
+                "python_path": "d3m.primitives.classification.bert_classifier.DistilBertPairClassification",
+                "name": "BERT pair classification",
+                "digest": "57dd60eb6d007879179373f12fd82ab036c23a0c0393248af9f49b961e9b076f"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.4.produce"
+                    "data": "steps.3.produce"
                 },
                 "outputs": {
                     "type": "CONTAINER",
-                    "data": "steps.5.produce"
+                    "data": "steps.4.produce"
                 }
             },
             "outputs": [
@@ -200,7 +174,7 @@
             "hyperparams": {
                 "metric": {
                     "type": "VALUE",
-                    "data": "meanSquaredError"
+                    "data": "f1"
                 }
             }
         },
@@ -216,28 +190,19 @@
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.6.produce"
+                    "data": "steps.5.produce"
                 },
                 "reference": {
                     "type": "CONTAINER",
-                    "data": "steps.1.produce"
+                    "data": "steps.2.produce"
                 }
             },
             "outputs": [
                 {
                     "id": "produce"
                 }
-            ],
-            "hyperparams": {
-                "use_columns": {
-                    "type": "VALUE",
-                    "data": [
-                        0,
-                        1
-                    ]
-                }
-            }
+            ]
         }
     ],
-    "digest": "dbbd5ea216d1320f929457a753579145bf082ddd2050e98f7fe67fe483960793"
+    "digest": "e9f1f54f4b797d00c7f15852b4675b1548fe9f711c306dbbf1089ec19489f350"
 }

@@ -1,7 +1,7 @@
 {
-    "id": "c904721d-0fee-4621-9db5-1d26e709ba25",
+    "id": "0caceec4-c92a-4cf9-949a-ca0d0c1cb1b9",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-15T19:36:13.459278Z",
+    "created": "2019-06-16T02:01:55.677904Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilRaggedDatasetLoader",
                 "name": "Load ragged collection from dataset into a single dataframe",
-                "digest": "4523e2062a5a53e65947c88035f9bbc501195605fee8629bdd55bfd31c16dee3"
+                "digest": "0396978ec427cca3143d99fca09878effc4b64c00a46c953685303434ddaad10"
             },
             "arguments": {
                 "inputs": {
@@ -136,7 +136,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilTimeSeriesReshaper",
                 "name": "Time series reshaper",
-                "digest": "a4c490f41cf590f4f0a1d1567a65df1d552b89a435fb23aebdaff2fa1f1e3ca8"
+                "digest": "df9780a883ebd5db2349a5e92331cc711dc693a38f0ac60b67d12cb41c4681a0"
             },
             "arguments": {
                 "inputs": {
@@ -157,7 +157,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.learner.random_forest.DistilTimeSeriesNeighboursPrimitive",
                 "name": "Timeseries neighbours",
-                "digest": "324c56210fb447325d4ae6968cdd0f46012b5e47d48f301df8dda7fe4d335a12"
+                "digest": "0f398a0a415ab4cb27b33a78ca903d9e76324f58532fab9cae2317e44eb9d38e"
             },
             "arguments": {
                 "inputs": {
@@ -207,5 +207,5 @@
             ]
         }
     ],
-    "digest": "a9193bee83059c47874b5336f018ba312960ef82e558785e3dd5e05277ad1e52"
+    "digest": "ccd6d8dcb488d9d06ab9be51329d7f68b4aa9d47e992cd368a33da1596968312"
 }
