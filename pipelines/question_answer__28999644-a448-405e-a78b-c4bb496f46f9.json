@@ -1,7 +1,7 @@
 {
-    "id": "528b2199-8366-441d-92c3-efb6f708f94e",
+    "id": "28999644-a448-405e-a78b-c4bb496f46f9",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-16T02:01:57.419729Z",
+    "created": "2019-06-17T00:44:06.079389Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.2.0",
                 "python_path": "d3m.primitives.data_transformation.denormalize.Common",
                 "name": "Denormalize datasets",
-                "digest": "f99de349f2ae301af21367b357def49b61e76c78f93a4346e068421c1f79a896"
+                "digest": "afca078f05899b9f329e1b8cc0973848e39e83a7521d2cade81c1fbad5cf8139"
             },
             "arguments": {
                 "inputs": {
@@ -42,7 +42,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.dataset_to_dataframe.Common",
                 "name": "Extract a DataFrame from a Dataset",
-                "digest": "49d51cb2e3c7071cb3fb3533f9bc0579bb6ee775f378137da7c0a15f5c52a432"
+                "digest": "e557fc176af67913ed241dbe793cf986439157cfe9c4a12f1aafcba3c07b8b6f"
             },
             "arguments": {
                 "inputs": {
@@ -63,7 +63,7 @@
                 "version": "0.5.0",
                 "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
                 "name": "Parses strings into their types",
-                "digest": "a508c4d066c6c1671afbd68bc0bc929c1aac8bad68abb0c94de5582171571cc3"
+                "digest": "7e16e2b1e559690e221de471826d7d1cd36698bc5140dc00f3c7a6c6b711c3b2"
             },
             "arguments": {
                 "inputs": {
@@ -95,7 +95,7 @@
                 "version": "0.2.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "890f23a0073f54b86905edb56f44b576a0a4f4a81a06e3b30e0c490757780e64"
+                "digest": "d4fa27a3e215b89d2231d344ec0202e1b8e41ad322deb79c68fd6ca673eae3f7"
             },
             "arguments": {
                 "inputs": {
@@ -124,7 +124,7 @@
                 "version": "0.2.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "890f23a0073f54b86905edb56f44b576a0a4f4a81a06e3b30e0c490757780e64"
+                "digest": "d4fa27a3e215b89d2231d344ec0202e1b8e41ad322deb79c68fd6ca673eae3f7"
             },
             "arguments": {
                 "inputs": {
@@ -154,7 +154,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.classification.bert_classifier.DistilBertPairClassification",
                 "name": "BERT pair classification",
-                "digest": "57dd60eb6d007879179373f12fd82ab036c23a0c0393248af9f49b961e9b076f"
+                "digest": "c443d634d1084c95006c7be08e132e4cfb44ef74891f2ff6cdb81389a0edbd3b"
             },
             "arguments": {
                 "inputs": {
@@ -185,7 +185,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.construct_predictions.DataFrameCommon",
                 "name": "Construct pipeline predictions output",
-                "digest": "b8a061628cded425929ae2f3f332afe652ed8bf0bf54cb762740ff0b60805961"
+                "digest": "077921b0d6cee9bbda9494bc60c8b48f8287db8d0bff674056a7c9e5cc92ebb9"
             },
             "arguments": {
                 "inputs": {
@@ -204,5 +204,5 @@
             ]
         }
     ],
-    "digest": "e9f1f54f4b797d00c7f15852b4675b1548fe9f711c306dbbf1089ec19489f350"
+    "digest": "c7388cc4405f530e42cc6155c2fa41d78a2e8f714b093980c7ed13ad2803092f"
 }

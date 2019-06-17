@@ -1,7 +1,7 @@
 {
-    "id": "5f6e807a-b162-452f-a5fa-a37878bb9676",
+    "id": "e7977b64-f663-49eb-8784-57c6b0af2b77",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-16T02:01:56.288808Z",
+    "created": "2019-06-17T00:28:40.192870Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.load_graphs.DistilGraphLoader",
                 "name": "Load graphs into a parseable object",
-                "digest": "3fd7eaed06a0f5b8a25b33dd6c141cf93deef7e0f25eeb24b8b503d97a0d4af8"
+                "digest": "6a3f929a9bf49f2bc77bc1c6f5c31fa5f1ec71c3b444e703279db6d3ab7f7b4e"
             },
             "arguments": {
                 "inputs": {
@@ -45,7 +45,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.seeded_graph_matcher.DistilSeededGraphMatcher",
                 "name": "SeededGraphMatcher",
-                "digest": "53371b779c17180262e366835e566f4a01c7368d02e71067f27f0c6363ec1781"
+                "digest": "f91bda47661e0966426ee276e8f94fdcfa623aa3941a45c5d63cf2cc09536395"
             },
             "arguments": {
                 "inputs": {
@@ -70,5 +70,5 @@
             }
         }
     ],
-    "digest": "a79886809e9c07daa2c40c76a0e3466ec0337fb333ec21a98f8f3fc6c998f41d"
+    "digest": "a3bfe15f1e735d1175b624c841f2cba804aca5b220f23df5c804d4cfacb860c2"
 }

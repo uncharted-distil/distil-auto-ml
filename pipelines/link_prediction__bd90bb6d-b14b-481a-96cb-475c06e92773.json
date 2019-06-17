@@ -1,7 +1,7 @@
 {
-    "id": "cd27084e-1117-40b3-a96e-faae7ae64bd7",
+    "id": "bd90bb6d-b14b-481a-96cb-475c06e92773",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-16T02:01:31.927308Z",
+    "created": "2019-06-17T00:26:59.309471Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.load_single_graph.DistilSingleGraphLoader",
                 "name": "Load single graph and dataframe into a parseable object",
-                "digest": "ba064a9eee61798b19b75af985875434c8720c62a9e20040c57b971dda68a0b7"
+                "digest": "2281456581133ef5dfcfc07866a5f309e28a44884b2334542e38e89f5cc48362"
             },
             "arguments": {
                 "inputs": {
@@ -41,11 +41,11 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "064cec55-39dd-45b7-a663-50d3e17e0c42",
+                "id": "fc138210-c317-4528-81ae-5eed3a1a0267",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.community_detection.DistilCommunityDetection",
-                "name": "CommunityDetection",
-                "digest": "058f768a55138df6e0a43515035593c9506915b1fd643cce7d1b67d8c7af3aeb"
+                "python_path": "d3m.primitives.data_transformation.link_prediction.DistilLinkPrediction",
+                "name": "LinkPrediction",
+                "digest": "0f09c3e6297ae3d2786aa8671b6cfad60d0aca28288404aca8006f930c42e48e"
             },
             "arguments": {
                 "inputs": {
@@ -65,10 +65,10 @@
             "hyperparams": {
                 "metric": {
                     "type": "VALUE",
-                    "data": "normalizedMutualInformation"
+                    "data": "accuracy"
                 }
             }
         }
     ],
-    "digest": "d5d9756f8eba876daebeec526a185667f0f92e5aef6e083cd40183f971cf3846"
+    "digest": "1d4579ade6da0bda32e0cae42c9390cd4affad64a243cdc964e0f55c6651b8d0"
 }

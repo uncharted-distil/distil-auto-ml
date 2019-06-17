@@ -1,7 +1,7 @@
 {
-    "id": "6e6d30cf-c55b-446b-8d9f-fc3fabece12e",
+    "id": "3bd2c6ee-619b-4bc9-a4a2-5df51237881c",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-15T15:06:04.812514Z",
+    "created": "2019-06-17T00:26:58.318151Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.dataset_to_dataframe.Common",
                 "name": "Extract a DataFrame from a Dataset",
-                "digest": "49d51cb2e3c7071cb3fb3533f9bc0579bb6ee775f378137da7c0a15f5c52a432"
+                "digest": "e557fc176af67913ed241dbe793cf986439157cfe9c4a12f1aafcba3c07b8b6f"
             },
             "arguments": {
                 "inputs": {
@@ -42,7 +42,7 @@
                 "version": "0.5.0",
                 "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
                 "name": "Parses strings into their types",
-                "digest": "a508c4d066c6c1671afbd68bc0bc929c1aac8bad68abb0c94de5582171571cc3"
+                "digest": "7e16e2b1e559690e221de471826d7d1cd36698bc5140dc00f3c7a6c6b711c3b2"
             },
             "arguments": {
                 "inputs": {
@@ -74,7 +74,7 @@
                 "version": "1.0.3",
                 "python_path": "d3m.primitives.time_series_forecasting.arima.Parrot",
                 "name": "parrot",
-                "digest": "da7f583ba0bfc1c951d1382b3118e9c96d7284a4850cd8a709f242854465d36a"
+                "digest": "7acf3d60814df47ec3640cd6b788a3b22b2626408d55a5b2ae5a09615f5fff12"
             },
             "arguments": {
                 "inputs": {
@@ -103,5 +103,5 @@
             }
         }
     ],
-    "digest": "d71453605972a486279f24f8aa88ae9b3635cb9406ebe7d3c2cef119480b73d6"
+    "digest": "72687b100832bb5527ae71c54222ab622b2a9d196c524d7111fdba9841411e74"
 }
