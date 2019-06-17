@@ -1,7 +1,7 @@
 {
-    "id": "84543e6b-019e-4b9c-b49c-49703a619531",
+    "id": "e7ddda34-14ba-41b6-9e62-67a24beda5e4",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-17T19:51:51.882233Z",
+    "created": "2019-06-17T20:58:23.648016Z",
     "inputs": [
         {
             "name": "inputs"
@@ -17,11 +17,11 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "f31f8c1f-d1c5-43e5-a4b2-2ae4a761ef2e",
-                "version": "0.2.0",
-                "python_path": "d3m.primitives.data_transformation.denormalize.Common",
-                "name": "Denormalize datasets",
-                "digest": "00ae7955cc0abce2a3ddee96247209f3395009ae6553c7ce8caa577e402754db"
+                "id": "c3f9e9c5-7d16-4608-a875-d59147d12f39",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilRaggedDatasetLoader",
+                "name": "Load ragged collection from dataset into a single dataframe",
+                "digest": "31511a9b82dca2cb233147114b2b84ffb36ba9c8293d5060b1f2a41dbb6fb33e"
             },
             "arguments": {
                 "inputs": {
@@ -32,27 +32,9 @@
             "outputs": [
                 {
                     "id": "produce"
-                }
-            ]
-        },
-        {
-            "type": "PRIMITIVE",
-            "primitive": {
-                "id": "4b42ce1e-9b98-4a25-b68e-fad13311eb65",
-                "version": "0.3.0",
-                "python_path": "d3m.primitives.data_transformation.dataset_to_dataframe.Common",
-                "name": "Extract a DataFrame from a Dataset",
-                "digest": "0d46a2c5bc374e305682dc4f1c322518c07638153a8365034a513ea46960802b"
-            },
-            "arguments": {
-                "inputs": {
-                    "type": "CONTAINER",
-                    "data": "steps.0.produce"
-                }
-            },
-            "outputs": [
+                },
                 {
-                    "id": "produce"
+                    "id": "produce_collection"
                 }
             ]
         },
@@ -63,12 +45,12 @@
                 "version": "0.5.0",
                 "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
                 "name": "Parses strings into their types",
-                "digest": "312cacc014497dd674e34765f6eb54430e594c591e760da0383c87844753d2ce"
+                "digest": "7e16e2b1e559690e221de471826d7d1cd36698bc5140dc00f3c7a6c6b711c3b2"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.1.produce"
+                    "data": "steps.0.produce"
                 }
             },
             "outputs": [
@@ -95,12 +77,12 @@
                 "version": "0.2.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "297a4943484bcd532650d5727e23b3d11ca702688d7b64dfb5df8bf1282eaa47"
+                "digest": "d4fa27a3e215b89d2231d344ec0202e1b8e41ad322deb79c68fd6ca673eae3f7"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.2.produce"
+                    "data": "steps.1.produce"
                 }
             },
             "outputs": [
@@ -124,12 +106,12 @@
                 "version": "0.2.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "297a4943484bcd532650d5727e23b3d11ca702688d7b64dfb5df8bf1282eaa47"
+                "digest": "d4fa27a3e215b89d2231d344ec0202e1b8e41ad322deb79c68fd6ca673eae3f7"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.2.produce"
+                    "data": "steps.1.produce"
                 }
             },
             "outputs": [
@@ -150,20 +132,41 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "7c305f3a-442a-41ad-b9db-8c437753b119",
+                "id": "a4375c5b-a439-4e3d-8ce5-2e8859097a51",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.classification.bert_classifier.DistilBertPairClassification",
-                "name": "BERT pair classification",
-                "digest": "b13b4548c9330b98c597522332aa6672f70e1f20b3d90c328e7ba6ad7b25539d"
+                "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilTimeSeriesReshaper",
+                "name": "Time series reshaper",
+                "digest": "6136d656d6e167a2c6b8a805d80e7cae09fb49633afcd6e4c6e49fda4b50d8e1"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.3.produce"
+                    "data": "steps.0.produce_collection"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "a8649c58-25ae-4578-87da-bc6cbc68c98e",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.learner.random_forest.DistilTimeSeriesNeighboursPrimitive",
+                "name": "Timeseries neighbours",
+                "digest": "1f365761962a88b22867fa3823e2391887bee2a1211dfe8f2c587a7011351f14"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.4.produce"
                 },
                 "outputs": {
                     "type": "CONTAINER",
-                    "data": "steps.4.produce"
+                    "data": "steps.3.produce"
                 }
             },
             "outputs": [
@@ -174,7 +177,7 @@
             "hyperparams": {
                 "metric": {
                     "type": "VALUE",
-                    "data": "f1"
+                    "data": "f1Macro"
                 }
             }
         },
@@ -185,7 +188,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.construct_predictions.DataFrameCommon",
                 "name": "Construct pipeline predictions output",
-                "digest": "cfb2d595652c4ae0d24e67d4cb8e4916c9f3c2753eaccc2935263d054b3682fa"
+                "digest": "077921b0d6cee9bbda9494bc60c8b48f8287db8d0bff674056a7c9e5cc92ebb9"
             },
             "arguments": {
                 "inputs": {
@@ -194,7 +197,7 @@
                 },
                 "reference": {
                     "type": "CONTAINER",
-                    "data": "steps.2.produce"
+                    "data": "steps.1.produce"
                 }
             },
             "outputs": [
@@ -204,5 +207,5 @@
             ]
         }
     ],
-    "digest": "4e4871fc79fc00ecf459365604095a49d489a769d9a47ce4c3fd49d802779b97"
+    "digest": "c635198b593ee573c4fb069fe4d9a508fa2e9ef92dbcc9aecd2a4d04c1d3db66"
 }

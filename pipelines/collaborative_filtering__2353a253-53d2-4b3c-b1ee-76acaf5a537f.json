@@ -1,7 +1,7 @@
 {
-    "id": "58f01fdc-8bbc-4e75-87cb-3ddf4bfe13c9",
+    "id": "2353a253-53d2-4b3c-b1ee-76acaf5a537f",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-17T19:51:52.492392Z",
+    "created": "2019-06-17T20:58:01.648175Z",
     "inputs": [
         {
             "name": "inputs"
@@ -9,7 +9,7 @@
     ],
     "outputs": [
         {
-            "data": "steps.6.produce",
+            "data": "steps.5.produce",
             "name": "output"
         }
     ],
@@ -17,11 +17,11 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "c3f9e9c5-7d16-4608-a875-d59147d12f39",
-                "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilRaggedDatasetLoader",
-                "name": "Load ragged collection from dataset into a single dataframe",
-                "digest": "a1c8d47c6c19160e7e2460e59679b28cc7445a788e74964345de336078129547"
+                "id": "4b42ce1e-9b98-4a25-b68e-fad13311eb65",
+                "version": "0.3.0",
+                "python_path": "d3m.primitives.data_transformation.dataset_to_dataframe.Common",
+                "name": "Extract a DataFrame from a Dataset",
+                "digest": "e557fc176af67913ed241dbe793cf986439157cfe9c4a12f1aafcba3c07b8b6f"
             },
             "arguments": {
                 "inputs": {
@@ -32,9 +32,6 @@
             "outputs": [
                 {
                     "id": "produce"
-                },
-                {
-                    "id": "produce_collection"
                 }
             ]
         },
@@ -45,7 +42,7 @@
                 "version": "0.5.0",
                 "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
                 "name": "Parses strings into their types",
-                "digest": "312cacc014497dd674e34765f6eb54430e594c591e760da0383c87844753d2ce"
+                "digest": "7e16e2b1e559690e221de471826d7d1cd36698bc5140dc00f3c7a6c6b711c3b2"
             },
             "arguments": {
                 "inputs": {
@@ -77,7 +74,7 @@
                 "version": "0.2.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "297a4943484bcd532650d5727e23b3d11ca702688d7b64dfb5df8bf1282eaa47"
+                "digest": "d4fa27a3e215b89d2231d344ec0202e1b8e41ad322deb79c68fd6ca673eae3f7"
             },
             "arguments": {
                 "inputs": {
@@ -106,7 +103,7 @@
                 "version": "0.2.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "297a4943484bcd532650d5727e23b3d11ca702688d7b64dfb5df8bf1282eaa47"
+                "digest": "d4fa27a3e215b89d2231d344ec0202e1b8e41ad322deb79c68fd6ca673eae3f7"
             },
             "arguments": {
                 "inputs": {
@@ -132,37 +129,16 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "a4375c5b-a439-4e3d-8ce5-2e8859097a51",
+                "id": "a242314d-7955-483f-aed6-c74cd2b880df",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilTimeSeriesReshaper",
-                "name": "Time series reshaper",
-                "digest": "a5747275b789f3774283e13a20c821cbd3f999ddc3d5d456f709a6250c59032e"
+                "python_path": "d3m.primitives.learner.collaborative_filtering_link_prediction.DistilCollaborativeFiltering",
+                "name": "Collaborative filtering",
+                "digest": "d6b9303cbe50f7c91ed1b88e03bd94b2e0067dee939059a2fe2a97eca9efecdf"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.0.produce_collection"
-                }
-            },
-            "outputs": [
-                {
-                    "id": "produce"
-                }
-            ]
-        },
-        {
-            "type": "PRIMITIVE",
-            "primitive": {
-                "id": "a8649c58-25ae-4578-87da-bc6cbc68c98e",
-                "version": "0.1.0",
-                "python_path": "d3m.primitives.learner.random_forest.DistilTimeSeriesNeighboursPrimitive",
-                "name": "Timeseries neighbours",
-                "digest": "5a27220632218c2c96c8a8325771155413d7ff348b200fc823a4588aa75b6904"
-            },
-            "arguments": {
-                "inputs": {
-                    "type": "CONTAINER",
-                    "data": "steps.4.produce"
+                    "data": "steps.2.produce"
                 },
                 "outputs": {
                     "type": "CONTAINER",
@@ -177,7 +153,7 @@
             "hyperparams": {
                 "metric": {
                     "type": "VALUE",
-                    "data": "f1Macro"
+                    "data": "meanAbsoluteError"
                 }
             }
         },
@@ -188,12 +164,12 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.construct_predictions.DataFrameCommon",
                 "name": "Construct pipeline predictions output",
-                "digest": "cfb2d595652c4ae0d24e67d4cb8e4916c9f3c2753eaccc2935263d054b3682fa"
+                "digest": "077921b0d6cee9bbda9494bc60c8b48f8287db8d0bff674056a7c9e5cc92ebb9"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.5.produce"
+                    "data": "steps.4.produce"
                 },
                 "reference": {
                     "type": "CONTAINER",
@@ -207,5 +183,5 @@
             ]
         }
     ],
-    "digest": "f5e9bcaf720f9456ebab7a588cdf624c68f76fe6af4b6031b8779a879740701a"
+    "digest": "9f99918b864ea1917fd04b2a6114abde153327ecb7b4ac59c703e743b249d222"
 }

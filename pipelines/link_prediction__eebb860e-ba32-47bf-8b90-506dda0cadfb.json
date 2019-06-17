@@ -1,7 +1,7 @@
 {
-    "id": "0381340f-a7a9-4c28-a322-f354199d4765",
+    "id": "eebb860e-ba32-47bf-8b90-506dda0cadfb",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-17T19:51:43.499995Z",
+    "created": "2019-06-17T20:58:24.118701Z",
     "inputs": [
         {
             "name": "inputs"
@@ -17,11 +17,11 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "ae0797506-ea7b-4a7f-a7e4-2f91e2082f05",
+                "id": "79012210-2463-4f94-9da6-11bdc5a7e6c4",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.load_graphs.DistilGraphLoader",
-                "name": "Load graphs into a parseable object",
-                "digest": "09cc52e9e799199d601c04740fc8ab0bfa2eae42ad5398a298b442396c2d6eda"
+                "python_path": "d3m.primitives.data_transformation.load_single_graph.DistilSingleGraphLoader",
+                "name": "Load single graph and dataframe into a parseable object",
+                "digest": "9893cb98b9eef3357dbd2caa82197afecab77d9acf135712c74b4ce4d57976b3"
             },
             "arguments": {
                 "inputs": {
@@ -41,11 +41,11 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "8baea8e6-9d3a-46d7-acf1-04fd593dcd37",
+                "id": "fc138210-c317-4528-81ae-5eed3a1a0267",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.seeded_graph_matcher.DistilSeededGraphMatcher",
-                "name": "SeededGraphMatcher",
-                "digest": "e3f10f52566e3027dccf3ecb7b20faeca1092d5fed631c47e6ff3d12dce392eb"
+                "python_path": "d3m.primitives.data_transformation.link_prediction.DistilLinkPrediction",
+                "name": "LinkPrediction",
+                "digest": "daa9516aa289abed216b19c15af8fa112fc786e2cd4a0392202feae3b9a7b7c2"
             },
             "arguments": {
                 "inputs": {
@@ -70,5 +70,5 @@
             }
         }
     ],
-    "digest": "5b64f9853013f6af9c21f6c2aa8921609b66662e5a2764677f5eb8d03c3538b0"
+    "digest": "86601d8afb5821013cb4935d7958d2fc15910966720e9b6701764e9618a3d9e6"
 }

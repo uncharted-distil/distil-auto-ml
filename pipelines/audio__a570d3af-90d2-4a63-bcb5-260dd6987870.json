@@ -1,7 +1,7 @@
 {
-    "id": "9ac0d80f-43c9-4ad8-8494-f49bc6cf8e2a",
+    "id": "a570d3af-90d2-4a63-bcb5-260dd6987870",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-17T19:53:26.722748Z",
+    "created": "2019-06-17T20:58:21.681327Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_preprocessing.audio_loader.DistilAudioDatasetLoader",
                 "name": "Load audio collection from dataset into a single dataframe",
-                "digest": "a2ea6161aceda51f837ebb70ea36635d089772de442dde59436bcc890dd33216"
+                "digest": "aee0a9fdb2d855119735292725bcc80a2153225fe256de5915110b5dd8026ca4"
             },
             "arguments": {
                 "inputs": {
@@ -48,7 +48,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.feature_extraction.audio_transfer.DistilAudioTransfer",
                 "name": "Audio Transfer",
-                "digest": "668f9c9cb44e19141e127b6ca6bf63eb261f609f35a6fb338676c7b78fda13cf"
+                "digest": "2c26ea07301783e1f081c70560c3131a0cd381756a8fc84a6d8d89b270152e9c"
             },
             "arguments": {
                 "inputs": {
@@ -69,7 +69,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.learner.random_forest.DistilEnsembleForest",
                 "name": "EnsembleForest",
-                "digest": "937e9fc161880388d537a7e89c39949d88eabf6659dd0d46e0af11008d6a2f7a"
+                "digest": "34b0b6ba5a4cd4a2a500757ad0f5e099691e79c5826f47d4827d5cdeae2eea76"
             },
             "arguments": {
                 "inputs": {
@@ -100,7 +100,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.construct_predictions.DataFrameCommon",
                 "name": "Construct pipeline predictions output",
-                "digest": "cfb2d595652c4ae0d24e67d4cb8e4916c9f3c2753eaccc2935263d054b3682fa"
+                "digest": "077921b0d6cee9bbda9494bc60c8b48f8287db8d0bff674056a7c9e5cc92ebb9"
             },
             "arguments": {
                 "inputs": {
@@ -128,5 +128,5 @@
             }
         }
     ],
-    "digest": "251d398f4ce51dba01df2b7133aedbe01ab28f0f24e15120e83a897172c97997"
+    "digest": "84f37f1e1e47d3d4c3ce4276b3fe29be0990b3fd28c375f7b03061a8533d0605"
 }

@@ -1,7 +1,7 @@
 {
-    "id": "de8aed8f-02b4-4ade-b196-9dd9a244b8de",
+    "id": "d2389635-dcf4-407a-b91b-27ea92aa687e",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-17T19:51:42.987523Z",
+    "created": "2019-06-17T20:58:02.486398Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.load_single_graph.DistilSingleGraphLoader",
                 "name": "Load single graph and dataframe into a parseable object",
-                "digest": "993617e620a650072d9f3135060f8cc95252f30a7554fbfd65e0c6eef0964ed6"
+                "digest": "9893cb98b9eef3357dbd2caa82197afecab77d9acf135712c74b4ce4d57976b3"
             },
             "arguments": {
                 "inputs": {
@@ -45,7 +45,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.community_detection.DistilCommunityDetection",
                 "name": "CommunityDetection",
-                "digest": "7a012af62cb67b9f69e61e80b236cf8c6460d0456a9167cf048c371c31a713cc"
+                "digest": "5b6dee41c2d70ec17ab6a7c1d476176cd29c7cb0d977507ecbc7980da55b6ee8"
             },
             "arguments": {
                 "inputs": {
@@ -70,5 +70,5 @@
             }
         }
     ],
-    "digest": "66b78036557e6d66033c1b2694b1b3c5e3935a866b222b17efbe9019d87037ca"
+    "digest": "9276ccffebfd8548119fb09c6f744afba72b83a6609d744bb2deecb831cdb77b"
 }

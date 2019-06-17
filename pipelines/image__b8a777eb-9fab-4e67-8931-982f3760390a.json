@@ -1,7 +1,7 @@
 {
-    "id": "a632b279-c53c-425a-bfef-d27f08a8f3af",
+    "id": "b8a777eb-9fab-4e67-8931-982f3760390a",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-17T19:51:50.368611Z",
+    "created": "2019-06-17T20:58:23.266562Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.2.0",
                 "python_path": "d3m.primitives.data_transformation.denormalize.Common",
                 "name": "Denormalize datasets",
-                "digest": "00ae7955cc0abce2a3ddee96247209f3395009ae6553c7ce8caa577e402754db"
+                "digest": "afca078f05899b9f329e1b8cc0973848e39e83a7521d2cade81c1fbad5cf8139"
             },
             "arguments": {
                 "inputs": {
@@ -42,7 +42,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.dataset_to_dataframe.Common",
                 "name": "Extract a DataFrame from a Dataset",
-                "digest": "0d46a2c5bc374e305682dc4f1c322518c07638153a8365034a513ea46960802b"
+                "digest": "e557fc176af67913ed241dbe793cf986439157cfe9c4a12f1aafcba3c07b8b6f"
             },
             "arguments": {
                 "inputs": {
@@ -63,7 +63,7 @@
                 "version": "0.2.0",
                 "python_path": "d3m.primitives.data_preprocessing.image_reader.DataFrameCommon",
                 "name": "Columns image reader",
-                "digest": "a8ed92bc3d4625971eb1ef61aa0d6cfd9c2caea4fd3d0e92491bd225c1cfe484"
+                "digest": "4d08472cb2054e39e07bb0fc377fdfc971517e55beed48f4db6c64276694cad6"
             },
             "arguments": {
                 "inputs": {
@@ -97,7 +97,7 @@
                 "version": "0.5.0",
                 "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
                 "name": "Parses strings into their types",
-                "digest": "312cacc014497dd674e34765f6eb54430e594c591e760da0383c87844753d2ce"
+                "digest": "7e16e2b1e559690e221de471826d7d1cd36698bc5140dc00f3c7a6c6b711c3b2"
             },
             "arguments": {
                 "inputs": {
@@ -129,7 +129,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.feature_extraction.image_transfer.DistilImageTransfer",
                 "name": "Image Transfer",
-                "digest": "64aefde9dff34878a90f2b1474154d9036a7e83d97764d250896d7cf6865eb93"
+                "digest": "f8f2c978fc0ac7e0ee1eb582b785c11483046752852491cb09200b7c24a14a8e"
             },
             "arguments": {
                 "inputs": {
@@ -150,7 +150,7 @@
                 "version": "0.2.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "297a4943484bcd532650d5727e23b3d11ca702688d7b64dfb5df8bf1282eaa47"
+                "digest": "d4fa27a3e215b89d2231d344ec0202e1b8e41ad322deb79c68fd6ca673eae3f7"
             },
             "arguments": {
                 "inputs": {
@@ -180,7 +180,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.learner.random_forest.DistilEnsembleForest",
                 "name": "EnsembleForest",
-                "digest": "937e9fc161880388d537a7e89c39949d88eabf6659dd0d46e0af11008d6a2f7a"
+                "digest": "34b0b6ba5a4cd4a2a500757ad0f5e099691e79c5826f47d4827d5cdeae2eea76"
             },
             "arguments": {
                 "inputs": {
@@ -211,7 +211,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.construct_predictions.DataFrameCommon",
                 "name": "Construct pipeline predictions output",
-                "digest": "cfb2d595652c4ae0d24e67d4cb8e4916c9f3c2753eaccc2935263d054b3682fa"
+                "digest": "077921b0d6cee9bbda9494bc60c8b48f8287db8d0bff674056a7c9e5cc92ebb9"
             },
             "arguments": {
                 "inputs": {
@@ -239,5 +239,5 @@
             }
         }
     ],
-    "digest": "54c0f2124b35bb667ba37cdeb4e9a6a736b217c9c0910fd4fbebfaebca8a446f"
+    "digest": "2adf31f57ecc9edcd92989ae6e3de20b0a412c1d710cd2aed111882ffacf719f"
 }
