@@ -1,7 +1,7 @@
 {
-    "id": "4cffda67-0472-44b7-9b73-71e37c564524",
+    "id": "0381340f-a7a9-4c28-a322-f354199d4765",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-17T00:23:03.886278Z",
+    "created": "2019-06-17T19:51:43.499995Z",
     "inputs": [
         {
             "name": "inputs"
@@ -17,11 +17,11 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "79012210-2463-4f94-9da6-11bdc5a7e6c4",
+                "id": "ae0797506-ea7b-4a7f-a7e4-2f91e2082f05",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.load_single_graph.DistilSingleGraphLoader",
-                "name": "Load single graph and dataframe into a parseable object",
-                "digest": "2281456581133ef5dfcfc07866a5f309e28a44884b2334542e38e89f5cc48362"
+                "python_path": "d3m.primitives.data_transformation.load_graphs.DistilGraphLoader",
+                "name": "Load graphs into a parseable object",
+                "digest": "09cc52e9e799199d601c04740fc8ab0bfa2eae42ad5398a298b442396c2d6eda"
             },
             "arguments": {
                 "inputs": {
@@ -41,11 +41,11 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "064cec55-39dd-45b7-a663-50d3e17e0c42",
+                "id": "8baea8e6-9d3a-46d7-acf1-04fd593dcd37",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.community_detection.DistilCommunityDetection",
-                "name": "CommunityDetection",
-                "digest": "41d88779b54cba05936d2e59e4d6ce639afeb177ef1a5915dd27b97a158f65e7"
+                "python_path": "d3m.primitives.data_transformation.seeded_graph_matcher.DistilSeededGraphMatcher",
+                "name": "SeededGraphMatcher",
+                "digest": "e3f10f52566e3027dccf3ecb7b20faeca1092d5fed631c47e6ff3d12dce392eb"
             },
             "arguments": {
                 "inputs": {
@@ -65,10 +65,10 @@
             "hyperparams": {
                 "metric": {
                     "type": "VALUE",
-                    "data": "normalizedMutualInformation"
+                    "data": "accuracy"
                 }
             }
         }
     ],
-    "digest": "a07d163b7c47b2b6565b4ad839ff65bc3c0455a5ddc337e967a80d6e338420af"
+    "digest": "5b64f9853013f6af9c21f6c2aa8921609b66662e5a2764677f5eb8d03c3538b0"
 }
