@@ -9,7 +9,7 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from d3m.primitives.time_series_forecasting.vector_autoregression import VAR
+# from d3m.primitives.time_series_forecasting.vector_autoregression import VAR
 from d3m.primitives.time_series_forecasting.arima import Parrot
 
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
