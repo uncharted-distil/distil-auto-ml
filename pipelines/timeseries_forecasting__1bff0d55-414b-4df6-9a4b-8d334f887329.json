@@ -1,0 +1,107 @@
+{
+    "id": "1bff0d55-414b-4df6-9a4b-8d334f887329",
+    "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
+    "created": "2019-06-18T02:06:50.712015Z",
+    "inputs": [
+        {
+            "name": "inputs"
+        }
+    ],
+    "outputs": [
+        {
+            "data": "steps.2.produce",
+            "name": "output"
+        }
+    ],
+    "steps": [
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "4b42ce1e-9b98-4a25-b68e-fad13311eb65",
+                "version": "0.3.0",
+                "python_path": "d3m.primitives.data_transformation.dataset_to_dataframe.Common",
+                "name": "Extract a DataFrame from a Dataset",
+                "digest": "43e118209c48c0d132134dde9115ede5678f348348520eafeefe28e81177b4ed"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "inputs.0"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "d510cb7a-1782-4f51-b44c-58f0236e47c7",
+                "version": "0.5.0",
+                "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
+                "name": "Parses strings into their types",
+                "digest": "3feb9bcf7350e1975b9709d1565a27859d2cf354b095b29f174b158462224f24"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "parse_semantic_types": {
+                    "type": "VALUE",
+                    "data": [
+                        "http://schema.org/Boolean",
+                        "http://schema.org/Integer",
+                        "http://schema.org/Float",
+                        "https://metadata.datadrivendiscovery.org/types/FloatVector"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "d473d487-2c32-49b2-98b5-a2b48571e07c",
+                "version": "1.0.3",
+                "python_path": "d3m.primitives.time_series_forecasting.arima.Parrot",
+                "name": "parrot",
+                "digest": "7acf3d60814df47ec3640cd6b788a3b22b2626408d55a5b2ae5a09615f5fff12"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.1.produce"
+                },
+                "outputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.1.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "seasonal_differencing": {
+                    "type": "VALUE",
+                    "data": 11
+                },
+                "n_periods": {
+                    "type": "VALUE",
+                    "data": 21
+                }
+            }
+        }
+    ],
+    "digest": "8bffa0737a7386990c86821e718dc040d658d01ad43c9efbf59527535cd67ac1"
+}
