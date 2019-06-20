@@ -8,15 +8,13 @@ from d3m import container, utils
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 
-
-
+from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
+from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.audio_transfer import AudioTransferPrimitive
-
 from distil.primitives.audio_loader import AudioDatasetLoaderPrimitive
-
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
@@ -44,37 +42,49 @@ def create_pipeline(metric: str,
     step = PrimitiveStep(primitive_description=AudioDatasetLoaderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
-    step.add_output('produce_target')
     step.add_output('produce_collection')
+    # step.add_hyperparameter('sample', ArgumentType.VALUE, 0.1)
     audio_pipeline.add_step(step)
 
+     # step 1 - parse columns.
+    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
+    step.add_output('produce')
+    semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
+                      'https://metadata.datadrivendiscovery.org/types/FloatVector')
+    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
+    audio_pipeline.add_step(step)
 
-    # step 1 - featurize
+    # step 2 - Extract targets
+    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
+    step.add_output('produce')
+    target_types = ('https://metadata.datadrivendiscovery.org/types/Target', 'https://metadata.datadrivendiscovery.org/types/TrueTarget')
+    step.add_hyperparameter('semantic_types', ArgumentType.VALUE, target_types)
+    audio_pipeline.add_step(step)
+
+    # step 3 - featurize
     step = PrimitiveStep(primitive_description=AudioTransferPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce_collection')
     step.add_output('produce')
     audio_pipeline.add_step(step)
 
-
-    # step 2 -- Generates a random forest ensemble model.
+    # step 4 -- Generates a random forest ensemble model.
     step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce_target')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.2.produce')
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     audio_pipeline.add_step(step)
 
-
-    # step 3 - convert predictions to expected format
+    # step 5 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.2.produce')
-    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce_target')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
+    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step.add_output('produce')
-    step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
     audio_pipeline.add_step(step)
 
-
     # Adding output step to the pipeline
-    audio_pipeline.add_output(name='output', data_reference='steps.3.produce')
+    audio_pipeline.add_output(name='output', data_reference='steps.5.produce')
 
     return audio_pipeline
