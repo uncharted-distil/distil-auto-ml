@@ -62,8 +62,10 @@ class RequestValidator:
             step_types = [list(s.keys()).pop() for s in template_dict['steps']]
             if 'placeholder' in step_types:
                 placeholder_present = True
-                if step_types.index('placeholder') != len(step_types) - 1:
-                    raise ValueError('Unsupported placeholder position {}'.format(request))
+            # Placeholder doesn't have to be last primitive in step list, it just has to be the
+            # the single output from the pipeline DAG.  Assumption below doesn't hold in that case.
+            #     if step_types.index('placeholder') != len(step_types) - 1:
+            #         raise ValueError('Unsupported placeholder position {}'.format(request))
         # This is ok
         if not problem_type and template_dict and not placeholder_present:
             pass
