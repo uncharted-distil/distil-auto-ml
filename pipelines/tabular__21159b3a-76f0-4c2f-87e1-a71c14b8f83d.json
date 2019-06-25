@@ -1,7 +1,7 @@
 {
-    "id": "0ed6fbca-2afd-4ba6-87cd-a3234e9846c3",
+    "id": "21159b3a-76f0-4c2f-87e1-a71c14b8f83d",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-18T02:10:41.219853Z",
+    "created": "2019-06-25T15:42:50.236682Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.dataset_to_dataframe.Common",
                 "name": "Extract a DataFrame from a Dataset",
-                "digest": "43e118209c48c0d132134dde9115ede5678f348348520eafeefe28e81177b4ed"
+                "digest": "a141e6821de7ae586968b0986237745a5510850e6940cf946db9d50d3828b030"
             },
             "arguments": {
                 "inputs": {
@@ -42,7 +42,7 @@
                 "version": "0.5.0",
                 "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
                 "name": "Parses strings into their types",
-                "digest": "3feb9bcf7350e1975b9709d1565a27859d2cf354b095b29f174b158462224f24"
+                "digest": "d95eb0ea8a5e6f9abc0965a97e9c4f5d8f74a3df591c11c4145faea3e581cd06"
             },
             "arguments": {
                 "inputs": {
@@ -74,7 +74,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "8c9de5cd06f74ea3f80fa9f1e1f775a1d3eddff1621512e6ab72aaab8724b88d"
+                "digest": "2dda31ef0452060bc55070204c5328927e2b2537a03afa6333607e3e4828ab26"
             },
             "arguments": {
                 "inputs": {
@@ -103,7 +103,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "8c9de5cd06f74ea3f80fa9f1e1f775a1d3eddff1621512e6ab72aaab8724b88d"
+                "digest": "2dda31ef0452060bc55070204c5328927e2b2537a03afa6333607e3e4828ab26"
             },
             "arguments": {
                 "inputs": {
@@ -133,7 +133,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilEnrichDates",
                 "name": "Enrich dates",
-                "digest": "842069a031374b658218b94a1fd69e4210078d047632bd65f49d0ca22a6e0ebd"
+                "digest": "ebf7220c826342aad5e590326b505628e0a5500c84713698719de3584bf120ff"
             },
             "arguments": {
                 "inputs": {
@@ -154,7 +154,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilReplaceSingletons",
                 "name": "Replace singeltons",
-                "digest": "d2603e7d8ed314c1b8e0618b4e452ba74aab36d08a3c7a29cb85f4d61e64ba5b"
+                "digest": "d1cede32542981287a8119c15b827737abe82886e68fd656913f145d722111b5"
             },
             "arguments": {
                 "inputs": {
@@ -175,7 +175,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.imputer.DistilCategoricalImputer",
                 "name": "Categorical imputer",
-                "digest": "91fba60912c7f3921d4c2c6d0af07b66f984a8799030a01530b7287d6fff0b61"
+                "digest": "cf1349806216e5495b184970fa2af5eb547f581e493fd3a973a14ee33428756e"
             },
             "arguments": {
                 "inputs": {
@@ -196,7 +196,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.encoder.DistilTextEncoder",
                 "name": "Text encoder",
-                "digest": "8cba0937430d10f8deb2b8b717e5eb5b3493b6de2c53070a294f40a7f419f015"
+                "digest": "78a84be7b85c935501996887e337ce4eeab95f1f561bff4bcf033106fc6f872c"
             },
             "arguments": {
                 "inputs": {
@@ -221,7 +221,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.one_hot_encoder.DistilOneHotEncoder",
                 "name": "One-hot encoder",
-                "digest": "88db43082bfb05c5132444df367d9cf7f0395b1fbbbb74772aafdc26a12332f1"
+                "digest": "b17944d9eeb803a2ba6dfc27cb542ec2a0db1f4c9342b0b679d5b2432726c77d"
             },
             "arguments": {
                 "inputs": {
@@ -248,7 +248,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.encoder.DistilBinaryEncoder",
                 "name": "Binary encoder",
-                "digest": "d27135815d7a43d1e9a61c68271baa385dca5f9512e1ec369fe36c6b64a5f4ad"
+                "digest": "65d65ef9b6e7a063b338fcfbae577016017ecc02a7af352fc656bc2533948bac"
             },
             "arguments": {
                 "inputs": {
@@ -345,7 +345,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.learner.random_forest.DistilEnsembleForest",
                 "name": "EnsembleForest",
-                "digest": "5f1ba725c9ac1794477f3fdd5bd237ee4e39cb20dc278cc71543c2d02e36ab19"
+                "digest": "3a70604f85860194455f504040a41c80136f05e10f4f076768d3c3a522dcc76a"
             },
             "arguments": {
                 "inputs": {
@@ -376,7 +376,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.construct_predictions.DataFrameCommon",
                 "name": "Construct pipeline predictions output",
-                "digest": "dfbf9e3112dd7ab851fc85588741b66900ac25bd03f2e602327046f676036e28"
+                "digest": "96382129c2d9e87a2c0ab0b477b410947e5644d4dfae24e905d16a72d32dc41b"
             },
             "arguments": {
                 "inputs": {
@@ -395,5 +395,5 @@
             ]
         }
     ],
-    "digest": "07bfa958616a6c7b659ba8c9969e597149b36174c626965d656f0ba144834446"
+    "digest": "f92134b3e22f15c29903d8e0cba4a90d1499c5c81ba0c37b6b065ba7d18e3879"
 }

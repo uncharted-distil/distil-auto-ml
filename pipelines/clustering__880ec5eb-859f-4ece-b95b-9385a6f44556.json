@@ -1,7 +1,7 @@
 {
-    "id": "a5a90337-689b-4479-b4d7-54d41ca1690c",
+    "id": "880ec5eb-859f-4ece-b95b-9385a6f44556",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-17T20:58:25.482981Z",
+    "created": "2019-06-25T15:42:49.839512Z",
     "inputs": [
         {
             "name": "inputs"
@@ -9,7 +9,7 @@
     ],
     "outputs": [
         {
-            "data": "steps.13.produce",
+            "data": "steps.11.produce",
             "name": "output"
         }
     ],
@@ -21,7 +21,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.dataset_to_dataframe.Common",
                 "name": "Extract a DataFrame from a Dataset",
-                "digest": "e557fc176af67913ed241dbe793cf986439157cfe9c4a12f1aafcba3c07b8b6f"
+                "digest": "a141e6821de7ae586968b0986237745a5510850e6940cf946db9d50d3828b030"
             },
             "arguments": {
                 "inputs": {
@@ -42,7 +42,7 @@
                 "version": "0.5.0",
                 "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
                 "name": "Parses strings into their types",
-                "digest": "7e16e2b1e559690e221de471826d7d1cd36698bc5140dc00f3c7a6c6b711c3b2"
+                "digest": "d95eb0ea8a5e6f9abc0965a97e9c4f5d8f74a3df591c11c4145faea3e581cd06"
             },
             "arguments": {
                 "inputs": {
@@ -71,10 +71,10 @@
             "type": "PRIMITIVE",
             "primitive": {
                 "id": "4503a4c6-42f7-45a1-a1d4-ed69699cf5e1",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "d4fa27a3e215b89d2231d344ec0202e1b8e41ad322deb79c68fd6ca673eae3f7"
+                "digest": "2dda31ef0452060bc55070204c5328927e2b2537a03afa6333607e3e4828ab26"
             },
             "arguments": {
                 "inputs": {
@@ -99,41 +99,11 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "4503a4c6-42f7-45a1-a1d4-ed69699cf5e1",
-                "version": "0.2.0",
-                "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
-                "name": "Extracts columns by semantic type",
-                "digest": "d4fa27a3e215b89d2231d344ec0202e1b8e41ad322deb79c68fd6ca673eae3f7"
-            },
-            "arguments": {
-                "inputs": {
-                    "type": "CONTAINER",
-                    "data": "steps.1.produce"
-                }
-            },
-            "outputs": [
-                {
-                    "id": "produce"
-                }
-            ],
-            "hyperparams": {
-                "semantic_types": {
-                    "type": "VALUE",
-                    "data": [
-                        "https://metadata.datadrivendiscovery.org/types/Target",
-                        "https://metadata.datadrivendiscovery.org/types/TrueTarget"
-                    ]
-                }
-            }
-        },
-        {
-            "type": "PRIMITIVE",
-            "primitive": {
                 "id": "b1367f5b-bab1-4dfc-a1a9-6a56430e516a",
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilEnrichDates",
                 "name": "Enrich dates",
-                "digest": "a93c484ea573cbf3d947dac36f7d06c17939f074382d31b5b3fe414474b97ef9"
+                "digest": "ebf7220c826342aad5e590326b505628e0a5500c84713698719de3584bf120ff"
             },
             "arguments": {
                 "inputs": {
@@ -154,7 +124,28 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilReplaceSingletons",
                 "name": "Replace singeltons",
-                "digest": "8c3007040c0f79a12cf5457d513e0ba12ae5b80e676aeff9eda9c2e4773be9aa"
+                "digest": "d1cede32542981287a8119c15b827737abe82886e68fd656913f145d722111b5"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.3.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "0a9936f3-7784-4697-82f0-2a5fcc744c16",
+                "version": "0.1.0",
+                "python_path": "d3m.primitives.data_transformation.imputer.DistilCategoricalImputer",
+                "name": "Categorical imputer",
+                "digest": "cf1349806216e5495b184970fa2af5eb547f581e493fd3a973a14ee33428756e"
             },
             "arguments": {
                 "inputs": {
@@ -171,62 +162,16 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "0a9936f3-7784-4697-82f0-2a5fcc744c16",
+                "id": "d3d421cb-9601-43f0-83d9-91a9c4199a06",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.imputer.DistilCategoricalImputer",
-                "name": "Categorical imputer",
-                "digest": "91c1f7d98729af1fb3bcaadfd1b52f04df778768a41ee5a61b04cf806854f903"
+                "python_path": "d3m.primitives.data_transformation.one_hot_encoder.DistilOneHotEncoder",
+                "name": "One-hot encoder",
+                "digest": "b17944d9eeb803a2ba6dfc27cb542ec2a0db1f4c9342b0b679d5b2432726c77d"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
                     "data": "steps.5.produce"
-                }
-            },
-            "outputs": [
-                {
-                    "id": "produce"
-                }
-            ]
-        },
-        {
-            "type": "PRIMITIVE",
-            "primitive": {
-                "id": "09f252eb-215d-4e0b-9a60-fcd967f5e708",
-                "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.encoder.DistilTextEncoder",
-                "name": "Text encoder",
-                "digest": "e2ca626d73614cf933b0bcb2f751423309e754cf8e4e965b035e712d11ccbcf2"
-            },
-            "arguments": {
-                "inputs": {
-                    "type": "CONTAINER",
-                    "data": "steps.6.produce"
-                },
-                "outputs": {
-                    "type": "CONTAINER",
-                    "data": "steps.3.produce"
-                }
-            },
-            "outputs": [
-                {
-                    "id": "produce"
-                }
-            ]
-        },
-        {
-            "type": "PRIMITIVE",
-            "primitive": {
-                "id": "d3d421cb-9601-43f0-83d9-91a9c4199a06",
-                "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.one_hot_encoder.DistilOneHotEncoder",
-                "name": "One-hot encoder",
-                "digest": "93ace8ca63b2a5114c33a8b3487f494eec537bc7d3a03831e843c1289c3fe106"
-            },
-            "arguments": {
-                "inputs": {
-                    "type": "CONTAINER",
-                    "data": "steps.7.produce"
                 }
             },
             "outputs": [
@@ -248,12 +193,12 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.encoder.DistilBinaryEncoder",
                 "name": "Binary encoder",
-                "digest": "91e0fbfe17a28011e90bb8b109afdd29f0f11ffde100a26d611112a4068af348"
+                "digest": "65d65ef9b6e7a063b338fcfbae577016017ecc02a7af352fc656bc2533948bac"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.8.produce"
+                    "data": "steps.6.produce"
                 }
             },
             "outputs": [
@@ -280,7 +225,7 @@
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.9.produce"
+                    "data": "steps.7.produce"
                 }
             },
             "outputs": [
@@ -319,7 +264,7 @@
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.10.produce"
+                    "data": "steps.8.produce"
                 }
             },
             "outputs": [
@@ -341,20 +286,16 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "e0ad06ce-b484-46b0-a478-c567e1ea7e02",
+                "id": "3b09024e-a83b-418c-8ff4-cf3d30a9609e",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.learner.random_forest.DistilEnsembleForest",
-                "name": "EnsembleForest",
-                "digest": "34b0b6ba5a4cd4a2a500757ad0f5e099691e79c5826f47d4827d5cdeae2eea76"
+                "python_path": "d3m.primitives.clustering.k_means.DistilKMeans",
+                "name": "K means",
+                "digest": "f8b8569fbb3b7aa861325c326c0609e99cfd37a3b510ca1377c34dbc0866cf88"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.11.produce"
-                },
-                "outputs": {
-                    "type": "CONTAINER",
-                    "data": "steps.3.produce"
+                    "data": "steps.9.produce"
                 }
             },
             "outputs": [
@@ -363,9 +304,13 @@
                 }
             ],
             "hyperparams": {
-                "metric": {
+                "n_clusters": {
                     "type": "VALUE",
-                    "data": "f1Macro"
+                    "data": 100
+                },
+                "cluster_col_name": {
+                    "type": "VALUE",
+                    "data": "Class"
                 }
             }
         },
@@ -376,12 +321,12 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.construct_predictions.DataFrameCommon",
                 "name": "Construct pipeline predictions output",
-                "digest": "077921b0d6cee9bbda9494bc60c8b48f8287db8d0bff674056a7c9e5cc92ebb9"
+                "digest": "96382129c2d9e87a2c0ab0b477b410947e5644d4dfae24e905d16a72d32dc41b"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.12.produce"
+                    "data": "steps.10.produce"
                 },
                 "reference": {
                     "type": "CONTAINER",
@@ -395,5 +340,5 @@
             ]
         }
     ],
-    "digest": "f55871ff647557bc5f0204f564748925d04d136de7d0a8735d7bc2ec97e07a55"
+    "digest": "2d17d2d0dfa31e525e8be58e07d2e18fc292e5b7f36326789d0f26b8bb6961b5"
 }

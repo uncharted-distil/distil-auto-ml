@@ -1,7 +1,7 @@
 {
-    "id": "e052da17-c3d6-4597-a975-ecd8876189d1",
+    "id": "817dd234-919e-4465-8252-e317df7f2f6c",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-17T20:52:25.853905Z",
+    "created": "2019-06-25T15:42:47.853049Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.dataset_to_dataframe.Common",
                 "name": "Extract a DataFrame from a Dataset",
-                "digest": "e557fc176af67913ed241dbe793cf986439157cfe9c4a12f1aafcba3c07b8b6f"
+                "digest": "a141e6821de7ae586968b0986237745a5510850e6940cf946db9d50d3828b030"
             },
             "arguments": {
                 "inputs": {
@@ -42,7 +42,7 @@
                 "version": "0.5.0",
                 "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
                 "name": "Parses strings into their types",
-                "digest": "7e16e2b1e559690e221de471826d7d1cd36698bc5140dc00f3c7a6c6b711c3b2"
+                "digest": "d95eb0ea8a5e6f9abc0965a97e9c4f5d8f74a3df591c11c4145faea3e581cd06"
             },
             "arguments": {
                 "inputs": {
@@ -103,5 +103,5 @@
             }
         }
     ],
-    "digest": "b5fc668aed1e95db3946ab9cb3c72842ec5f145016c81761c2eca9079942309d"
+    "digest": "c94ba42a4074ffd7a571c39a1be856af8eba1d3d66bc2ea09b59d44f6436bddb"
 }
