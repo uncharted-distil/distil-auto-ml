@@ -1,7 +1,7 @@
 {
-    "id": "9af34c9b-2675-4261-a711-5006656d9c78",
+    "id": "09d29db2-6d24-45cd-9109-e2455f145370",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-18T01:08:31.820588Z",
+    "created": "2019-06-25T15:42:48.804332Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.load_single_graph.DistilSingleGraphLoader",
                 "name": "Load single graph and dataframe into a parseable object",
-                "digest": "ef36b3e960456d993ddbbb274788b892c130742d61088ae67ac06b53fc16b387"
+                "digest": "5a4ba5cae8e83c9c7725996be8163196467365f110515af67b34aed9345cdabf"
             },
             "arguments": {
                 "inputs": {
@@ -45,7 +45,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.vertex_nomination.DistilVertexNomination",
                 "name": "VertexNomination",
-                "digest": "e2cf9a87f31bd53455adf8b761f33c8ce11ea7bb64c4835be543b46d145c23ce"
+                "digest": "2e91c8383786c618dd93988f882ab6fa478f9889d760cf8d385d57b9499c9673"
             },
             "arguments": {
                 "inputs": {
@@ -70,5 +70,5 @@
             }
         }
     ],
-    "digest": "0d3b3ede9223443ee9b79e7f495627b646ccfd335994dcd45a36d98b30deb0e9"
+    "digest": "16856a4c2443902c1456afdea267470d70d43f7b328cc137df15b028d521b6c4"
 }
