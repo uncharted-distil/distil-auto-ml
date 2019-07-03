@@ -9,9 +9,9 @@ COPY server-requirements.txt .
 COPY api api
 RUN pip3 install -r server-requirements.txt
 
-# Our primitives
-ARG CACHEBUSTER=0
-RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
+# Our primitives - not needed during eval since we use the frozen d3m primitive image
+#ARG CACHEBUSTER=0
+#RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git#egg=DistilPrimitives
 
 COPY . .
 

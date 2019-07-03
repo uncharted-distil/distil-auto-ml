@@ -184,12 +184,12 @@ def main(once=False):
 
     logging.basicConfig(level=logging.DEBUG)
 
+    # Get DB access
+    session = models.start_session(config.DB_LOCATION)
+
     # Create and start the gRPC server
     server = Server()
     server.start(config.PORT)
-
-    # Get DB access
-    session = models.start_session(config.DB_LOCATION)
 
     # Main job loop
     while True:
