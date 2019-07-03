@@ -128,6 +128,7 @@ def create_pipeline(metric: str,
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
+    step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
     step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
     tabular_pipeline.add_step(step)
     previous_step += 1
