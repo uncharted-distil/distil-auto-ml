@@ -67,6 +67,8 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
         pipeline = collaborative_filtering.create_pipeline(metric)
     elif pipeline_type == 'vertex_nomination':
         pipeline = vertex_nomination.create_pipeline(metric)
+    elif pipeline_type == 'vertex_classification':
+        pipeline = vertex_nomination.create_pipeline(metric)
     elif pipeline_type == 'link_prediction':
         pipeline = link_prediction.create_pipeline(metric)
     elif pipeline_type == 'community_detection':
