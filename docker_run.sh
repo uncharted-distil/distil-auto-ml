@@ -10,4 +10,5 @@ docker run \
   --env D3MOUTPUTDIR=$D3MOUTPUTDIR \
   -v $D3MOUTPUTDIR:$D3MOUTPUTDIR \
   -v $D3MINPUTDIR:$D3MINPUTDIR \
+  -v $D3MSTATICDIR:$D3MSTATICDIR \
   registry.datadrivendiscovery.org/uncharted/distil-integration/distil-auto-ml:latest

@@ -1,7 +1,7 @@
 {
-    "id": "652547b2-aabc-438f-845b-1cd44b32b447",
+    "id": "666e21bb-55fa-4840-bdd8-a1686053e7bd",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-14T18:27:03.585896Z",
+    "created": "2019-06-25T15:42:46.422685Z",
     "inputs": [
         {
             "name": "inputs"
@@ -9,7 +9,7 @@
     ],
     "outputs": [
         {
-            "data": "steps.3.produce",
+            "data": "steps.5.produce",
             "name": "output"
         }
     ],
@@ -21,7 +21,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_preprocessing.audio_loader.DistilAudioDatasetLoader",
                 "name": "Load audio collection from dataset into a single dataframe",
-                "digest": "62152f054784342e5911288e72fc8fcba42d2603c00f037ce21ca2baaafc3fbd"
+                "digest": "46e3b0e1520e06ca1eea1f3c809a4265c93ae8fc394af578d994889a31a29b82"
             },
             "arguments": {
                 "inputs": {
@@ -34,12 +34,71 @@
                     "id": "produce"
                 },
                 {
-                    "id": "produce_target"
-                },
-                {
                     "id": "produce_collection"
                 }
             ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "d510cb7a-1782-4f51-b44c-58f0236e47c7",
+                "version": "0.5.0",
+                "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
+                "name": "Parses strings into their types",
+                "digest": "d95eb0ea8a5e6f9abc0965a97e9c4f5d8f74a3df591c11c4145faea3e581cd06"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "parse_semantic_types": {
+                    "type": "VALUE",
+                    "data": [
+                        "http://schema.org/Boolean",
+                        "http://schema.org/Integer",
+                        "http://schema.org/Float",
+                        "https://metadata.datadrivendiscovery.org/types/FloatVector"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "4503a4c6-42f7-45a1-a1d4-ed69699cf5e1",
+                "version": "0.3.0",
+                "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
+                "name": "Extracts columns by semantic type",
+                "digest": "2dda31ef0452060bc55070204c5328927e2b2537a03afa6333607e3e4828ab26"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.1.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "semantic_types": {
+                    "type": "VALUE",
+                    "data": [
+                        "https://metadata.datadrivendiscovery.org/types/Target",
+                        "https://metadata.datadrivendiscovery.org/types/TrueTarget"
+                    ]
+                }
+            }
         },
         {
             "type": "PRIMITIVE",
@@ -48,7 +107,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.feature_extraction.audio_transfer.DistilAudioTransfer",
                 "name": "Audio Transfer",
-                "digest": "d4bb9a855c86b148be47bc2a60fb556fa8537af30950a2b82363d2c5966395e1"
+                "digest": "1ec0a58d565160dd7fbcf2dbe22030cb5871af5196accabe7cc78c82f9b4d8b8"
             },
             "arguments": {
                 "inputs": {
@@ -69,16 +128,16 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.learner.random_forest.DistilEnsembleForest",
                 "name": "EnsembleForest",
-                "digest": "076ef68b0df6bfda244f03dc6e7a3a6aab6d79eba5cba4a7c3073bd1a20b7ae1"
+                "digest": "3a70604f85860194455f504040a41c80136f05e10f4f076768d3c3a522dcc76a"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.1.produce"
+                    "data": "steps.3.produce"
                 },
                 "outputs": {
                     "type": "CONTAINER",
-                    "data": "steps.0.produce_target"
+                    "data": "steps.2.produce"
                 }
             },
             "outputs": [
@@ -100,33 +159,24 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.construct_predictions.DataFrameCommon",
                 "name": "Construct pipeline predictions output",
-                "digest": "cfb2d595652c4ae0d24e67d4cb8e4916c9f3c2753eaccc2935263d054b3682fa"
+                "digest": "96382129c2d9e87a2c0ab0b477b410947e5644d4dfae24e905d16a72d32dc41b"
             },
             "arguments": {
                 "inputs": {
                     "type": "CONTAINER",
-                    "data": "steps.2.produce"
+                    "data": "steps.4.produce"
                 },
                 "reference": {
                     "type": "CONTAINER",
-                    "data": "steps.0.produce_target"
+                    "data": "steps.1.produce"
                 }
             },
             "outputs": [
                 {
                     "id": "produce"
                 }
-            ],
-            "hyperparams": {
-                "use_columns": {
-                    "type": "VALUE",
-                    "data": [
-                        0,
-                        1
-                    ]
-                }
-            }
+            ]
         }
     ],
-    "digest": "629e2ed1d43d30ac76f285fa850cbbbb9cb31bdf61b0e4a132330c9dd5cfd7d1"
+    "digest": "a751624520463599ba26ad639d0a94c10493e8b4ffa5040e015e45a8712563ef"
 }

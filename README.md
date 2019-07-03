@@ -1,5 +1,10 @@
 ## Distil Auto ML
 
+#### What is this
+Mirror of main TA2 system for Uncharted and Qntfy 
+
+Main repo is https://github.com/uncharted-distil/distil-auto-ml
+
 #### Installation
 
 ```shell

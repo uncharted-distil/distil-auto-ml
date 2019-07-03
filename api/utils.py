@@ -483,7 +483,7 @@ def decode_problem_description(problem_description, *, strict_digest=False, prob
         for privileged_data_item in problem_input.privileged_data:
             privileged_data.append(
                 {
-                    'target_index': privileged_data_item.target_index,
+                    'privileged_data_index': privileged_data_item.privileged_data_index,
                     'resource_id': privileged_data_item.resource_id,
                     'column_index': privileged_data_item.column_index,
                     'column_name': privileged_data_item.column_name,

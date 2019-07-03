@@ -1,7 +1,7 @@
 {
-    "id": "65d39f3b-7023-4b50-b31b-9cf0dc2abc43",
+    "id": "3c9ed234-f3c3-4225-a8d5-0a575bb63080",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-14T18:25:41.007803Z",
+    "created": "2019-06-25T15:42:48.422923Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilRaggedDatasetLoader",
                 "name": "Load ragged collection from dataset into a single dataframe",
-                "digest": "d39206ee3257bb81a1a8b96f051316ee1baa60a43e9d84992d345de9e5f4913d"
+                "digest": "5bbc15adb5abe243ff9311ef7fa1b6723b17284441838cd28de92ea43f245330"
             },
             "arguments": {
                 "inputs": {
@@ -45,7 +45,7 @@
                 "version": "0.5.0",
                 "python_path": "d3m.primitives.data_transformation.column_parser.DataFrameCommon",
                 "name": "Parses strings into their types",
-                "digest": "312cacc014497dd674e34765f6eb54430e594c591e760da0383c87844753d2ce"
+                "digest": "d95eb0ea8a5e6f9abc0965a97e9c4f5d8f74a3df591c11c4145faea3e581cd06"
             },
             "arguments": {
                 "inputs": {
@@ -74,10 +74,10 @@
             "type": "PRIMITIVE",
             "primitive": {
                 "id": "4503a4c6-42f7-45a1-a1d4-ed69699cf5e1",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "297a4943484bcd532650d5727e23b3d11ca702688d7b64dfb5df8bf1282eaa47"
+                "digest": "2dda31ef0452060bc55070204c5328927e2b2537a03afa6333607e3e4828ab26"
             },
             "arguments": {
                 "inputs": {
@@ -103,10 +103,10 @@
             "type": "PRIMITIVE",
             "primitive": {
                 "id": "4503a4c6-42f7-45a1-a1d4-ed69699cf5e1",
-                "version": "0.2.0",
+                "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.extract_columns_by_semantic_types.DataFrameCommon",
                 "name": "Extracts columns by semantic type",
-                "digest": "297a4943484bcd532650d5727e23b3d11ca702688d7b64dfb5df8bf1282eaa47"
+                "digest": "2dda31ef0452060bc55070204c5328927e2b2537a03afa6333607e3e4828ab26"
             },
             "arguments": {
                 "inputs": {
@@ -136,7 +136,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.data_cleaning.DistilTimeSeriesReshaper",
                 "name": "Time series reshaper",
-                "digest": "03a3bcc0017fdbc39ce0692133f1470af82bd71832c7db71d90d3a7dba40381c"
+                "digest": "f10272ff06865da38c5098738b8a914d1ccc677876f2cf7f97e5fcf93324ff65"
             },
             "arguments": {
                 "inputs": {
@@ -157,7 +157,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.learner.random_forest.DistilTimeSeriesNeighboursPrimitive",
                 "name": "Timeseries neighbours",
-                "digest": "88a70b46b7082d99c21c3846d90f4df6f2dfc0026319a0cb62743ee23badf8b7"
+                "digest": "062033c963edffb65e39b5f6d9abe77b06843d61047c964882ceee7a589d06ef"
             },
             "arguments": {
                 "inputs": {
@@ -188,7 +188,7 @@
                 "version": "0.3.0",
                 "python_path": "d3m.primitives.data_transformation.construct_predictions.DataFrameCommon",
                 "name": "Construct pipeline predictions output",
-                "digest": "cfb2d595652c4ae0d24e67d4cb8e4916c9f3c2753eaccc2935263d054b3682fa"
+                "digest": "96382129c2d9e87a2c0ab0b477b410947e5644d4dfae24e905d16a72d32dc41b"
             },
             "arguments": {
                 "inputs": {
@@ -207,5 +207,5 @@
             ]
         }
     ],
-    "digest": "327a874729ba94c5240b70e12dd970dd5d346ac49e0ce02515347931ae566158"
+    "digest": "035b85c7884d6afe2eca647bf7acbc6f3d5b0e3b176caa68deb2cad3bf2198e4"
 }

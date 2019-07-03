@@ -1,7 +1,7 @@
 {
-    "id": "cd812436-0151-494a-9519-1008754dd7f5",
+    "id": "09d29db2-6d24-45cd-9109-e2455f145370",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-06-13T23:48:25.210460Z",
+    "created": "2019-06-25T15:42:48.804332Z",
     "inputs": [
         {
             "name": "inputs"
@@ -21,7 +21,7 @@
                 "version": "0.1.0",
                 "python_path": "d3m.primitives.data_transformation.load_single_graph.DistilSingleGraphLoader",
                 "name": "Load single graph and dataframe into a parseable object",
-                "digest": "c0e4f6bcfe77ff4707e7bc29fcb9d4edc71660641791c4599ed64b5df2d11b95"
+                "digest": "5a4ba5cae8e83c9c7725996be8163196467365f110515af67b34aed9345cdabf"
             },
             "arguments": {
                 "inputs": {
@@ -41,11 +41,11 @@
         {
             "type": "PRIMITIVE",
             "primitive": {
-                "id": "fc138210-c317-4528-81ae-5eed3a1a0267",
+                "id": "0130828c-1ac0-47a9-a167-f05bae5a3146",
                 "version": "0.1.0",
-                "python_path": "d3m.primitives.data_transformation.link_prediction.DistilLinkPrediction",
-                "name": "LinkPrediction",
-                "digest": "aef9646032a7d690f597d701bd65b985603698a212e41b3c290ffd0a816c1566"
+                "python_path": "d3m.primitives.data_transformation.vertex_nomination.DistilVertexNomination",
+                "name": "VertexNomination",
+                "digest": "2e91c8383786c618dd93988f882ab6fa478f9889d760cf8d385d57b9499c9673"
             },
             "arguments": {
                 "inputs": {
@@ -70,5 +70,5 @@
             }
         }
     ],
-    "digest": "44787cdb8701fa203e649c4d8fab3ad9b1e9ee44175f9dcddace65c1c168e440"
+    "digest": "16856a4c2443902c1456afdea267470d70d43f7b328cc137df15b028d521b6c4"
 }
