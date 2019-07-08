@@ -31,6 +31,7 @@ PIPE_TO_DATASET = {
     'text': ('30_personae', 'f1', {}),
     'timeseries_forecasting': ('56_sunspots_monthly', 'rootMeanSquaredError', {}),
     'timeseries_classification': ('LL1_50words', 'f1Macro', {}),
+    'timeseries_kanine': ('LL1_50words', 'f1Macro', {}),
     'vertex_nomination': ('LL1_net_nomination_seed', 'accuracy', {}),
 }
 
