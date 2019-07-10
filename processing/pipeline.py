@@ -18,12 +18,14 @@ from processing.pipelines import (clustering,
                                   question_answer,
                                   tabular,
                                   text,
-                                  timeseries_classification,
                                   link_prediction,
                                   audio,
                                   vertex_nomination,
                                   community_detection,
-                                  timeseries_forecasting)
+                                  timeseries_classification,
+                                  timeseries_forecasting,
+                                  timeseries_kanine,
+                                  timeseries_var)
 
 
 import utils
@@ -54,7 +56,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     elif pipeline_type == 'graph_matching':
         pipeline = graph_matching.create_pipeline(metric)
     elif pipeline_type == 'timeseries_classification':
-        pipeline = timeseries_classification.create_pipeline(metric)
+        pipeline = timeseries_kanine.create_pipeline(metric)
     elif pipeline_type == 'question_answering':
         pipeline = question_answer.create_pipeline(metric)
     elif pipeline_type == 'text':
@@ -78,7 +80,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
         col_name = problem['inputs'][0]['targets'][0]['column_name']
         pipeline = clustering.create_pipeline(metric, num_clusters=n_clusters, cluster_col_name=col_name)
     elif pipeline_type == 'timeseries_forecasting':
-        pipeline = timeseries_forecasting.create_pipeline(metric)
+        pipeline = timeseries_var.create_pipeline(metric)
     else:
         logger.error(f'Pipeline type [{pipeline_type}] is not yet supported.')
         return None, train_dataset
