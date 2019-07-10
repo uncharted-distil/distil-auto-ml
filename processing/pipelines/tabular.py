@@ -108,6 +108,7 @@ def create_pipeline(metric: str,
     tabular_pipeline.add_step(step)
     previous_step += 1
 
+    """
     # Adds a one hot encoder for categoricals of low cardinality.
     if cat_mode == 'one_hot':
         step = PrimitiveStep(primitive_description=OneHotEncoderPrimitive.metadata.query())
@@ -116,7 +117,7 @@ def create_pipeline(metric: str,
         step.add_hyperparameter('max_one_hot', ArgumentType.VALUE, max_one_hot)
         tabular_pipeline.add_step(step)
         previous_step += 1
-
+    """
     # Adds a binary encoder for categoricals of high cardinality.
     step = PrimitiveStep(primitive_description=BinaryEncoderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))

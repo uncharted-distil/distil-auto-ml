@@ -5,12 +5,19 @@ Mirror of main TA2 system for Uncharted and Qntfy
 
 Main repo is https://github.com/uncharted-distil/distil-auto-ml
 
-#### Installation
+#### Get this running locally with docker 
 
-```shell
-./build.sh
-pip3 install -r server-requirements.txt
-```
+* symlink your datasets directory 
+
+`ln -s ../datasets/seed_datasets_current seed_datasets_current`
+
+* choose the dataset you want to run 
+
+`export DATASET=185_baseball`
+
+* run it all 
+
+`docker-compose up`
 
 #### Get those static files 
 ```shell
