@@ -56,6 +56,9 @@ def is_audio(dataset_doc: dict) -> bool:
 def is_image(dataset_doc: dict) -> bool:
     return 'image' in get_resource_types(dataset_doc)
 
+def is_object_detection(dataset_doc: dict) -> bool:
+    return problem['problem']['task_type'] == _problem.TaskType.OBJECT_DETECTION
+
 def is_graph_matching(problem: dict) -> bool:
     return problem['problem']['task_type'] == _problem.TaskType.GRAPH_MATCHING
 
@@ -126,6 +129,9 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
 
     elif is_image(dataset_doc):
         return 'image', {}
+
+    elif is_object_detection(dataset_doc):
+        return 'object_detection', {}
 
     elif is_clustering(problem):
 

@@ -13,7 +13,6 @@ from distil.primitives.ragged_dataset_loader import RaggedDatasetLoaderPrimitive
 from distil.primitives.timeseries_reshaper import TimeSeriesReshaperPrimitive
 from distil.primitives.timeseries_neighbours import TimeSeriesNeighboursPrimitive
 
-from common_primitives.denormalize import DenormalizePrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.remove_columns import RemoveColumnsPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive

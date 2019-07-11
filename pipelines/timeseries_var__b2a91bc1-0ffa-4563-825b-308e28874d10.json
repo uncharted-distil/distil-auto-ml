@@ -1,0 +1,97 @@
+{
+    "id": "b2a91bc1-0ffa-4563-825b-308e28874d10",
+    "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
+    "created": "2019-07-09T16:58:04.446817Z",
+    "inputs": [
+        {
+            "name": "inputs"
+        }
+    ],
+    "outputs": [
+        {
+            "data": "steps.2.produce",
+            "name": "output"
+        }
+    ],
+    "steps": [
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "4b42ce1e-9b98-4a25-b68e-fad13311eb65",
+                "version": "0.3.0",
+                "python_path": "d3m.primitives.data_transformation.dataset_to_dataframe.Common",
+                "name": "Extract a DataFrame from a Dataset",
+                "digest": "458a82145751686619d331a0d15cecb28d6c9f5eeb9450b9ebccf83a0ece49fd"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "inputs.0"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "d510cb7a-1782-4f51-b44c-58f0236e47c7",
+                "version": "0.5.0",
+                "python_path": "d3m.primitives.data_transformation.column_parser.Common",
+                "name": "Parses strings into their types",
+                "digest": "14723622d623237138acbbc8b1a8652afd4da72b370ccf11f872502139987f37"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "parse_semantic_types": {
+                    "type": "VALUE",
+                    "data": [
+                        "http://schema.org/Boolean",
+                        "http://schema.org/Integer",
+                        "http://schema.org/Float",
+                        "https://metadata.datadrivendiscovery.org/types/FloatVector"
+                    ]
+                }
+            }
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "76b5a479-c209-4d94-92b5-7eba7a4d4499",
+                "version": "1.0.1",
+                "python_path": "d3m.primitives.time_series_forecasting.vector_autoregression.VAR",
+                "name": "VAR",
+                "digest": "1e0540f77bb2b074f61faf37ff93daf5e8d8c8483b4c7e25696631d07efe7b89"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.1.produce"
+                },
+                "outputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.1.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ]
+        }
+    ],
+    "digest": "cbf84c00cfc7337f1c909c233b0f7805af655b5fa08cae35bd3dca296a4f8462"
+}

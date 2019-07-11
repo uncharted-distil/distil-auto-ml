@@ -5,6 +5,7 @@ import json
 import logging
 import importlib
 import hashlib
+import traceback
 
 # Make the output a bit quieter...
 l = logging.getLogger()
@@ -26,11 +27,14 @@ PIPE_TO_DATASET = {
     'community_detection': ('6_70_com_amazon', 'normalizedMutualInformation', {}),
     'graph_matching': ('49_facebook', 'accuracy', {}),
     'image': ('22_handgeometry', 'meanSquaredError', {}),
+    'object_detection': ('LL1_penn_fudan_pedestrian', 'objectDetectionAP', {}),
     'link_prediction': ('59_umls', 'accuracy', {}),
     'question_answer': ('32_wikiqa', 'f1', {}),
     'text': ('30_personae', 'f1', {}),
     'timeseries_forecasting': ('56_sunspots_monthly', 'rootMeanSquaredError', {}),
     'timeseries_classification': ('LL1_50words', 'f1Macro', {}),
+    'timeseries_kanine': ('LL1_50words', 'f1Macro', {}),
+    'timeseries_var': ('56_sunspots', 'rootMeanSquaredError', {}),
     'vertex_nomination': ('LL1_net_nomination_seed', 'accuracy', {}),
 }
 
@@ -123,14 +127,16 @@ if __name__ == '__main__':
             json_filename = os.path.join(META_DIR, filename + '.json')
             meta_filename = os.path.join(META_DIR, filename + '.meta')
 
+            print(f'Writing {filename}')
+
             with open(json_filename, 'w') as f:
                     f.write(json.dumps(pipe_json, indent=4))
                     f.write('\n')
             # Get meta alongside pipeline
             meta = set_meta(dataset_to_use)
-            with open(meta_filename, 'w') as f:
+            with open(meta_filename, 'w') as f:                
                 f.write(json.dumps(meta, indent=4))
                 f.write('\n')
         except Exception as e:
-            print(e)
+            traceback.print_exc()
             sys.exit(0)
