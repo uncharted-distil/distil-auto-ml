@@ -1,0 +1,65 @@
+{
+    "id": "dfe88003-2e39-47b2-835d-32f52cf2a5f9",
+    "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
+    "created": "2019-07-09T13:42:21.238728Z",
+    "inputs": [
+        {
+            "name": "inputs"
+        }
+    ],
+    "outputs": [
+        {
+            "data": "steps.1.produce",
+            "name": "output"
+        }
+    ],
+    "steps": [
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "f31f8c1f-d1c5-43e5-a4b2-2ae4a761ef2e",
+                "version": "0.2.0",
+                "python_path": "d3m.primitives.data_transformation.denormalize.Common",
+                "name": "Denormalize datasets",
+                "digest": "3555a5cfd37f4e9d08e7aaf48e4c9e87b7321bff3cf68d81838ee09e840fece8"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "inputs.0"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "2d6d3223-1b3c-49cc-9ddd-50f571818268",
+                "version": "1.0.2",
+                "python_path": "d3m.primitives.time_series_classification.k_neighbors.Kanine",
+                "name": "kanine",
+                "digest": "bd406bdf73a720898fb3f27451eca996356809abb3181a25ed3c85caea13ddc6"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce"
+                },
+                "outputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ]
+        }
+    ],
+    "digest": "9855757cb8995489960aef258962f5229179f7bc8ede4d112e937cb86fe7b239"
+}
