@@ -27,6 +27,7 @@ PIPE_TO_DATASET = {
     'community_detection': ('6_70_com_amazon', 'normalizedMutualInformation', {}),
     'graph_matching': ('49_facebook', 'accuracy', {}),
     'image': ('22_handgeometry', 'meanSquaredError', {}),
+    'object_detection': ('LL1_penn_fudan_pedestrian', 'objectDetectionAP', {}),
     'link_prediction': ('59_umls', 'accuracy', {}),
     'question_answer': ('32_wikiqa', 'f1', {}),
     'text': ('30_personae', 'f1', {}),

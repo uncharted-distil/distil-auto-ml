@@ -15,6 +15,7 @@ from processing.pipelines import (clustering,
                                   collaborative_filtering,
                                   graph_matching,
                                   image,
+                                  object_detection,
                                   question_answer,
                                   tabular,
                                   text,
@@ -63,6 +64,8 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
         pipeline = text.create_pipeline(metric)
     elif pipeline_type == 'image':
         pipeline = image.create_pipeline(metric)
+    elif pipeline_type == 'object_detection':
+        pipeline = object_detection.create_pipeline(metric)
     elif pipeline_type == 'audio':
        pipeline = audio.create_pipeline(metric)
     elif pipeline_type == 'collaborative_filtering':
