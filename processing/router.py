@@ -35,6 +35,17 @@ def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
     else:
         return False
 
+def is_edgelist(dataset_doc: dict, problem_desc: dict) -> bool:
+    resource_types = get_resource_types(dataset_doc)
+    task_type = problem_desc['problem']['task_type']
+
+    if task_type not in [_problem.TaskType.VERTEX_CLASSIFICATION, _problem.TaskType.VERTEX_NOMINATION]:
+        return False
+    elif set(resource_types) == {'table'}:
+        return True
+    else:
+        return False
+
 def is_multitable(dataset_doc: dict) -> bool:
     return ['table', 'table'] == get_resource_types(dataset_doc)
 
@@ -172,7 +183,9 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         return 'vertex_nomination', {}
 
     elif is_vertex_classification(problem):
-        return 'vertex_classification', {}
+        return 'vertex_classification', {
+            "edgelist" : is_edgelist(dataset_doc, problem)
+        }
 
     elif is_collaborative_filtering(problem):
         return 'collaborative_filtering', {}
