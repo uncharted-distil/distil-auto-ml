@@ -87,7 +87,9 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
         col_name = problem['inputs'][0]['targets'][0]['column_name']
         pipeline = clustering.create_pipeline(metric, num_clusters=n_clusters, cluster_col_name=col_name)
     elif pipeline_type == 'timeseries_forecasting':
-        pipeline = timeseries_var.create_pipeline(metric)
+        # VAR hyperparameters for period need to be tuned to get meaningful results
+        #pipeline = timeseries_var.create_pipeline(metric)
+        pipeline = tabular.create_pipeline(metric)
     else:
         logger.error(f'Pipeline type [{pipeline_type}] is not yet supported.')
         return None, train_dataset
