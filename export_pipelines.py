@@ -37,6 +37,7 @@ PIPE_TO_DATASET = {
     'timeseries_var': ('56_sunspots', 'rootMeanSquaredError', {}),
     'vertex_nomination': ('LL1_net_nomination_seed', 'accuracy', {}),
     'vertex_classification': ('LL1_VTXC_1369_synthetic', 'f1Macro', {}),
+    'semisupervised_tabular': ('SEMI_1040_sylva_prior', 'f1Macro', {}),
 }
 
 # Skeleton of .meta data

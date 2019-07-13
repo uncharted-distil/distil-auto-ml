@@ -94,6 +94,10 @@ def is_link_prediction(problem: dict) -> bool:
 def is_text(dataset_doc: dict) -> bool:
     return ['table', 'text'] == get_resource_types(dataset_doc)
 
+def is_semisupervised_tabular(problem: dict) -> bool:
+    return problem['problem']['task_type'] == _problem.TaskType.SEMISUPERVISED_CLASSIFICATION or \
+        problem['problem']['task_type'] == _problem.TaskType.SEMISUPERVISED_REGRESSION
+
 # --
 # Routing
 
@@ -198,6 +202,8 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         return 'community_detection', {
             'overlapping' : False,
         }
+    elif is_semisupervised_tabular(problem):
+        return 'semisupervised_tabular', {}
 
     else:
         raise Exception('!! router failed on problem')
