@@ -55,7 +55,7 @@ def create_pipeline(metric: str,
     step.add_output('produce')
     semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
                       'https://metadata.datadrivendiscovery.org/types/FloatVector')
-    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
+    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)    
     tabular_pipeline.add_step(step)
     previous_step += 1
     parse_step = previous_step

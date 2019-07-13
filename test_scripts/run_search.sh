@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DATASET=$1
-
+echo "running search on ${DATASET}"
 [ -z "$D3MINPUTDIR" ] && echo "Error - D3MINPUTDIR unset" && exit 1
 [ -z "$D3MOUTPUTDIR" ] && echo "Error - D3MOUTPUTDIR unset" && exit 1
 [ -z "$DATASET" ] && echo "Error - DATASET unset" && exit 1

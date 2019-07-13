@@ -1,0 +1,15 @@
+{
+    "problem": "SEMI_1040_sylva_prior_problem",
+    "full_inputs": [
+        "SEMI_1040_sylva_prior_dataset"
+    ],
+    "train_inputs": [
+        "SEMI_1040_sylva_prior_dataset_TRAIN"
+    ],
+    "test_inputs": [
+        "SEMI_1040_sylva_prior_dataset_TEST"
+    ],
+    "score_inputs": [
+        "SEMI_1040_sylva_prior_dataset_SCORE"
+    ]
+}
