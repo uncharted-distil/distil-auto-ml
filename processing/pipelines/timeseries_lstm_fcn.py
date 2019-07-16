@@ -14,7 +14,7 @@ PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1
 
 
 def create_pipeline(metric: str) -> Pipeline:
-    
+
     # create the basic pipeline
     lstm_fcn_pipeline = Pipeline(context=PipelineContext.TESTING)
     lstm_fcn_pipeline.add_input(name='inputs')
@@ -29,7 +29,7 @@ def create_pipeline(metric: str) -> Pipeline:
     step = PrimitiveStep(primitive_description=LSTM_FCN.metadata.query()) 
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
-    step.add_hyperparameter(name='attention_lstm', argument_type= ArgumentType.VALUE, data=True)
+    step.add_hyperparameter(name='attention_lstm', argument_type= ArgumentType.VALUE, data=False)
     step.add_hyperparameter(name='lstm_cells', argument_type= ArgumentType.VALUE, data=64)
     step.add_output('produce')
     lstm_fcn_pipeline.add_step(step)

@@ -22,5 +22,5 @@ SERVER_USER_AGENT='qntfy_ta2'
 # Primitives static file directory
 D3MSTATICDIR = os.getenv("D3MSTATICDIR", '/static')
 
-# Enable GPU pipelines
-GPU = os.getenv("GPU", False)
+# Enable GPU pipelines - "auto" will try to detect, "true" and "false" will force
+GPU = os.getenv("GPU", "auto")

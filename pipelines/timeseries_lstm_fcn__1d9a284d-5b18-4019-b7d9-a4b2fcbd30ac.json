@@ -1,7 +1,7 @@
 {
-    "id": "bb80004b-cdb6-4115-959c-ed148ec57e7e",
+    "id": "1d9a284d-5b18-4019-b7d9-a4b2fcbd30ac",
     "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
-    "created": "2019-07-16T05:53:40.395268Z",
+    "created": "2019-07-16T19:32:18.269125Z",
     "inputs": [
         {
             "name": "inputs"
@@ -62,7 +62,7 @@
             "hyperparams": {
                 "attention_lstm": {
                     "type": "VALUE",
-                    "data": true
+                    "data": false
                 },
                 "lstm_cells": {
                     "type": "VALUE",
@@ -71,5 +71,5 @@
             }
         }
     ],
-    "digest": "31df01d09f34966d0b3e84186d1c1346e61e3d97daaf75ed4c8164f9927d2502"
+    "digest": "d55be5042725d0f2ac1873dfcd41b126b4426ada48cd1981bb4464186292643c"
 }
