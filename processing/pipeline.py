@@ -28,6 +28,7 @@ from processing.pipelines import (clustering,
                                   timeseries_forecasting,
                                   timeseries_kanine,
                                   timeseries_var,
+                                  timeseries_lstm_fcn,
                                   semisupervised_tabular)
 
 
@@ -37,7 +38,11 @@ logger = logging.getLogger(__name__)
 
 
 def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None) -> Tuple[pipeline.Pipeline, container.Dataset]:
-     # Load dataset in the same way the d3m runtime will
+
+    # allow for use of GPU optimized pipelines 
+    gpu = config.GPU
+
+    # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
 
     # Load the dataset doc itself
@@ -59,9 +64,15 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     elif pipeline_type == 'graph_matching':
         pipeline = graph_matching.create_pipeline(metric)
     elif pipeline_type == 'timeseries_classification':
-        pipeline = timeseries_kanine.create_pipeline(metric)
+        if gpu:
+            pipeline = timeseries_lstm_fcn.create_pipeline(metric)
+        else:
+            pipeline = timeseries_kanine.create_pipeline(metric)
     elif pipeline_type == 'question_answering':
-        pipeline = question_answer.create_pipeline(metric)
+        if gpu:
+            pipeline = question_answer.create_pipeline(metric)
+        else:
+            pipeline = tabular.create_pipeline(metric)
     elif pipeline_type == 'text':
         pipeline = text.create_pipeline(metric)
     elif pipeline_type == 'image':
@@ -71,7 +82,10 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     elif pipeline_type == 'audio':
        pipeline = audio.create_pipeline(metric)
     elif pipeline_type == 'collaborative_filtering':
-        pipeline = collaborative_filtering.create_pipeline(metric)
+        if gpu:
+            pipeline = collaborative_filtering.create_pipeline(metric)
+        else:
+            pipeline = tabular.create_pipeline(metric)
     elif pipeline_type == 'vertex_nomination':
         pipeline = vertex_nomination.create_pipeline(metric)
     elif pipeline_type == 'vertex_classification':
