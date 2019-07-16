@@ -1,10 +1,12 @@
 import json
 import logging
 from typing import Tuple, Optional
+import GPUtil
 
 from d3m.container import dataset
 from d3m import container, exceptions, runtime
 from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
+from d3m.metadata.pipeline import Pipeline
 
 from distil.modeling import metrics
 from processing import router
@@ -28,6 +30,7 @@ from processing.pipelines import (clustering,
                                   timeseries_forecasting,
                                   timeseries_kanine,
                                   timeseries_var,
+                                  timeseries_lstm_fcn,
                                   semisupervised_tabular)
 
 
@@ -37,7 +40,11 @@ logger = logging.getLogger(__name__)
 
 
 def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None) -> Tuple[pipeline.Pipeline, container.Dataset]:
-     # Load dataset in the same way the d3m runtime will
+
+    # allow for use of GPU optimized pipelines 
+    gpu = _use_gpu()
+        
+    # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
 
     # Load the dataset doc itself
@@ -54,14 +61,21 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
 
     pipeline_type = pipeline_type.lower()
 
+    pipeline: Pipeline = None
     if pipeline_type == 'table':
         pipeline = tabular.create_pipeline(metric)
     elif pipeline_type == 'graph_matching':
         pipeline = graph_matching.create_pipeline(metric)
     elif pipeline_type == 'timeseries_classification':
-        pipeline = timeseries_kanine.create_pipeline(metric)
+        if gpu:
+            pipeline = timeseries_lstm_fcn.create_pipeline(metric)
+        else:
+            pipeline = timeseries_kanine.create_pipeline(metric)
     elif pipeline_type == 'question_answering':
-        pipeline = question_answer.create_pipeline(metric)
+        if gpu:
+            pipeline = question_answer.create_pipeline(metric)
+        else:
+            pipeline = tabular.create_pipeline(metric)
     elif pipeline_type == 'text':
         pipeline = text.create_pipeline(metric)
     elif pipeline_type == 'image':
@@ -71,7 +85,10 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     elif pipeline_type == 'audio':
        pipeline = audio.create_pipeline(metric)
     elif pipeline_type == 'collaborative_filtering':
-        pipeline = collaborative_filtering.create_pipeline(metric)
+        if gpu:
+            pipeline = collaborative_filtering.create_pipeline(metric)
+        else:
+            pipeline = tabular.create_pipeline(metric)
     elif pipeline_type == 'vertex_nomination':
         pipeline = vertex_nomination.create_pipeline(metric)
     elif pipeline_type == 'vertex_classification':
@@ -150,3 +167,20 @@ def _prepend_pipeline(base: pipeline.Pipeline, prepend: pipeline.Pipeline) -> pi
 
     logger.warn(f'Failed to prepend pipeline {prepend.id} - continuing with base unmodified')
     return base
+
+def _use_gpu() -> bool:
+    # check for gpu presence - exception can be thrown when none available depending on 
+    # system config
+    use_gpu = False
+    try:
+        gpus = GPUtil.getGPUs()
+        logger.info(f'{len(gpus)} GPUs detected')
+        if (config.GPU == 'auto' or config.GPU == 'true') and len(gpus > 0):            
+            use_gpu = True
+        else:
+            use_gpu = False
+    except Exception as error:
+            use_gpu = False
+    logger.info(f'GPU enabled pipelines {use_gpu}')
+    return use_gpu
+    

@@ -38,6 +38,7 @@ PIPE_TO_DATASET = {
     'vertex_nomination': ('LL1_net_nomination_seed', 'accuracy', {}),
     'vertex_classification': ('LL1_VTXC_1369_synthetic', 'f1Macro', {}),
     'semisupervised_tabular': ('SEMI_1040_sylva_prior', 'f1Macro', {}),
+    'timeseries_lstm_fcn': ('LL1_50words', 'f1Macro', {})
 }
 
 # Skeleton of .meta data

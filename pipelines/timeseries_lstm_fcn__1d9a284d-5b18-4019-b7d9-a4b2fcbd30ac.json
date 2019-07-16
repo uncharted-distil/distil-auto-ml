@@ -1,0 +1,75 @@
+{
+    "id": "1d9a284d-5b18-4019-b7d9-a4b2fcbd30ac",
+    "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
+    "created": "2019-07-16T19:32:18.269125Z",
+    "inputs": [
+        {
+            "name": "inputs"
+        }
+    ],
+    "outputs": [
+        {
+            "data": "steps.1.produce",
+            "name": "output"
+        }
+    ],
+    "steps": [
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "f31f8c1f-d1c5-43e5-a4b2-2ae4a761ef2e",
+                "version": "0.2.0",
+                "python_path": "d3m.primitives.data_transformation.denormalize.Common",
+                "name": "Denormalize datasets",
+                "digest": "403408c15167e7ad63817089cb91c222ce1b34d8f3ea3939b522d45ec3db0755"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "inputs.0"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "a55cef3a-a7a9-411e-9dde-5c935ff3504b",
+                "version": "1.0.0",
+                "python_path": "d3m.primitives.time_series_classification.convolutional_neural_net.LSTM_FCN",
+                "name": "lstm_fcn",
+                "digest": "95faac47ab0b0c401ca774e23cd35250905dd7c7433723bb5c47f7ba13143427"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce"
+                },
+                "outputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "attention_lstm": {
+                    "type": "VALUE",
+                    "data": false
+                },
+                "lstm_cells": {
+                    "type": "VALUE",
+                    "data": 64
+                }
+            }
+        }
+    ],
+    "digest": "d55be5042725d0f2ac1873dfcd41b126b4426ada48cd1981bb4464186292643c"
+}
