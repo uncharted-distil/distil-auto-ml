@@ -131,9 +131,14 @@ class Messaging:
         return core_pb2.FitSolutionResponse(
             request_id=request_id)
 
-    def make_get_fit_solution_results_response(self, fitted_solution_id, progess_msg):
-        resp = core_pb2.GetFitSolutionResultsResponse(fitted_solution_id=fitted_solution_id,
-                                                      progress=progess_msg)
+    def make_get_fit_solution_results_response(self, preds_path, output_key, fit_solution_id, progress_msg):
+        # make a proper URI with file:// prefix
+        csv_uri = pathlib.Path(preds_path).absolute().as_uri()
+        val = value_pb2.Value(csv_uri=csv_uri)
+        resp = core_pb2.GetFitSolutionResultsResponse(
+            fitted_solution_id=fit_solution_id,
+            progress=progress_msg,
+            exposed_outputs={output_key: val})
         return resp
 
     def get_output_key(self, message):
