@@ -1,14 +1,18 @@
 import json
 import logging
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 import GPUtil
 
 from d3m.container import dataset
 from d3m import container, exceptions, runtime
+from d3m.base import utils as base_utils
 from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 from d3m.metadata.pipeline import Pipeline
 
 from distil.modeling import metrics
+from distil.primitives import utils as distil_utils
+from distil.primitives.utils import CATEGORICALS
+
 from processing import router
 
 import config
@@ -20,6 +24,7 @@ from processing.pipelines import (clustering,
                                   object_detection,
                                   question_answer,
                                   tabular,
+                                  tabular_no_one_hot,
                                   text,
                                   link_prediction,
                                   audio,
@@ -63,7 +68,11 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
 
     pipeline: Pipeline = None
     if pipeline_type == 'table':
-        pipeline = tabular.create_pipeline(metric)
+        include_one_hot = _include_one_hot(train_dataset, 16)
+        if include_one_hot:
+            pipeline = tabular.create_pipeline(metric)
+        else:
+            pipeline = tabular_no_one_hot.create_pipeline(metric) # has its own wrapper so pipeline can be exported separately
     elif pipeline_type == 'graph_matching':
         pipeline = graph_matching.create_pipeline(metric)
     elif pipeline_type == 'timeseries_classification':
@@ -184,3 +193,25 @@ def _use_gpu() -> bool:
     logger.info(f'GPU enabled pipelines {use_gpu}')
     return use_gpu
     
+def _include_one_hot(inputs: container.Dataset, max_one_hot: int) -> bool:
+    # CDB: EVAL ONLY WORKAROUND
+    # Our one hot encoder fails when there are categorical values present but one are below
+    # the encoding threshold, and the SKLearnWrap one hot encoder fails in any case that you
+    # pass it a dataframe with no categorical columns for it to encode.  The MS Geolife dataset
+    # has categorical columns that are all binary encoded so the pipeline fails to work in that case.
+    # Since primitives are frozen for the eval, the only thing we can do is threshold check the categoricals
+    # remove the categorical primitive if none pass.
+    
+    # fetch the default resource
+    dataframe_resource_id, dataframe = base_utils.get_tabular_resource(inputs, None)
+    
+    # check to see if there are any encodable columsn that will be below the one hot threshold
+    cols = distil_utils.get_operating_columns(dataframe, [], CATEGORICALS)
+    filtered_cols: List[int] = []
+    for c in cols:
+        num_labels = len(set(dataframe.iloc[:,c]))
+        if num_labels <= max_one_hot:
+            logger.debug(f'Found columns to one-hot encode')
+            return True
+    logger.debug(f'No columns to one-hot encode')
+    return False

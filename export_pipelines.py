@@ -18,6 +18,7 @@ META_DIR = 'pipelines'
 # and metric for pipeline config
 PIPE_TO_DATASET = {
     'tabular': ('185_baseball', 'f1Macro', {}),
+    'tabular_no_one_hot': ('LL1_336_MS_Geolife_transport_mode_prediction_separate_lat_lon', 'f1Macro', {}),
     'audio': ('31_urbansound', 'accuracy', {}),
     'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', {
         'num_clusters': 100,
