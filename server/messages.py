@@ -111,7 +111,8 @@ class Messaging:
 
     def make_hello_response_message(self):
         return core_pb2.HelloResponse(
-            user_agent=config.SERVER_USER_AGENT)
+            user_agent=config.SERVER_USER_AGENT,
+            version=core_pb2.DESCRIPTOR.GetOptions().Extensions[core_pb2.protocol_version])
 
     def get_solution_id(self, message):
         return message.solution_id
