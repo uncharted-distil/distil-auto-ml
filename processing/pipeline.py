@@ -183,8 +183,8 @@ def _use_gpu() -> bool:
     use_gpu = False
     try:
         gpus = GPUtil.getGPUs()
-        logger.info(f'{len(gpus)} GPUs detected')
-        if (config.GPU == 'auto' or config.GPU == 'true') and len(gpus > 0):            
+        logger.info(f'{len(gpus)} GPUs detected.  Requested GPU use is [{config.GPU}].')
+        if (config.GPU == 'auto' or config.GPU == 'true') and len(gpus) > 0:            
             use_gpu = True
         else:
             use_gpu = False
@@ -203,15 +203,22 @@ def _include_one_hot(inputs: container.Dataset, max_one_hot: int) -> bool:
     # remove the categorical primitive if none pass.
     
     # fetch the default resource
-    dataframe_resource_id, dataframe = base_utils.get_tabular_resource(inputs, None)
+    resource_id, dataframe = base_utils.get_tabular_resource(inputs, None)
     
-    # check to see if there are any encodable columsn that will be below the one hot threshold
-    cols = distil_utils.get_operating_columns(dataframe, [], CATEGORICALS)
-    filtered_cols: List[int] = []
-    for c in cols:
-        num_labels = len(set(dataframe.iloc[:,c]))
-        if num_labels <= max_one_hot:
-            logger.debug(f'Found columns to one-hot encode')
-            return True
+    # check to see if there are any encodable columns that will be below the one hot threshold - encodable is an attribute
+    # of a categorical type
+    type_set = set(CATEGORICALS)
+    for column_index in range(len(dataframe.columns)):
+        column_semantic_types = inputs.metadata.query((resource_id, metadata_base.ALL_ELEMENTS, column_index)).get('semantic_types', ())
+        logger.debug(f'col {dataframe.columns[column_index]} semantic types: {column_semantic_types}')
+        # verify that we have an attribute
+        is_attribute = 'https://metadata.datadrivendiscovery.org/types/Attribute' in column_semantic_types
+        is_categorical = len(set(CATEGORICALS) & set(column_semantic_types)) > 0
+        is_target = 'https://metadata.datadrivendiscovery.org/types/SuggestedTarget' in column_semantic_types
+        if is_attribute and is_categorical and not is_target:
+            num_labels = len(set(dataframe.iloc[:,column_index]))                
+            if num_labels <= max_one_hot:
+                logger.debug(f'Found columns to one-hot encode')
+                return True
     logger.debug(f'No columns to one-hot encode')
     return False
