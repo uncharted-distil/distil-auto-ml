@@ -34,7 +34,8 @@ PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1
 def create_pipeline(metric: str,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
-                    scale: bool = False) -> Pipeline:
+                    scale: bool = False,
+                    include_one_hot = True) -> Pipeline:
     input_val = 'steps.{}.produce'
 
 
@@ -109,7 +110,7 @@ def create_pipeline(metric: str,
     previous_step += 1
 
     # Adds a one hot encoder for categoricals of low cardinality.
-    if cat_mode == 'one_hot':
+    if cat_mode == 'one_hot' and include_one_hot:
         step = PrimitiveStep(primitive_description=OneHotEncoderPrimitive.metadata.query())
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
         step.add_output('produce')

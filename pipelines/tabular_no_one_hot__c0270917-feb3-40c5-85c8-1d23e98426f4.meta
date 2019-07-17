@@ -1,0 +1,15 @@
+{
+    "problem": "LL1_336_MS_Geolife_transport_mode_prediction_separate_lat_lon_problem",
+    "full_inputs": [
+        "LL1_336_MS_Geolife_transport_mode_prediction_separate_lat_lon_dataset"
+    ],
+    "train_inputs": [
+        "LL1_336_MS_Geolife_transport_mode_prediction_separate_lat_lon_dataset_TRAIN"
+    ],
+    "test_inputs": [
+        "LL1_336_MS_Geolife_transport_mode_prediction_separate_lat_lon_dataset_TEST"
+    ],
+    "score_inputs": [
+        "LL1_336_MS_Geolife_transport_mode_prediction_separate_lat_lon_dataset_SCORE"
+    ]
+}
