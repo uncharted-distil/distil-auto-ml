@@ -110,9 +110,13 @@ class Messaging:
         return score
 
     def make_hello_response_message(self):
-        return core_pb2.HelloResponse(
+        resp = core_pb2.HelloResponse(
             user_agent=config.SERVER_USER_AGENT,
             version=core_pb2.DESCRIPTOR.GetOptions().Extensions[core_pb2.protocol_version])
+        resp.allowed_value_types.append(value_pb2.RAW)
+        resp.allowed_value_types.append(value_pb2.DATASET_URI)
+        resp.allowed_value_types.append(value_pb2.CSV_URI)
+        return resp
 
     def get_solution_id(self, message):
         return message.solution_id
