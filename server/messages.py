@@ -5,7 +5,9 @@ import config
 
 from api import core_pb2, problem_pb2, value_pb2, pipeline_pb2, primitive_pb2, utils
 
+from d3m import index
 from d3m.metadata import pipeline
+
 
 class Messaging:
 
@@ -110,9 +112,13 @@ class Messaging:
         return score
 
     def make_hello_response_message(self):
-        return core_pb2.HelloResponse(
+        resp = core_pb2.HelloResponse(
             user_agent=config.SERVER_USER_AGENT,
             version=core_pb2.DESCRIPTOR.GetOptions().Extensions[core_pb2.protocol_version])
+        resp.allowed_value_types.append(value_pb2.RAW)
+        resp.allowed_value_types.append(value_pb2.DATASET_URI)
+        resp.allowed_value_types.append(value_pb2.CSV_URI)
+        return resp
 
     def get_solution_id(self, message):
         return message.solution_id
@@ -127,9 +133,14 @@ class Messaging:
         return core_pb2.FitSolutionResponse(
             request_id=request_id)
 
-    def make_get_fit_solution_results_response(self, fitted_solution_id, progess_msg):
-        resp = core_pb2.GetFitSolutionResultsResponse(fitted_solution_id=fitted_solution_id,
-                                                      progress=progess_msg)
+    def make_get_fit_solution_results_response(self, preds_path, output_key, fit_solution_id, progress_msg):
+        # make a proper URI with file:// prefix
+        csv_uri = pathlib.Path(preds_path).absolute().as_uri()
+        val = value_pb2.Value(csv_uri=csv_uri)
+        resp = core_pb2.GetFitSolutionResultsResponse(
+            fitted_solution_id=fit_solution_id,
+            progress=progress_msg,
+            exposed_outputs={output_key: val})
         return resp
 
     def get_output_key(self, message):
@@ -209,4 +220,14 @@ class Messaging:
 
     def get_rank(self, msg):
         return msg.rank
+    def make_list_primitives_response(self):
+        resp = core_pb2.ListPrimitivesResponse()
+        primitives = [ primitive_pb2.Primitive(
+            id=prim_data.metadata["id"],
+            version=prim_data.metadata["version"],
+            python_path=prim_data.metadata["python_path"],
+            name=prim_data.metadata["name"],
+            digest=prim_data.metadata["digest"]) for prim_data in index.get_loaded_primitives()]
+        resp.primitives.extend(primitives)
+        return resp
 
