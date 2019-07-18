@@ -67,7 +67,6 @@ class Requests(Base):
         DateTime,
         default=datetime.datetime.utcnow)
     internal_score = Column(Float)
-    output_key = Column(String)
 
 class FitSolution(Base):
     __tablename__ = 'fit_solution'

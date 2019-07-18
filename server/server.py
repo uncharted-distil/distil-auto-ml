@@ -141,8 +141,8 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
         context.abort(grpc.StatusCode.UNIMPLEMENTED, self.UNIMPLEMENTED_MSG)
 
     def ListPrimitives(self, request, context):
-        self.logger.debug("ListPrimitives: {}".format(request))
-        return self.msg.make_list_primitives_response()
+        # TODO
+        context.abort(grpc.StatusCode.UNIMPLEMENTED, self.UNIMPLEMENTED_MSG)
 
     def Hello(self, request, context):
         return self.msg.make_hello_response_message()
