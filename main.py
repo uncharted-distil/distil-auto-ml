@@ -34,11 +34,6 @@ QUATTO_LIVES = {}
 # Configure output dir
 pathlib.Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
-def save_job(runtime, task_id):
-    filepath = utils.make_job_fn(task_id)
-    with open(filepath, 'wb') as f:
-        pickle.dump(runtime, f)
-
 def produce_task(logger, session, task):
     try:
         logger.info('Starting produce task ID {}'.format(task.id))
@@ -133,7 +128,6 @@ def exline_task(logger, session, task):
         save_me = {'pipeline': fitted_pipeline, 'target_name': target_name}
 
         QUATTO_LIVES[task.id] = save_me
-        save_job(save_me, task.id)
         task.pipeline = pipeline_json
         task.pipeline_run = pipeline_run_yaml
 
