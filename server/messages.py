@@ -5,7 +5,9 @@ import config
 
 from api import core_pb2, problem_pb2, value_pb2, pipeline_pb2, primitive_pb2, utils
 
+from d3m import index
 from d3m.metadata import pipeline
+
 
 class Messaging:
 
@@ -225,4 +227,14 @@ class Messaging:
 
     def get_rank(self, msg):
         return msg.rank
+    def make_list_primitives_response(self):
+        resp = core_pb2.ListPrimitivesResponse()
+        primitives = [ primitive_pb2.Primitive(
+            id=prim_data.metadata["id"],
+            version=prim_data.metadata["version"],
+            python_path=prim_data.metadata["python_path"],
+            name=prim_data.metadata["name"],
+            digest=prim_data.metadata["digest"]) for prim_data in index.get_loaded_primitives()]
+        resp.primitives.extend(primitives)
+        return resp
 
