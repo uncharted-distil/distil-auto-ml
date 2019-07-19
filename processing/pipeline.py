@@ -101,10 +101,9 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     elif pipeline_type == 'vertex_nomination':
         pipeline = vertex_nomination.create_pipeline(metric)
     elif pipeline_type == 'vertex_classification':
-        if (pipeline_info['edgelist']):
-            pipeline = vertex_classification.create_pipeline(metric)
-        else: 
-            pipeline = vertex_nomination.create_pipeline(metric)
+        # force using vertex classification 
+        # TODO - should determine the graph data format 
+        pipeline = vertex_classification.create_pipeline(metric)
     elif pipeline_type == 'link_prediction':
         pipeline = link_prediction.create_pipeline(metric)
     elif pipeline_type == 'community_detection':
