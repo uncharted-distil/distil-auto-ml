@@ -36,8 +36,8 @@ from processing.pipelines import (clustering,
                                   timeseries_kanine,
                                   timeseries_var,
                                   timeseries_lstm_fcn,
-                                  semisupervised_tabular)
-
+                                  semisupervised_tabular,
+                                  data_augmentation_tabular)
 
 import utils
 
@@ -119,6 +119,8 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
         pipeline = tabular.create_pipeline(metric)
     elif pipeline_type == 'semisupervised_tabular':
         pipeline = semisupervised_tabular.create_pipeline(metric)
+    elif pipeline_type == 'data_augmentation_tabular':
+        pipeline =    data_augmentation_tabular.create_pipeline(metric)
     else:
         logger.error(f'Pipeline type [{pipeline_type}] is not yet supported.')
         return None, train_dataset

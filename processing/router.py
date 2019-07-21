@@ -98,6 +98,9 @@ def is_semisupervised_tabular(problem: dict) -> bool:
     return problem['problem']['task_type'] == _problem.TaskType.SEMISUPERVISED_CLASSIFICATION or \
         problem['problem']['task_type'] == _problem.TaskType.SEMISUPERVISED_REGRESSION
 
+def is_data_augmentation(problem: dict) -> bool:
+    # TODO - how to determine this is a data augmentation problem?
+    return False
 # --
 # Routing
 
