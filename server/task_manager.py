@@ -4,6 +4,7 @@ protobuf messages and DAG tasks for the worker.
 """
 import json
 import logging
+import time
 from sqlalchemy import exists, and_
 
 import config
@@ -35,6 +36,7 @@ class TaskManager():
         return _id
 
     def SearchSolutions(self, message):
+
         """Get potential pipelines and load into DB."""
         # Validate request is in required format, extract if it is
         dataset_uri, _ = self.validator.validate_search_solutions_request(message)
@@ -68,12 +70,6 @@ class TaskManager():
         self.session.commit()
         return search_id
 
-    def _is_search_ended(self, search_id):
-        unended_validate_tasks = self.session.query(models.Tasks) \
-                                               .filter(models.Tasks.search_id==str(search_id)) \
-                                               .filter(models.Tasks.type=="VALIDATE") \
-                                               .filter(models.Tasks.ended==False) \
-                                               .all()
         return not unended_validate_tasks
 
     def GetSearchSolutionsResults(self, request):
@@ -84,20 +80,17 @@ class TaskManager():
         search_id = self.validator.validate_get_search_solutions_results_request(request, self.session)
         seen_ids = []
 
-        # Verifies successful 'tasks' one by one
+        start = time.time()
         while True:
             task = self.session.query(models.Tasks) \
                                .filter(models.Tasks.search_id==str(search_id)) \
                                .filter(models.Tasks.type=="EXLINE") \
-                               .filter(models.Tasks.ended==True) \
                                .filter(models.Tasks.error==False) \
-                               .filter(~models.Tasks.id.in_(seen_ids)) \
                                .first()
 
             if task:
                 self.session.refresh(task)
                 # Add id to seen_ids so don't return again
-                seen_ids.append(task.id)
                 # Check if Solution already exists
                 solution = self.session.query(models.Solutions) \
                                        .filter(models.Solutions.search_id==search_id) \
@@ -106,7 +99,6 @@ class TaskManager():
                 # Generate ValidSolution row if has not
                 # been previously verified
                 if not solution:
-
                     # Link the task to the solution
                     solution_id = task.id
 
@@ -119,8 +111,7 @@ class TaskManager():
                 # End session
                 self.session.commit()
 
-                search_ended = self._is_search_ended(search_id)
-                if search_ended:
+                if task.ended:
                     # Make the Fit solution message here
                     fit_solution_id = self._generate_id()
                     fit_solution = models.FitSolution(
@@ -133,10 +124,13 @@ class TaskManager():
                     progress_msg = self.msg.make_progress_msg(progress)
                     yield self.msg.make_get_search_solutions_result(solution_id, progress_msg)
                     break
-                if not search_ended:
-                    progress = "RUNNING"
-                    progress_msg = self.msg.make_progress_msg(progress)
-                    yield self.msg.make_get_search_solutions_result(solution_id, progress_msg)
+                else:
+                    if time.time() - start > config.PROGRESS_INTERVAL:
+                        start = time.time()
+                        progress_msg = self.msg.make_progress_msg("RUNNING")
+                        yield self.msg.make_get_search_solutions_result(None, progress_msg)
+                    else:
+                        yield False
             else:
                 yield False
 

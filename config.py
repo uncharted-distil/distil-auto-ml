@@ -24,3 +24,6 @@ D3MSTATICDIR = os.getenv("D3MSTATICDIR", '/static')
 
 # Enable GPU pipelines - "auto" will try to detect, "true" and "false" will force
 GPU = os.getenv("GPU", "auto")
+
+# Solution serach progress update message interval in seconds
+PROGRESS_INTERVAL = os.getenv("PROGRESS_INTERVAL", 10.0)

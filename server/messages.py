@@ -25,11 +25,12 @@ class Messaging:
         return msg.search_id
 
     def make_get_search_solutions_result(self, solution_id, progess_msg):
-        m = core_pb2.GetSearchSolutionsResultsResponse(
-            solution_id=solution_id,
-            progress=progess_msg,
-            internal_score=0.0,
-            scores = [core_pb2.SolutionSearchScore(
+
+        # if no solutin_id is set this is just a progress message and doesn't need
+        # score info
+        scores = []
+        if solution_id is not None:
+           [core_pb2.SolutionSearchScore(
                 scoring_configuration=core_pb2.ScoringConfiguration(
                     method=core_pb2.RANKING
                 ),
@@ -44,6 +45,12 @@ class Messaging:
                     )
                 )]
             )]
+
+        m = core_pb2.GetSearchSolutionsResultsResponse(
+            solution_id=solution_id,
+            progress=progess_msg,
+            internal_score=0.0,
+            scores = scores
         )
         return m
 
