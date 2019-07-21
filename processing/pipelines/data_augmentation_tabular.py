@@ -13,7 +13,6 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from distil.primitives.output_dataframe import OutputDataframePrimitive
 from distil.primitives.categorical_imputer import CategoricalImputerPrimitive
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.replace_singletons import ReplaceSingletonsPrimitive
