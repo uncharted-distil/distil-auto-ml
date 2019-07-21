@@ -154,6 +154,9 @@ class Scorer:
             score = metrics.jaccard_similarity_score(true, preds)
         elif metric == 'normalized_mutual_information':
             score = metrics.normalized_mutual_info_score(true, preds)
+        elif metric == 'object_detection_average_precision':
+            self.logger.warning(f'{metric} metric unsuppported - returning 0')
+            score = 0.0
         else:
             raise ValueError('Cannot score metric {}'.format(metric))
         return score
