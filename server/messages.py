@@ -30,7 +30,7 @@ class Messaging:
         # score info
         scores = []
         if solution_id is not None:
-           [core_pb2.SolutionSearchScore(
+           scores = [core_pb2.SolutionSearchScore(
                 scoring_configuration=core_pb2.ScoringConfiguration(
                     method=core_pb2.RANKING
                 ),
