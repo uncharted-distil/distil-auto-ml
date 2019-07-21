@@ -65,8 +65,10 @@ def is_question_answering(dataset_doc: dict) -> bool:
 def is_audio(dataset_doc: dict) -> bool:
     return 'audio' in get_resource_types(dataset_doc)
 
-def is_image(dataset_doc: dict) -> bool:
-    return 'image' in get_resource_types(dataset_doc)
+def is_image(dataset_doc: dict, problem: dict) -> bool:
+    classification = problem['problem']['task_type'] == _problem.TaskType.CLASSIFICATION
+    regression = problem['problem']['task_type'] == _problem.TaskType.REGRESSION
+    return 'image' in get_resource_types(dataset_doc) and (classification or regression)
 
 def is_object_detection(problem: dict) -> bool:
    return problem['problem']['task_type'] == _problem.TaskType.OBJECT_DETECTION
@@ -148,7 +150,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
     elif is_text(dataset_doc):
         return 'text', {}
 
-    elif is_image(dataset_doc):
+    elif is_image(dataset_doc, problem):
         return 'image', {}
 
     elif is_object_detection(problem):
