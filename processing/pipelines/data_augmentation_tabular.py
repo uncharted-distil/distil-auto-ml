@@ -40,6 +40,8 @@ from sklearn_wrap import SKMissingIndicator
 from sklearn_wrap import SKImputer
 from sklearn_wrap import SKStandardScaler
 
+logger = logging.getLogger(__name__)
+
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
@@ -48,7 +50,8 @@ def create_pipeline(metric: str,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False,
-                    keywords: str = '') -> Pipeline:
+                    keywords: dict = '',
+                    dataset_path: str = None) -> Pipeline:
     input_val = 'steps.{}.produce'
 
     # create the basic pipeline
@@ -58,10 +61,9 @@ def create_pipeline(metric: str,
     # Search NYU DataMart
     URL = os.environ['DATAMART_URL_NYU'] + '/search'
 
-    # TODO pull the dataset path from the runtime - TESTING ONLY!!!
-    data = '/Users/slangevin/Development/uncharted/d3m/datasets/DA_ny_taxi_demand/' + 'DA_ny_taxi_demand_dataset/tables/learningData.csv'
-
-    with open(data, 'rb') as data_p:
+    csv_path = os.path.dirname(dataset_path)
+    csv_path = os.path.join(csv_path, 'tables', 'learningData.csv')
+    with open(csv_path, 'rb') as data_p:
         response = requests.post(
             URL,
             files={
@@ -70,23 +72,31 @@ def create_pipeline(metric: str,
         )
     response.raise_for_status()
     query_results = response.json()['results']
-
-    # Augment dataset - currently just picks the first query result
-    # TODO add in the keywords from the problem spec
-    step = PrimitiveStep(primitive_description=DataMartAugmentPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
-    step.add_output('produce')
-    step.add_hyperparameter('system_identifier', ArgumentType.VALUE, "NYU")
-    step.add_hyperparameter('search_result', ArgumentType.VALUE, json.dumps(query_results[0]))
-    tabular_pipeline.add_step(step)
     previous_step = 0
+    include_aug = len(query_results) > 0
+    if include_aug:
+        # Augment dataset - currently just picks the first query result
+        # TODO add in the keywords from the problem spec
+        step = PrimitiveStep(primitive_description=DataMartAugmentPrimitive.metadata.query())
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
+        step.add_output('produce')
+        step.add_hyperparameter('system_identifier', ArgumentType.VALUE, "NYU")
+        step.add_hyperparameter('search_result', ArgumentType.VALUE, json.dumps(query_results[0]))
+        tabular_pipeline.add_step(step)
+    else:
+        logger.warn("Datamart did not return result for input dataset - proceeding with baseline dataset")
 
     # Denormalize
+    data_ref = ""
+    if include_aug:
+        data_ref = input_val.format(previous_step)
+        previous_step += 1
+    else:
+        data_ref = 'inputs.0'
     step = PrimitiveStep(primitive_description=DenormalizePrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=data_ref)
     step.add_output('produce')
     tabular_pipeline.add_step(step)
-    previous_step += 1
 
     # # TESTING - sample the dataset - speed up testing
     # step = PrimitiveStep(primitive_description=DatasetSamplePrimitive.metadata.query())
@@ -103,18 +113,7 @@ def create_pipeline(metric: str,
     tabular_pipeline.add_step(step)
     previous_step += 1
 
-    # Parse columns.
-    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_output('produce')
-    semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
-                      'https://metadata.datadrivendiscovery.org/types/FloatVector')
-    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)    
-    tabular_pipeline.add_step(step)
-    previous_step += 1
-    parse_step = previous_step
-
-     # replace text fields to categorical
+    # replace text fields to categorical
     step = PrimitiveStep(primitive_description=ReplaceSemanticTypesPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
@@ -124,6 +123,17 @@ def create_pipeline(metric: str,
     step.add_hyperparameter('to_semantic_types', ArgumentType.VALUE, to_types)
     tabular_pipeline.add_step(step)
     previous_step += 1
+
+    # Parse columns.
+    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
+                      'https://metadata.datadrivendiscovery.org/types/FloatVector')
+    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
+    tabular_pipeline.add_step(step)
+    previous_step += 1
+    parse_step = previous_step
 
     # Extract attributes
     step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
@@ -165,41 +175,41 @@ def create_pipeline(metric: str,
     tabular_pipeline.add_step(step)
     previous_step += 1
 
-    # # Adds an svm text encoder for text fields.
-    # step = PrimitiveStep(primitive_description=TextEncoderPrimitive.metadata.query())
-    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    # step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
-    # step.add_output('produce')
-    # tabular_pipeline.add_step(step)
-    # previous_step += 1
+    # Adds an svm text encoder for text fields.
+    step = PrimitiveStep(primitive_description=TextEncoderPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
+    step.add_output('produce')
+    tabular_pipeline.add_step(step)
+    previous_step += 1
 
-    # # Adds a one hot encoder for categoricals of low cardinality.
-    # if cat_mode == 'one_hot':
-    #     step = PrimitiveStep(primitive_description=OneHotEncoderPrimitive.metadata.query())
-    #     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    #     step.add_output('produce')
-    #     step.add_hyperparameter('max_one_hot', ArgumentType.VALUE, max_one_hot)
-    #     tabular_pipeline.add_step(step)
-    #     previous_step += 1
-    
+    # Adds a one hot encoder for categoricals of low cardinality.
+    if cat_mode == 'one_hot':
+        step = PrimitiveStep(primitive_description=OneHotEncoderPrimitive.metadata.query())
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+        step.add_output('produce')
+        step.add_hyperparameter('max_one_hot', ArgumentType.VALUE, max_one_hot)
+        tabular_pipeline.add_step(step)
+        previous_step += 1
+
     # Adds a binary encoder for categoricals of high cardinality.
     step = PrimitiveStep(primitive_description=BinaryEncoderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
-    step.add_hyperparameter('min_binary', ArgumentType.VALUE, 0)
+    step.add_hyperparameter('min_binary', ArgumentType.VALUE, max_one_hot)
     tabular_pipeline.add_step(step)
     previous_step += 1
 
-    # # Adds SK learn missing value indicator
-    # step = PrimitiveStep(primitive_description=SKMissingIndicator.SKMissingIndicator.metadata.query())
-    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    # step.add_output('produce')
-    # step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, False)
-    # step.add_hyperparameter('return_result', ArgumentType.VALUE, 'append')
-    # step.add_hyperparameter('error_on_new', ArgumentType.VALUE, False)
-    # step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
-    # tabular_pipeline.add_step(step)
-    # previous_step += 1
+    # Adds SK learn missing value indicator
+    step = PrimitiveStep(primitive_description=SKMissingIndicator.SKMissingIndicator.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, False)
+    step.add_hyperparameter('return_result', ArgumentType.VALUE, 'append')
+    step.add_hyperparameter('error_on_new', ArgumentType.VALUE, False)
+    step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
+    tabular_pipeline.add_step(step)
+    previous_step += 1
 
     # Adds SK learn simple imputer
     step = PrimitiveStep(primitive_description=SKImputer.SKImputer.metadata.query())
