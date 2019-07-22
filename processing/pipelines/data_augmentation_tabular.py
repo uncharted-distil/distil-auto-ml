@@ -50,7 +50,7 @@ def create_pipeline(metric: str,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False,
-                    keywords: dict = '',
+                    keywords: list = [],
                     dataset_path: str = None) -> Pipeline:
     input_val = 'steps.{}.produce'
 
@@ -63,20 +63,25 @@ def create_pipeline(metric: str,
 
     csv_path = os.path.dirname(dataset_path)
     csv_path = os.path.join(csv_path, 'tables', 'learningData.csv')
+
+    query = { 'keywords': keywords }
+
     with open(csv_path, 'rb') as data_p:
         response = requests.post(
             URL,
             files={
                 'data': data_p,
+                'query': ('query.json', json.dumps(query), 'application/json')
             }
         )
     response.raise_for_status()
     query_results = response.json()['results']
+
+
     previous_step = 0
     include_aug = len(query_results) > 0
     if include_aug:
         # Augment dataset - currently just picks the first query result
-        # TODO add in the keywords from the problem spec
         step = PrimitiveStep(primitive_description=DataMartAugmentPrimitive.metadata.query())
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
         step.add_output('produce')
@@ -169,11 +174,11 @@ def create_pipeline(metric: str,
     previous_step += 1
 
     # Append categorical imputer.  Finds missing categorical values and replaces them with an imputed value.
-    step = PrimitiveStep(primitive_description=CategoricalImputerPrimitive.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_output('produce')
-    tabular_pipeline.add_step(step)
-    previous_step += 1
+    # step = PrimitiveStep(primitive_description=CategoricalImputerPrimitive.metadata.query())
+    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    # step.add_output('produce')
+    # tabular_pipeline.add_step(step)
+    # previous_step += 1
 
     # Adds an svm text encoder for text fields.
     step = PrimitiveStep(primitive_description=TextEncoderPrimitive.metadata.query())

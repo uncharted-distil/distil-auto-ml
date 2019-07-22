@@ -120,7 +120,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     elif pipeline_type == 'semisupervised_tabular':
         pipeline = semisupervised_tabular.create_pipeline(metric)
     elif pipeline_type == 'data_augmentation_tabular':
-        keywords = pipeline_info[0]['domain'] + pipeline_info[0]['keywords']
+        keywords = pipeline_info[0]['keywords']
         pipeline = data_augmentation_tabular.create_pipeline(metric, dataset_path=modified_path, keywords=keywords)
     else:
         logger.error(f'Pipeline type [{pipeline_type}] is not yet supported.')
