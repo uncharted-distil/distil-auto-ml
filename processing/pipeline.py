@@ -9,7 +9,7 @@ from d3m.base import utils as base_utils
 from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 from d3m.metadata.pipeline import Pipeline
 
-from distil.modeling import metrics
+from processing import metrics
 from distil.primitives import utils as distil_utils
 from distil.primitives.utils import CATEGORICALS
 
