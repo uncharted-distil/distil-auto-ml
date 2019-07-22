@@ -46,9 +46,9 @@ logger = logging.getLogger(__name__)
 
 def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None) -> Tuple[pipeline.Pipeline, container.Dataset]:
 
-    # allow for use of GPU optimized pipelines 
+    # allow for use of GPU optimized pipelines
     gpu = _use_gpu()
-        
+
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
 
@@ -101,8 +101,8 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     elif pipeline_type == 'vertex_nomination':
         pipeline = vertex_nomination.create_pipeline(metric)
     elif pipeline_type == 'vertex_classification':
-        # force using vertex classification 
-        # TODO - should determine the graph data format 
+        # force using vertex classification
+        # TODO - should determine the graph data format
         pipeline = vertex_classification.create_pipeline(metric)
     elif pipeline_type == 'link_prediction':
         pipeline = link_prediction.create_pipeline(metric)
@@ -120,7 +120,8 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     elif pipeline_type == 'semisupervised_tabular':
         pipeline = semisupervised_tabular.create_pipeline(metric)
     elif pipeline_type == 'data_augmentation_tabular':
-        pipeline =    data_augmentation_tabular.create_pipeline(metric)
+        keywords = pipeline_info[0]['domain'] + pipeline_info[0]['keywords']
+        pipeline = data_augmentation_tabular.create_pipeline(metric, dataset_path=modified_path, keywords=keywords)
     else:
         logger.error(f'Pipeline type [{pipeline_type}] is not yet supported.')
         return None, train_dataset
@@ -179,13 +180,13 @@ def _prepend_pipeline(base: pipeline.Pipeline, prepend: pipeline.Pipeline) -> pi
     return base
 
 def _use_gpu() -> bool:
-    # check for gpu presence - exception can be thrown when none available depending on 
+    # check for gpu presence - exception can be thrown when none available depending on
     # system config
     use_gpu = False
     try:
         gpus = GPUtil.getGPUs()
         logger.info(f'{len(gpus)} GPUs detected.  Requested GPU use is [{config.GPU}].')
-        if (config.GPU == 'auto' or config.GPU == 'true') and len(gpus) > 0:            
+        if (config.GPU == 'auto' or config.GPU == 'true') and len(gpus) > 0:
             use_gpu = True
         else:
             use_gpu = False
@@ -193,7 +194,7 @@ def _use_gpu() -> bool:
             use_gpu = False
     logger.info(f'GPU enabled pipelines {use_gpu}')
     return use_gpu
-    
+
 def _include_one_hot(inputs: container.Dataset, max_one_hot: int) -> bool:
     # CDB: EVAL ONLY WORKAROUND
     # Our one hot encoder fails when there are categorical values present but one are below
@@ -202,10 +203,10 @@ def _include_one_hot(inputs: container.Dataset, max_one_hot: int) -> bool:
     # has categorical columns that are all binary encoded so the pipeline fails to work in that case.
     # Since primitives are frozen for the eval, the only thing we can do is threshold check the categoricals
     # remove the categorical primitive if none pass.
-    
+
     # fetch the default resource
     resource_id, dataframe = base_utils.get_tabular_resource(inputs, None)
-    
+
     # check to see if there are any encodable columns that will be below the one hot threshold - encodable is an attribute
     # of a categorical type
     type_set = set(CATEGORICALS)
@@ -217,7 +218,7 @@ def _include_one_hot(inputs: container.Dataset, max_one_hot: int) -> bool:
         is_categorical = len(set(CATEGORICALS) & set(column_semantic_types)) > 0
         is_target = 'https://metadata.datadrivendiscovery.org/types/SuggestedTarget' in column_semantic_types
         if is_attribute and is_categorical and not is_target:
-            num_labels = len(set(dataframe.iloc[:,column_index]))                
+            num_labels = len(set(dataframe.iloc[:,column_index]))
             if num_labels <= max_one_hot:
                 logger.debug(f'Found columns to one-hot encode')
                 return True

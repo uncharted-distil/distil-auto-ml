@@ -24,8 +24,9 @@ def get_resource_types(dataset_doc: dict) -> Sequence[str]:
 def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
     resource_types = get_resource_types(dataset_doc)
     task_type = problem_desc['problem']['task_type']
-
-    if task_type not in [_problem.TaskType.REGRESSION, _problem.TaskType.CLASSIFICATION]:
+    if 'data_augmentation' in problem_desc:
+        return False
+    elif task_type not in [_problem.TaskType.REGRESSION, _problem.TaskType.CLASSIFICATION]:
         return False
     elif resource_types == ['table']:
         return True
@@ -69,7 +70,7 @@ def is_image(dataset_doc: dict) -> bool:
 
 def is_object_detection(problem: dict) -> bool:
    return problem['problem']['task_type'] == _problem.TaskType.OBJECT_DETECTION
- 
+
 def is_graph_matching(problem: dict) -> bool:
     return problem['problem']['task_type'] == _problem.TaskType.GRAPH_MATCHING
 
@@ -98,9 +99,11 @@ def is_semisupervised_tabular(problem: dict) -> bool:
     return problem['problem']['task_type'] == _problem.TaskType.SEMISUPERVISED_CLASSIFICATION or \
         problem['problem']['task_type'] == _problem.TaskType.SEMISUPERVISED_REGRESSION
 
-def is_data_augmentation(problem: dict) -> bool:
-    # TODO - how to determine this is a data augmentation problem?
-    return False
+def is_data_augmentation_tabular(dataset_doc: dict, problem: dict) -> bool:
+    is_data_aug = True if 'data_augmentation' in problem else False
+    is_classification_regression = True if (problem['problem']['task_type']) in [_problem.TaskType.REGRESSION, _problem.TaskType.CLASSIFICATION] else False
+    is_tabular = ['table'] == get_resource_types(dataset_doc)
+    return is_data_aug and is_classification_regression and is_tabular
 # --
 # Routing
 
@@ -178,7 +181,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         }
 
     elif is_timeseries_forecasting(problem):
-        return 'timeseries_forecasting', {}        
+        return 'timeseries_forecasting', {}
 
     elif is_audio(dataset_doc):
         return 'audio', {}
@@ -207,6 +210,8 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         }
     elif is_semisupervised_tabular(problem):
         return 'semisupervised_tabular', {}
+    elif is_data_augmentation_tabular(dataset_doc, problem):
+        return 'data_augmentation_tabular', problem['data_augmentation']
 
     else:
         raise Exception('!! router failed on problem')

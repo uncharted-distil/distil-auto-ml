@@ -40,6 +40,8 @@ from sklearn_wrap import SKMissingIndicator
 from sklearn_wrap import SKImputer
 from sklearn_wrap import SKStandardScaler
 
+logger = logging.getLogger(__name__)
+
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
@@ -48,7 +50,8 @@ def create_pipeline(metric: str,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False,
-                    keywords: str = '') -> Pipeline:
+                    keywords: dict = '',
+                    dataset_path: str = None) -> Pipeline:
     input_val = 'steps.{}.produce'
 
     # create the basic pipeline
@@ -58,10 +61,9 @@ def create_pipeline(metric: str,
     # Search NYU DataMart
     URL = os.environ['DATAMART_URL_NYU'] + '/search'
 
-    # TODO pull the dataset path from the runtime - TESTING ONLY!!!
-    data = '/Users/slangevin/Development/uncharted/d3m/datasets/DA_ny_taxi_demand/' + 'DA_ny_taxi_demand_dataset/tables/learningData.csv'
-
-    with open(data, 'rb') as data_p:
+    csv_path = os.path.dirname(dataset_path)
+    csv_path = os.path.join(csv_path, 'tables', 'learningData.csv')
+    with open(csv_path, 'rb') as data_p:
         response = requests.post(
             URL,
             files={
@@ -70,6 +72,8 @@ def create_pipeline(metric: str,
         )
     response.raise_for_status()
     query_results = response.json()['results']
+
+    logger.error(f"******{query_results}")
 
     # Augment dataset - currently just picks the first query result
     # TODO add in the keywords from the problem spec
@@ -109,7 +113,7 @@ def create_pipeline(metric: str,
     step.add_output('produce')
     semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
                       'https://metadata.datadrivendiscovery.org/types/FloatVector')
-    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)    
+    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
     tabular_pipeline.add_step(step)
     previous_step += 1
     parse_step = previous_step
@@ -181,7 +185,7 @@ def create_pipeline(metric: str,
     #     step.add_hyperparameter('max_one_hot', ArgumentType.VALUE, max_one_hot)
     #     tabular_pipeline.add_step(step)
     #     previous_step += 1
-    
+
     # Adds a binary encoder for categoricals of high cardinality.
     step = PrimitiveStep(primitive_description=BinaryEncoderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
