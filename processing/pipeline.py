@@ -2,6 +2,7 @@ import json
 import logging
 from typing import Tuple, Optional, List
 import GPUtil
+import sys
 
 from d3m.container import dataset
 from d3m import container, exceptions, runtime
@@ -68,10 +69,13 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
 
     pipeline: Pipeline = None
     if pipeline_type == 'table':
-        include_one_hot = _include_one_hot(train_dataset, 16)
-        if include_one_hot:
+        if _is_aug_prepend(prepend):
+            # CDB: eval only temphack to work around issues with (frozen) primitives
+            pipeline = data_augmentation_tabular.create_pipeline(metric, include_aug=False)
+        elif _include_one_hot(train_dataset, 16):
             pipeline = tabular.create_pipeline(metric)
         else:
+            # CDB: eval only temphack to work around issues with (frozen) primitives
             pipeline = tabular_no_one_hot.create_pipeline(metric) # has its own wrapper so pipeline can be exported separately
     elif pipeline_type == 'graph_matching':
         pipeline = graph_matching.create_pipeline(metric)
@@ -120,7 +124,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     elif pipeline_type == 'semisupervised_tabular':
         pipeline = semisupervised_tabular.create_pipeline(metric)
     elif pipeline_type == 'data_augmentation_tabular':
-        keywords = pipeline_info[0]['keywords']
+        pipeline = data_augmentation_tabular.create_pipeline(metric, dataset_path=modified_path, keywords=pipeline_info)
         pipeline = data_augmentation_tabular.create_pipeline(metric, dataset_path=modified_path, keywords=keywords)
     else:
         logger.error(f'Pipeline type [{pipeline_type}] is not yet supported.')
@@ -223,4 +227,15 @@ def _include_one_hot(inputs: container.Dataset, max_one_hot: int) -> bool:
                 logger.debug(f'Found columns to one-hot encode')
                 return True
     logger.debug(f'No columns to one-hot encode')
+    return False
+
+def _is_aug_prepend(prepend: pipeline.Pipeline) -> pipeline.Pipeline:
+    # CDB: EVAL ONLY WORKAROUND
+    # The standard tabular pipeline contains a number of primitives that don't do well with the somewhat messy augmentation data.
+    # Since pipelines can't be fixed, we'll check for augmentation, and if that's the case, we'll use a more robust, but lower
+    # scoring pipeline.
+    if prepend is not None:
+        for i, step in enumerate(prepend.steps):
+            if isinstance(step, pipeline.PrimitiveStep):
+                return step.primitive.metadata.query()['id'] == 'fe0f1ac8-1d39-463a-b344-7bd498a31b91'
     return False
