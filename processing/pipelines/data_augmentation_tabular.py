@@ -9,9 +9,13 @@ import json
 import requests
 
 from d3m import container, utils
+from d3m.base import utils as base_utils
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
+
+import datamart
+import datamart_nyu
 
 from distil.primitives.categorical_imputer import CategoricalImputerPrimitive
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
@@ -26,12 +30,9 @@ from common_primitives.remove_columns import RemoveColumnsPrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
-
 from common_primitives.dataset_sample import DatasetSamplePrimitive
 from common_primitives.denormalize import DenormalizePrimitive
-
 from common_primitives.replace_semantic_types import ReplaceSemanticTypesPrimitive
-
 from common_primitives.datamart_download import DataMartDownloadPrimitive
 from common_primitives.datamart_augment import DataMartAugmentPrimitive
 
@@ -49,7 +50,7 @@ PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1
 def create_pipeline(metric: str,
                     max_one_hot: int = 16,
                     keywords: list = [],
-                    dataset_path: str = None,
+                    dataset: container.Dataset = None,
                     include_aug = True) -> Pipeline:
     input_val = 'steps.{}.produce'
 
@@ -60,8 +61,8 @@ def create_pipeline(metric: str,
 
     query_results: List[Any] = []
     if include_aug:
-       query_results = _query_datamart(keywords, dataset_path)
-    include_aug = len(query_results) > 0
+       query_result = _query_datamart(keywords, dataset)
+    include_aug = query_result != None
 
     if include_aug:
         # Augment dataset - currently just picks the first query result
@@ -69,8 +70,9 @@ def create_pipeline(metric: str,
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
         step.add_output('produce')
         step.add_hyperparameter('system_identifier', ArgumentType.VALUE, "NYU")
-        step.add_hyperparameter('search_result', ArgumentType.VALUE, json.dumps(query_results[0]))
+        step.add_hyperparameter('search_result', ArgumentType.VALUE, query_result.serialize())
         tabular_pipeline.add_step(step)
+
     else:
         logger.warn("Datamart did not return result for input dataset - proceeding with baseline dataset")
 
@@ -215,47 +217,54 @@ def create_pipeline(metric: str,
 
     return tabular_pipeline
 
-def _query_datamart(keywords: List[Any], dataset_path: Optional[str]) -> List[Any]:
-     # Search NYU DataMart using dataset and keyword
-    URL = os.environ['DATAMART_URL_NYU'] + '/search'
+def _query_datamart(keywords: List[Any], dataset: Optional[container.Dataset]) -> Optional[datamart.DatamartSearchResult]:
+    # extract entrypoint table from resource
+    _, search_dataset = base_utils.get_tabular_resource(dataset, None)
 
-    csv_path = os.path.dirname(dataset_path)
-    csv_path = os.path.join(csv_path, 'tables', 'learningData.csv')
+     # Search NYU DataMart using dataset and keyword
+    URL = os.environ['DATAMART_URL_NYU']
+    client = datamart_nyu.RESTDatamart(URL)
 
     # extract the keywords from the data aug info
     keywords_list: Set[str] = set()
     for keywords_entry in keywords:
         keywords_list.update(keywords_entry['keywords'])
 
-    query = { 'keywords': list(keywords_list) }
-    with open(csv_path, 'rb') as data_p:
-        response = requests.post(
-            URL,
-            files={
-                'data': data_p,
-                'query': ('query.json', json.dumps(query), 'application/json')
-            }
-        )
-    response.raise_for_status()
-    query_results = response.json()['results']
+    query = datamart.DatamartQuery(
+        keywords = list(keywords_list),
+        variables = []
+    )
+    cursor = client.search_with_data(query, supplied_data=dataset)
+    results = cursor.get_next_page()
 
-    #print(f'keywords:\n\n {keywords_list}', file=sys.__stdout__)
-    #_print_results(query_results)
+    print(f'keywords:\n\n {keywords_list}', file=sys.__stdout__)
+    _print_results(results)
 
-    return query_results
+    # sometimes joins 500 with no explanation - we will try joins until one works
+    for result in results:
+        error = False
+        try:
+            join = result.augment(search_dataset)
+        except Exception as e:
+            join_with = result.get_json_metadata()['metadata']['name']
+            join_col = result.get_json_metadata()['augmentation']['right_columns_names']
+            logger.warn(f'Datamart failed to augment using dataset {join_with} column {join_col} - trying next result')
+            error = True
+        if not error:
+            return result
+    return None
 
 def _print_results(results):
     if not results:
         return
     for result in results:
-        print(result['metadata']['name'], file=sys.__stdout__)
-        print('Score: ', result['score'], file=sys.__stdout__)
-        if 'augmentation' in result:
-            aug_type = result['augmentation']['type']
-            print('Augmentation: %s' % aug_type, file=sys.__stdout__)
+        print(result.score(), file=sys.__stdout__)
+        print(result.get_json_metadata()['metadata']['name'], file=sys.__stdout__)
+        if (result.get_augment_hint()):
             print("Left Columns: %s" %
-                  str(result['augmentation']['left_columns_names']), file=sys.__stdout__)
+                  str(result.get_json_metadata()['augmentation']['left_columns_names']), file=sys.__stdout__)
             print("Right Columns: %s" %
-                  str(result['augmentation']['right_columns_names']), file=sys.__stdout__)
-
+                  str(result.get_json_metadata()['augmentation']['right_columns_names']), file=sys.__stdout__)
+        else:
+            print(result.id(), file=sys.__stdout__)
         print("-------------------", file=sys.__stdout__)
