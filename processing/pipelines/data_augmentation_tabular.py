@@ -61,8 +61,8 @@ def create_pipeline(metric: str,
 
     query_results: List[Any] = []
     if include_aug:
-       query_results = _query_datamart(keywords, dataset)
-    include_aug = len(query_results) > 0
+       query_result = _query_datamart(keywords, dataset)
+    include_aug = query_result != None
 
     if include_aug:
         # Augment dataset - currently just picks the first query result
@@ -70,7 +70,7 @@ def create_pipeline(metric: str,
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
         step.add_output('produce')
         step.add_hyperparameter('system_identifier', ArgumentType.VALUE, "NYU")
-        step.add_hyperparameter('search_result', ArgumentType.VALUE, query_results[0].serialize())
+        step.add_hyperparameter('search_result', ArgumentType.VALUE, query_result.serialize())
         tabular_pipeline.add_step(step)
 
     else:
@@ -217,7 +217,7 @@ def create_pipeline(metric: str,
 
     return tabular_pipeline
 
-def _query_datamart(keywords: List[Any], dataset: Optional[container.Dataset]) -> List[Any]:
+def _query_datamart(keywords: List[Any], dataset: Optional[container.Dataset]) -> Optional[datamart.DatamartSearchResult]:
     # extract entrypoint table from resource
     _, search_dataset = base_utils.get_tabular_resource(dataset, None)
 
@@ -240,7 +240,19 @@ def _query_datamart(keywords: List[Any], dataset: Optional[container.Dataset]) -
     print(f'keywords:\n\n {keywords_list}', file=sys.__stdout__)
     _print_results(results)
 
-    return results
+    # sometimes joins 500 with no explanation - we will try joins until one works
+    for result in results:
+        error = False
+        try:
+            join = result.augment(search_dataset)
+        except Exception as e:
+            join_with = result.get_json_metadata()['metadata']['name']
+            join_col = result.get_json_metadata()['augmentation']['right_columns_names']
+            logger.warn(f'Datamart failed to augment using dataset {join_with} column {join_col} - trying next result')
+            error = True
+        if not error:
+            return result
+    return None
 
 def _print_results(results):
     if not results:
