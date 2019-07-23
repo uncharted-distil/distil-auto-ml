@@ -44,6 +44,22 @@ logger = logging.getLogger(__name__)
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
+def print_results(results):
+    if not results:
+        return
+    for result in results:
+        print(result['metadata']['name'], file=sys.__stdout__)
+        print('Score: ', result['score'], file=sys.__stdout__)
+        if 'augmentation' in result:
+            aug_type = result['augmentation']['type']
+            print('Augmentation: %s' % aug_type, file=sys.__stdout__)
+            print("Left Columns: %s" %
+                  str(result['augmentation']['left_columns_names']), file=sys.__stdout__)
+            print("Right Columns: %s" %
+                  str(result['augmentation']['right_columns_names']), file=sys.__stdout__)
+
+        print("-------------------", file=sys.__stdout__)
+
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
 # in a naively implemented state for readability for now.
 def create_pipeline(metric: str,
@@ -64,7 +80,13 @@ def create_pipeline(metric: str,
     csv_path = os.path.dirname(dataset_path)
     csv_path = os.path.join(csv_path, 'tables', 'learningData.csv')
 
-    query = { 'keywords': keywords }
+    # extract the keywords from the data aug info
+    keywords_list: Set[str] = set()
+    for keywords_entry in keywords:
+        keywords_list.update(keywords_entry['keywords'])
+
+    # query = { 'keywords': keywords_list }
+    query = { 'keywords': list(keywords_list) }
 
     with open(csv_path, 'rb') as data_p:
         response = requests.post(
