@@ -247,6 +247,7 @@ class TaskManager():
             .first()
 
         request.fit_solution_id = fit_solution.id
+        request.output_key = task.output_key
         self.session.commit()
         return request_id
 
@@ -267,10 +268,12 @@ class TaskManager():
                       .first()
                 fit_solution_id = getattr(request, 'fit_solution_id', False)
                 task_complete = True if fit_solution_id else False
+                task_output_key = request.output_key
             # otherwise get the necessary info from the FIT task
             else:
                 task_complete = task.ended
                 fit_solution_id = task.fit_solution_id
+                task_output_key = task.output_key
                 self.session.refresh(task)
 
             # Ensure task is reloaded on next access
@@ -282,7 +285,7 @@ class TaskManager():
                 yield False
             if task_complete:
                 progress_msg = self.msg.make_progress_msg("COMPLETED")
-                yield self.msg.make_get_fit_solution_results_response(fit_solution_id, progress_msg)
+                yield self.msg.make_get_fit_solution_results_response(preds_path, task_output_key, fit_solution_id, progress_msg)
                 break
 
     def ProduceSolution(self, message):
@@ -317,7 +320,8 @@ class TaskManager():
         request_record = models.Requests(id=request_id,
                                          task_id=task.id,
                                          type="PRODUCE",
-                                         fit_solution_id=fitted_solution_id)
+                                         fit_solution_id=fitted_solution_id,
+                                         output_key=output_key)
         self.session.add(request_record)
         self.session.commit()
 
