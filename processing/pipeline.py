@@ -22,7 +22,7 @@ from processing.pipelines import (clustering,
                                   collaborative_filtering,
                                   graph_matching,
                                   image,
-                                  object_detection,
+                                  #object_detection,
                                   question_answer,
                                   tabular,
                                   tabular_no_one_hot,
@@ -30,7 +30,7 @@ from processing.pipelines import (clustering,
                                   link_prediction,
                                   audio,
                                   vertex_nomination,
-                                  vertex_classification,
+                                  #vertex_classification,
                                   community_detection,
                                   timeseries_classification,
                                   timeseries_forecasting,
@@ -119,7 +119,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     elif pipeline_type == 'timeseries_forecasting':
         # VAR hyperparameters for period need to be tuned to get meaningful results so we're using regression
         # for now
-        #pipeline = timeseries_var.create_pipeline(metric)
+        # pipeline = timeseries_var.create_pipeline(metric)
         pipeline = tabular.create_pipeline(metric)
     elif pipeline_type == 'semisupervised_tabular':
         pipeline = semisupervised_tabular.create_pipeline(metric)
