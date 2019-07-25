@@ -71,7 +71,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     if pipeline_type == 'table':
         if _is_aug_prepend(prepend):
             # CDB: eval only temphack to work around issues with (frozen) primitives
-            pipeline = data_augmentation_tabular.create_pipeline(metric, include_aug=False)
+            pipeline = data_augmentation_tabular.create_pipeline(metric, include_aug=False, dataset=train_dataset)
         elif _include_one_hot(train_dataset, 16):
             pipeline = tabular.create_pipeline(metric)
         else:
