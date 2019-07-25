@@ -56,7 +56,7 @@ def create_pipeline(metric: str,
     step.add_output('produce')
     semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
                       'https://metadata.datadrivendiscovery.org/types/FloatVector')
-    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)    
+    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
     tabular_pipeline.add_step(step)
     previous_step += 1
     parse_step = previous_step
@@ -117,7 +117,7 @@ def create_pipeline(metric: str,
         step.add_hyperparameter('max_one_hot', ArgumentType.VALUE, max_one_hot)
         tabular_pipeline.add_step(step)
         previous_step += 1
-    
+
     # Adds a binary encoder for categoricals of high cardinality.
     step = PrimitiveStep(primitive_description=BinaryEncoderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
@@ -129,16 +129,17 @@ def create_pipeline(metric: str,
     tabular_pipeline.add_step(step)
     previous_step += 1
 
+    # Failing during eval - https://github.com/uncharted-distil/distil-auto-ml/issues/105
     # Adds SK learn missing value indicator
-    step = PrimitiveStep(primitive_description=SKMissingIndicator.SKMissingIndicator.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_output('produce')
-    step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
-    step.add_hyperparameter('return_result', ArgumentType.VALUE, 'append')
-    step.add_hyperparameter('error_on_new', ArgumentType.VALUE, False)
-    step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
-    tabular_pipeline.add_step(step)
-    previous_step += 1
+    # step = PrimitiveStep(primitive_description=SKMissingIndicator.SKMissingIndicator.metadata.query())
+    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    # step.add_output('produce')
+    # step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
+    # step.add_hyperparameter('return_result', ArgumentType.VALUE, 'append')
+    # step.add_hyperparameter('error_on_new', ArgumentType.VALUE, False)
+    # step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
+    # tabular_pipeline.add_step(step)
+    # previous_step += 1
 
     # Adds SK learn simple imputer
     step = PrimitiveStep(primitive_description=SKImputer.SKImputer.metadata.query())
