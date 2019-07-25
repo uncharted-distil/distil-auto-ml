@@ -38,6 +38,8 @@ def create_pipeline(metric: str,
                     include_one_hot = True) -> Pipeline:
     input_val = 'steps.{}.produce'
 
+    if not include_one_hot:
+        max_one_hot = 0
 
     # create the basic pipeline
     tabular_pipeline = Pipeline(context=PipelineContext.TESTING)
