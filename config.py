@@ -26,4 +26,10 @@ D3MSTATICDIR = os.getenv("D3MSTATICDIR", '/static')
 GPU = os.getenv("GPU", "auto")
 
 # Solution serach progress update message interval in seconds
-PROGRESS_INTERVAL = os.getenv("PROGRESS_INTERVAL", 10.0)
+PROGRESS_INTERVAL = float(os.getenv("PROGRESS_INTERVAL", 10.0))
+
+# maximum number of augment columns to support
+AUG_MAX_COLS = int(os.getenv("AUG_MAX_COLS", 50))
+
+# maximum number of augment rows to support
+AUG_MAX_ROWS = int(os.getenv("AUG_MAX_ROWS", 50000))
