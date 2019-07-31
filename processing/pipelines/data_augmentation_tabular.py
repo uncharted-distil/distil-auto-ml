@@ -301,7 +301,7 @@ def _query_datamart(keywords: List[Any], dataset: Optional[container.Dataset]) -
     for result in results:
         error = False
         try:
-            join = result.augment(supplied_data=dataset)
+            join = result.augment(supplied_data=dataset, connection_url=URL)
         except Exception as e:
             join_with = result.get_json_metadata()['metadata']['name']
             join_col = result.get_json_metadata()['augmentation']['right_columns_names']
