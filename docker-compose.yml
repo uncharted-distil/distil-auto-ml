@@ -1,5 +1,29 @@
-version: "2"
+version: "3.7"
 services:
+  envoy:
+    image: registry.gitlab.com/datadrivendiscovery/simple-ta3/envoy:latest
+    environment:
+      - TA2_HOST=distil
+      - TA2_PORT=45042
+    ports:
+      - 8080:8080
+    links:
+      - distil
+  simple-ta3:
+    image: registry.gitlab.com/datadrivendiscovery/simple-ta3/simple-ta3:latest
+    environment:
+      - BRIDGE_HOST=envoy
+      - BRIDGE_PORT=8080
+      - D3MINPUTDIR=/input
+      - D3MOUTPUTDIR=/output
+      - D3MRUN=ta2ta3
+    volumes:
+      - ./seed_datasets_current:/input
+      - ./output:/output
+    links:
+      - envoy
+    ports:
+      - 80:80
   distil:
     build: .
     ports:
@@ -12,10 +36,10 @@ services:
       - ./pipelines:/app/pipelines
       - ./export_pipelines.py:/app/export_pipelines.py
   dummy-ta3:
-    image: registry.gitlab.com/datadrivendiscovery/dummy-ta3/dummy-ta3:2019.6.11
+    image: registry.gitlab.com/datadrivendiscovery/dummy-ta3/dummy-ta3:latest
     environment:
       - DATASET=${DATASET}
-    command: ["/usr/bin/python3", "-m", "dummy_ta3.dummy_ta3", "-p", "/seed_datasets_current/$DATASET/TRAIN/problem_TRAIN/problemDoc.json", "-d", "/seed_datasets_current", "-e", "distil", "-t", "600"]
+    command: ["/usr/bin/python3", "-m", "dummy_ta3.dummy_ta3", "-p", "/seed_datasets_current/$DATASET/TRAIN/problem_TRAIN/problemDoc.json", "-d", "/seed_datasets_current", "-e", "distil", "-t", "45042"]
     links:
       - "distil"
     volumes:
