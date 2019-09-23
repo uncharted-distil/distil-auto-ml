@@ -1,26 +1,34 @@
-## Distil Auto ML
+# Distil Auto ML
 
-#### What is this
-Mirror of main TA2 system for Uncharted and Qntfy 
+## Summary
+TA2 system for Uncharted and Qntfy 
 
 Main repo is https://github.com/uncharted-distil/distil-auto-ml
 
-#### Get this running locally with docker 
+## How to run
+The TA2 system can be built and started via docker-compose:
+```bash
+# symlink your datasets directory 
+ln -s ../datasets/seed_datasets_current seed_datasets_current`
 
-* symlink your datasets directory 
+# choose the dataset you want to run 
+export DATASET=185_baseball
 
-`ln -s ../datasets/seed_datasets_current seed_datasets_current`
+# run it
+docker-compose up distil
+```
 
-* choose the dataset you want to run 
+There are two testing TA3 systems also available via docker-compose:
+```bash
+# run the dummy-ta3 test suite
+docker-compose up distil dummy-ta3
 
-`export DATASET=185_baseball`
+# run the simple-ta3 system, which will then be available in the browser at localhost:80
+docker-compose up distil envoy simple-ta3
+```
 
-* run it all 
-
-`docker-compose up`
-
-#### Get those static files 
-```shell
-$ docker-compose run distil bash 
+## Get those static files 
+```bash
+docker-compose run distil bash 
 # cd /static && python3 -m d3m index download
 ```
