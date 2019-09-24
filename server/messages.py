@@ -7,6 +7,8 @@ from api import core_pb2, problem_pb2, value_pb2, pipeline_pb2, primitive_pb2, u
 
 from d3m.metadata import pipeline
 
+from d3m import index
+
 class Messaging:
 
     def get_dataset_uri(self, msg):
@@ -221,3 +223,13 @@ class Messaging:
     def get_rank(self, msg):
         return msg.rank
 
+    def make_list_primitives_response(self):
+        resp = core_pb2.ListPrimitivesResponse()
+        primitives = [ primitive_pb2.Primitive(
+            id=prim_data.metadata.query()["id"],
+            version=prim_data.metadata.query()["version"],
+            python_path=prim_data.metadata.query()["name"],
+            digest = prim_data.metadata.query()["digest"])
+            for prim_data in index.get_loaded_primitives()]
+        resp.primitives.extend(primitives)
+        return resp
