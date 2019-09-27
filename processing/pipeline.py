@@ -53,6 +53,10 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
 
+    # If the pipeline is fully specified, just return it
+    if not problem and prepend:
+        return prepend, train_dataset
+
     # Load the dataset doc itself
     modified_path = dataset_doc_path.replace("file://", "")
     with open(modified_path) as json_file:

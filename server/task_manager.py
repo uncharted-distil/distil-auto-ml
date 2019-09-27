@@ -44,8 +44,8 @@ class TaskManager():
         search_id = self._generate_id()
 
         # serialize the problem buf to json to save it in the db
-        prob = json_format.MessageToDict(message.problem)
-        prob = json.dumps(prob)
+        prob = json_format.MessageToDict(message.problem) if message.problem else None
+        prob = json.dumps(prob) if prob else None
 
         # serialize the pipeline to a string for storage in db if one is provided
         search_template: str = None

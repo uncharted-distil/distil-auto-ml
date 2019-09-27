@@ -14,7 +14,7 @@ class Messaging:
     def get_dataset_uri(self, msg):
         if len(msg.inputs) == 0:
             return False
-        return msg.inputs[0].dataset_uri
+        return msg.inputs[0].dataset_uri or msg.inputs[0].csv_uri
 
     def get_problem_type(self, msg):
         _type = msg.problem.problem.task_type
