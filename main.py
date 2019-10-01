@@ -43,11 +43,8 @@ def produce_task(logger, session, task):
         test_dataset = dataset.Dataset.load(task.dataset_uri)
         results = ex_pipeline.produce(fitted_pipeline, test_dataset)
 
-        test_dataset = test_dataset['learningData']
-        predictions_df = pd.DataFrame(test_dataset['d3mIndex'])
-        predictions_df[dats['target_name']] = results[dats['target_name']]
         preds_path = utils.make_preds_filename(task.fit_solution_id)
-        predictions_df.to_csv(preds_path, index=False)
+        results.to_csv(preds_path, index=False)
 
         session.commit()
     except Exception as e:
@@ -110,11 +107,15 @@ def exline_task(logger, session, task):
         logger.info('Starting distil task ID {}'.format(task.id))
         task.started_at = datetime.datetime.utcnow()
 
-        # load the problem supplied by the search request into a d3m Problem type
-        problem_proto = json_format.Parse(task.problem, problem_pb2.ProblemDescription())
-        problem_d3m = api_utils.decode_problem_description(problem_proto)
+        # load the problem supplied by the search request into a d3m Problem type if one is provided
+        if task.problem:
+            problem_proto = json_format.Parse(task.problem, problem_pb2.ProblemDescription())
+            problem_d3m = api_utils.decode_problem_description(problem_proto)
 
-        target_name = problem_d3m['inputs'][0]['targets'][0]['column_name']
+            target_name = problem_d3m['inputs'][0]['targets'][0]['column_name']
+        else:
+            problem_d3m = None
+            target_name = None
 
         search_template = pipeline.Pipeline.from_json(task.pipeline) if task.pipeline else None
         pipe, dataset = ex_pipeline.create(task.dataset_uri, problem_d3m, search_template)

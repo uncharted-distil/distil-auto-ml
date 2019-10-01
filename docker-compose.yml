@@ -35,6 +35,7 @@ services:
       - ./static:/static
       - ./pipelines:/app/pipelines
       - ./export_pipelines.py:/app/export_pipelines.py
+      - ./output:/output
   dummy-ta3:
     image: registry.gitlab.com/datadrivendiscovery/dummy-ta3/dummy-ta3:latest
     environment:

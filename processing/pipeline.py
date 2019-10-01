@@ -53,6 +53,11 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
 
+    # If there isn't a placeholder this is a fully specified pipeline.  Return the pipeline unmodified along with the
+    # dataset.
+    if prepend and not [True for s in prepend.steps if isinstance(s, PlaceholderStep)]:
+        return (prepend, train_dataset)
+
     # Load the dataset doc itself
     modified_path = dataset_doc_path.replace("file://", "")
     with open(modified_path) as json_file:
@@ -162,10 +167,6 @@ def produce(fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset) 
 def _prepend_pipeline(base: pipeline.Pipeline, prepend: pipeline.Pipeline) -> pipeline.Pipeline:
     # wrap pipeline in a sub pipeline - d3m core node replacement function doesn't work otherwise
     subpipeline = pipeline.SubpipelineStep(pipeline=base)
-
-    # If there isn't a placeholder, return the prepended pipe
-    if not [True for s in prepend.steps if isinstance(s, pipeline.PlaceholderStep)]:
-        return prepend
 
     # find the placeholder node in the prepend and replace it with the base sub pipeline
     for i, step in enumerate(prepend.steps):
