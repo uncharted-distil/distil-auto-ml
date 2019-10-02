@@ -8,7 +8,7 @@ from d3m.container import dataset
 from d3m import container, exceptions, runtime
 from d3m.base import utils as base_utils
 from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
-from d3m.metadata.pipeline import Pipeline
+from d3m.metadata.pipeline import Pipeline, PlaceholderStep
 
 from processing import metrics
 from distil.primitives import utils as distil_utils
