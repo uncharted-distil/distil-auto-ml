@@ -8,19 +8,16 @@ from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
 from d3m.primitives.time_series_classification.convolutional_neural_net import LSTM_FCN
-from common_primitives.denormalize import DenormalizePrimitive
-
-PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
-
+from distil.primitives.timeseries_formatter import TimeSeriesFormatterPrimitive
 
 def create_pipeline(metric: str) -> Pipeline:
 
     # create the basic pipeline
-    lstm_fcn_pipeline = Pipeline(context=PipelineContext.TESTING)
+    lstm_fcn_pipeline = Pipeline()
     lstm_fcn_pipeline.add_input(name='inputs')
 
-    # Denormalize so that we have a single dataframe in the dataset
-    step = PrimitiveStep(primitive_description=DenormalizePrimitive.metadata.query())
+    # step 0 - flatten the timeseries if necessary
+    step = PrimitiveStep(primitive_description=TimeSeriesFormatterPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
     lstm_fcn_pipeline.add_step(step)
@@ -31,6 +28,7 @@ def create_pipeline(metric: str) -> Pipeline:
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
     step.add_hyperparameter(name='attention_lstm', argument_type= ArgumentType.VALUE, data=False)
     step.add_hyperparameter(name='lstm_cells', argument_type= ArgumentType.VALUE, data=64)
+    step.add_hyperparameter('long_format', ArgumentType.VALUE, True)
     step.add_output('produce')
     lstm_fcn_pipeline.add_step(step)
 
