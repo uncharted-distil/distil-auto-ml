@@ -25,7 +25,6 @@ from processing.pipelines import (clustering,
                                   object_detection,
                                   question_answer,
                                   tabular,
-                                  tabular_no_one_hot,
                                   text,
                                   link_prediction,
                                   audio,
@@ -74,14 +73,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
 
     pipeline: Pipeline = None
     if pipeline_type == 'table':
-        if _is_aug_prepend(prepend):
-            # CDB: eval only temphack to work around issues with (frozen) primitives
-            pipeline = data_augmentation_tabular.create_pipeline(metric, include_aug=False, dataset=train_dataset)
-        elif _include_one_hot(train_dataset, 16):
-            pipeline = tabular.create_pipeline(metric)
-        else:
-            # CDB: eval only temphack to work around issues with (frozen) primitives
-            pipeline = tabular_no_one_hot.create_pipeline(metric) # has its own wrapper so pipeline can be exported separately
+        pipeline = tabular.create_pipeline(metric)
     elif pipeline_type == 'graph_matching':
         pipeline = graph_matching.create_pipeline(metric)
     elif pipeline_type == 'timeseries_classification':
@@ -198,44 +190,3 @@ def _use_gpu() -> bool:
             use_gpu = False
     logger.info(f'GPU enabled pipelines {use_gpu}')
     return use_gpu
-
-def _include_one_hot(inputs: container.Dataset, max_one_hot: int) -> bool:
-    # CDB: EVAL ONLY WORKAROUND
-    # Our one hot encoder fails when there are categorical values present but one are below
-    # the encoding threshold, and the SKLearnWrap one hot encoder fails in any case that you
-    # pass it a dataframe with no categorical columns for it to encode.  The MS Geolife dataset
-    # has categorical columns that are all binary encoded so the pipeline fails to work in that case.
-    # Since primitives are frozen for the eval, the only thing we can do is threshold check the categoricals
-    # remove the categorical primitive if none pass.
-
-    # fetch the default resource
-    resource_id, dataframe = base_utils.get_tabular_resource(inputs, None)
-
-    # check to see if there are any encodable columns that will be below the one hot threshold - encodable is an attribute
-    # of a categorical type
-    type_set = set(CATEGORICALS)
-    for column_index in range(len(dataframe.columns)):
-        column_semantic_types = inputs.metadata.query((resource_id, metadata_base.ALL_ELEMENTS, column_index)).get('semantic_types', ())
-        logger.debug(f'col {dataframe.columns[column_index]} semantic types: {column_semantic_types}')
-        # verify that we have an attribute
-        is_attribute = 'https://metadata.datadrivendiscovery.org/types/Attribute' in column_semantic_types
-        is_categorical = len(set(CATEGORICALS) & set(column_semantic_types)) > 0
-        is_target = 'https://metadata.datadrivendiscovery.org/types/SuggestedTarget' in column_semantic_types
-        if is_attribute and is_categorical and not is_target:
-            num_labels = len(set(dataframe.iloc[:,column_index]))
-            if num_labels <= max_one_hot:
-                logger.debug(f'Found columns to one-hot encode')
-                return True
-    logger.debug(f'No columns to one-hot encode')
-    return False
-
-def _is_aug_prepend(prepend: pipeline.Pipeline) -> pipeline.Pipeline:
-    # CDB: EVAL ONLY WORKAROUND
-    # The standard tabular pipeline contains a number of primitives that don't do well with the somewhat messy augmentation data.
-    # Since pipelines can't be fixed, we'll check for augmentation, and if that's the case, we'll use a more robust, but lower
-    # scoring pipeline.
-    if prepend is not None:
-        for i, step in enumerate(prepend.steps):
-            if isinstance(step, pipeline.PrimitiveStep):
-                return step.primitive.metadata.query()['id'] == 'fe0f1ac8-1d39-463a-b344-7bd498a31b91'
-    return False
