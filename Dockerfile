@@ -22,7 +22,7 @@ RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.gi
 RUN pip3 install -e git+https://github.com/uncharted-distil/distil-timeseries-loader.git@0d52a475f52848707a2b6d69fb3bae58409a784d#egg=DistilTimeSeriesLoader
 RUN pip3 install -e git+https://github.com/uncharted-distil/distil-fuzzy-join.git@d171c9dc29d699dba10c1fdd5f00db8bbdd37f7d#egg=DistilFuzzyJoin
 RUN pip3 install -e git+https://github.com/uncharted-distil/distil-mi-ranking.git@2ce1d22e1b0c212af043a3fcd48079d8000647db#egg=DistilMIRanking
-RUN pip3 install -e git+https://github.com/NewKnowledge/pcafeatures-d3m-wrapper.git@4b31ed6098236ef7392768c45e4fa2f238124d3c#egg=PcafeaturesD3MWrapper
+RUN pip3 install -e git+https://github.com/NewKnowledge/pcafeatures-d3m-wrapper.git@bc34b607a15bdbb765a2f959a1b81bc5f23cd469#egg=PcafeaturesD3MWrapper
 RUN pip3 install -e git+https://github.com/NewKnowledge/datacleaning-d3m-wrapper.git@d2666de3de1406adfad4c74f4aacaf52ceccfced#egg=DatacleaningD3MWrapper
 RUN pip3 install -e git+https://github.com/NewKnowledge/duke-d3m-wrapper.git@1c5e5f20fced72f042581a2f9cfca41557a2d85d#egg=DukeD3MWrapper
 RUN pip3 install -e git+https://github.com/NewKnowledge/unicorn-d3m-wrapper.git@865e2780e67c1f34ee2621748f557078d34eb15f#egg=UNICORNd3mWrapper
