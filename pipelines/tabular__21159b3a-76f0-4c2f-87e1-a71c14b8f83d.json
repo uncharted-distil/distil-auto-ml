@@ -11,6 +11,10 @@
         {
             "data": "steps.13.produce",
             "name": "output"
+        },
+        {
+            "data": "steps.12.produce_feature_importances",
+            "name": "importances"
         }
     ],
     "steps": [
@@ -360,6 +364,9 @@
             "outputs": [
                 {
                     "id": "produce"
+                },
+                {
+                    "id": "produce_feature_importances"
                 }
             ],
             "hyperparams": {
