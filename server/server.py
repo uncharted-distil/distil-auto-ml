@@ -25,7 +25,7 @@ def _unary_unary_interceptor(servicer, method_name, context, request):
         func = getattr(manager, method_name)
         result = func(request)
     except ValueError as e:
-        servicer.logger.info("Request not properly formatted, aborting gRPC call: {}".format(e))
+        servicer.logger.error("Request not properly formatted, aborting gRPC call: {}".format(e), exc_info=True)
         context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(e))
     except Exception as e:
         servicer.logger.exception("Unexpected error occured, aborting gRPC call: {}".format(e))
@@ -54,7 +54,7 @@ def _unary_stream_interceptor(servicer, method_name, context, request):
                 # yield in_progress message?
                 time.sleep(3)
     except ValueError as e:
-        servicer.logger.info("Request not properly formatted, aborting gRPC call: {}".format(e))
+        servicer.logger.error("Request not properly formatted, aborting gRPC call: {}".format(e), exc_info=True)
         context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(e))
     except Exception as e:
         servicer.logger.exception("Unexpected error occured, aborting gRPC call: {}".format(e))
