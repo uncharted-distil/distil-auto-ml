@@ -21,6 +21,11 @@ RUN pip3 install -e git+https://gitlab.com/datadrivendiscovery/common-primitives
 # Seems like the dependency in distil primitives gets completely ignored if not explicitly installed
 RUN pip3 install -e git+https://github.com/cdbethune/sklearn-pandas.git@c009c3a5a26f883f759cf123c0f5a509b1df013b#egg=sklearn-pandas
 
+# Remove slow loading primitives we don't use - pip uninstall not working
+RUN rm -rf /src/pyglrm-d3m
+RUN rm -rf /src/dsbox-spen
+RUN rm -rf /src/dsbox-graphs
+
 # Our primitives - not needed during eval since we use the frozen d3m primitive image
 ARG CACHEBUSTER=0
 RUN rm -rf /src/distil-primitives
