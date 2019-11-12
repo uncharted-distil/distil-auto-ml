@@ -16,7 +16,7 @@ RUN apt-get install -y libleptonica-dev libtesseract-dev tesseract-ocr tesseract
 
 # Set common primitives version to use. Manually force uninstall since 'pip uninstall' fails - https://github.com/pypa/pip/issues/4438
 RUN rm -rf /src/common-primitives
-RUN pip3 install -e git+https://gitlab.com/datadrivendiscovery/common-primitives.git@8f22abd534abcafc62bc585344c385c50ca5107f#egg=common-primitives
+RUN pip3 install -e git+https://gitlab.com/datadrivendiscovery/common-primitives.git@c83d066b6a3cf9fe1a8c5087e552dcf3e6c373b1#egg=common-primitives
 
 # Seems like the dependency in distil primitives gets completely ignored if not explicitly installed
 RUN pip3 install -e git+https://github.com/cdbethune/sklearn-pandas.git@c009c3a5a26f883f759cf123c0f5a509b1df013b#egg=sklearn-pandas
