@@ -4,7 +4,7 @@ import pathlib
 import logging
 import datetime
 import io
-
+import jsonschema
 from google.protobuf import json_format
 
 import config
@@ -123,11 +123,18 @@ def exline_task(logger, session, task):
 
         pipeline_json = fitted_pipeline.pipeline.to_json(nest_subpipelines=True)
         str_buf = io.StringIO()
-        result.pipeline_run.to_yaml(str_buf)
-        pipeline_run_yaml = str_buf.getvalue()
+        try:
+            result.pipeline_run.to_yaml(str_buf)
+            pipeline_run_yaml = str_buf.getvalue()
+        except jsonschema.exceptions.ValidationError as v:
+            # If a conforming result wasn't returned validation will fail.  Most common case for this is
+            # running an analytic as a fully specificed pipeline that returned a dataframe with out any
+            # rows (an empty result), or no dataframe at all (another possible way to express an empty result).
+            # In this case, we'll set the run results to None which is properly handled downstream.
+            pipeline_run_yaml = None
+            logger.warn('Could not parse result')
 
         save_me = {'pipeline': fitted_pipeline, 'target_name': target_name}
-
         QUATTO_LIVES[task.id] = save_me
         task.pipeline = pipeline_json
         task.pipeline_run = pipeline_run_yaml
