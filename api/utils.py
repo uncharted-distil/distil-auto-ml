@@ -343,8 +343,8 @@ def encode_problem_description(problem_description):
         performance_metrics.append(encode_performance_metric(performance_metric))
 
     problem = problem_pb2.Problem(
-        task_type=problem_description['problem']['task_type'].value,
-        task_subtype=problem_description['problem']['task_subtype'].value,
+        task_type=problem_description['problem']['task_keywords'][0].value,
+        task_subtype=problem_description['problem']['task_keywords'][1].value,
         performance_metrics=performance_metrics,
     )
 
@@ -431,8 +431,8 @@ def decode_problem_description(problem_description, *, strict_digest=False, prob
         'name': problem_description.name,
         'schema': problem_module.PROBLEM_SCHEMA_VERSION,
         'problem': {
-            'task_type': problem_module.TaskType(problem_description.problem.task_type),
-            'task_subtype': problem_module.TaskSubtype(problem_description.problem.task_subtype),
+            'task_type': problem_module.TaskKeyword(problem_description.problem.task_type),
+            'task_subtype': problem_module.TaskKeyword(problem_description.problem.task_subtype),
         },
     }
 

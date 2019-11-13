@@ -26,7 +26,7 @@ def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
     task_type = problem_desc['problem']['task_type']
     if 'data_augmentation' in problem_desc:
         return False
-    elif task_type not in [_problem.TaskType.REGRESSION, _problem.TaskType.CLASSIFICATION]:
+    elif task_type not in [_problem.TaskKeyword.REGRESSION, _problem.TaskKeyword.CLASSIFICATION]:
         return False
     elif resource_types == ['table']:
         return True
@@ -40,7 +40,7 @@ def is_edgelist(dataset_doc: dict, problem_desc: dict) -> bool:
     resource_types = get_resource_types(dataset_doc)
     task_type = problem_desc['problem']['task_type']
 
-    if task_type not in [_problem.TaskType.VERTEX_CLASSIFICATION, _problem.TaskType.VERTEX_NOMINATION]:
+    if task_type not in [_problem.TaskKeyword.VERTEX_CLASSIFICATION, _problem.TaskKeyword.VERTEX_NOMINATION]:
         return False
     elif set(resource_types) == {'table'}:
         return True
@@ -52,11 +52,11 @@ def is_multitable(dataset_doc: dict) -> bool:
 
 def is_timeseries_classification(dataset_doc: dict, problem: dict) -> bool:
     timeseries_resource = ['table', 'timeseries'] == get_resource_types(dataset_doc)
-    classification_task = problem['problem']['task_type'] == _problem.TaskType.CLASSIFICATION
+    classification_task = problem['problem']['task_type'] == _problem.TaskKeyword.CLASSIFICATION
     return timeseries_resource and classification_task
 
 def is_timeseries_forecasting(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskType.TIME_SERIES_FORECASTING
+    return problem['problem']['task_type'] == _problem.TaskKeyword.TIME_SERIES_FORECASTING
 
 def is_question_answering(dataset_doc: dict) -> bool:
     res_paths = sorted([r['resPath'] for r in dataset_doc['dataResources']])
@@ -66,44 +66,44 @@ def is_audio(dataset_doc: dict) -> bool:
     return 'audio' in get_resource_types(dataset_doc)
 
 def is_image(dataset_doc: dict, problem: dict) -> bool:
-    classification = problem['problem']['task_type'] == _problem.TaskType.CLASSIFICATION
-    regression = problem['problem']['task_type'] == _problem.TaskType.REGRESSION
+    classification = problem['problem']['task_type'] == _problem.TaskKeyword.CLASSIFICATION
+    regression = problem['problem']['task_type'] == _problem.TaskKeyword.REGRESSION
     return 'image' in get_resource_types(dataset_doc) and (classification or regression)
 
 def is_object_detection(problem: dict) -> bool:
-   return problem['problem']['task_type'] == _problem.TaskType.OBJECT_DETECTION
+   return problem['problem']['task_type'] == _problem.TaskKeyword.OBJECT_DETECTION
 
 def is_graph_matching(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskType.GRAPH_MATCHING
+    return problem['problem']['task_type'] == _problem.TaskKeyword.GRAPH_MATCHING
 
 def is_community_detection(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskType.COMMUNITY_DETECTION
+    return problem['problem']['task_type'] == _problem.TaskKeyword.COMMUNITY_DETECTION
 
 def is_clustering(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskType.CLUSTERING
+    return problem['problem']['task_type'] == _problem.TaskKeyword.CLUSTERING
 
 def is_vertex_classification(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskType.VERTEX_CLASSIFICATION
+    return problem['problem']['task_type'] == _problem.TaskKeyword.VERTEX_CLASSIFICATION
 
 def is_vertex_nomination(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskType.VERTEX_NOMINATION
+    return problem['problem']['task_type'] == _problem.TaskKeyword.VERTEX_NOMINATION
 
 def is_collaborative_filtering(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskType.COLLABORATIVE_FILTERING
+    return problem['problem']['task_type'] == _problem.TaskKeyword.COLLABORATIVE_FILTERING
 
 def is_link_prediction(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskType.LINK_PREDICTION
+    return problem['problem']['task_type'] == _problem.TaskKeyword.LINK_PREDICTION
 
 def is_text(dataset_doc: dict) -> bool:
     return ['table', 'text'] == get_resource_types(dataset_doc)
 
 def is_semisupervised_tabular(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskType.SEMISUPERVISED_CLASSIFICATION or \
-        problem['problem']['task_type'] == _problem.TaskType.SEMISUPERVISED_REGRESSION
+    return problem['problem']['task_type'] == _problem.TaskKeyword.SEMISUPERVISED_CLASSIFICATION or \
+        problem['problem']['task_type'] == _problem.TaskKeyword.SEMISUPERVISED_REGRESSION
 
 def is_data_augmentation_tabular(dataset_doc: dict, problem: dict) -> bool:
     is_data_aug = True if 'data_augmentation' in problem else False
-    is_classification_regression = True if (problem['problem']['task_type']) in [_problem.TaskType.REGRESSION, _problem.TaskType.CLASSIFICATION] else False
+    is_classification_regression = True if (problem['problem']['task_type']) in [_problem.TaskKeyword.REGRESSION, _problem.TaskKeyword.CLASSIFICATION] else False
     is_tabular = ['table'] == get_resource_types(dataset_doc)
     return is_data_aug and is_classification_regression and is_tabular
 # --

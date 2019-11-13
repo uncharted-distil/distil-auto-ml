@@ -14,8 +14,13 @@ import config
 D3MRUN = os.getenv("D3MRUN", "invalid")
 
 # directory setup
-D3MINPUTDIR = os.getenv("D3MINPUTDIR", "/input")
-D3MOUTPUTDIR = os.getenv("D3MOUTPUTDIR", "/output")
+local_env = os.getenv("D3MLOCAL") # set this to true if not running in docker.
+if local_env == 'True':
+    D3MINPUTDIR = os.getenv("D3MINPUTDIR", "./input")
+    D3MOUTPUTDIR = os.getenv("D3MOUTPUTDIR", "./output")
+else:
+    D3MINPUTDIR = os.getenv("D3MINPUTDIR", "/input")
+    D3MOUTPUTDIR = os.getenv("D3MOUTPUTDIR", "/output")
 
 # eval constraints
 D3MCPU = os.getenv("D3MCPU", None)
