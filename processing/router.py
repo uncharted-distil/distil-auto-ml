@@ -56,7 +56,7 @@ def is_timeseries_classification(dataset_doc: dict, problem: dict) -> bool:
     return timeseries_resource and classification_task
 
 def is_timeseries_forecasting(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskKeyword.TIME_SERIES_FORECASTING
+    return problem['problem']['task_type'] == _problem.TaskKeyword.FORECASTING
 
 def is_question_answering(dataset_doc: dict) -> bool:
     res_paths = sorted([r['resPath'] for r in dataset_doc['dataResources']])
@@ -98,8 +98,7 @@ def is_text(dataset_doc: dict) -> bool:
     return ['table', 'text'] == get_resource_types(dataset_doc)
 
 def is_semisupervised_tabular(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskKeyword.SEMISUPERVISED_CLASSIFICATION or \
-        problem['problem']['task_type'] == _problem.TaskKeyword.SEMISUPERVISED_REGRESSION
+    return problem['problem']['task_type'] == _problem.TaskKeyword.SEMISUPERVISED
 
 def is_data_augmentation_tabular(dataset_doc: dict, problem: dict) -> bool:
     is_data_aug = True if 'data_augmentation' in problem else False
@@ -206,7 +205,8 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         return 'link_prediction', {}
 
     elif is_community_detection(problem):
-        assert problem['problem']['task_subtype'] == _problem.TaskSubtype.NONOVERLAPPING
+        #TODO what should subtype be?
+        assert problem['problem']['task_subtype'] == _problem.TaskKeyword.COMMUNITY_DETECTION
         return 'community_detection', {
             'overlapping' : False,
         }
