@@ -16,9 +16,8 @@ from distil.primitives.one_hot_encoder import OneHotEncoderPrimitive
 from distil.primitives.binary_encoder import BinaryEncoderPrimitive
 from distil.primitives.text_encoder import TextEncoderPrimitive
 from distil.primitives.enrich_dates import EnrichDatesPrimitive
-
+from distil.primitives.list_encoder import ListEncoderPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
-from common_primitives.remove_columns import RemoveColumnsPrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
@@ -63,6 +62,7 @@ def create_pipeline(metric: str,
     previous_step += 1
     parse_step = previous_step
 
+
     # Extract attributes
     step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
@@ -84,6 +84,13 @@ def create_pipeline(metric: str,
 
     # Append date enricher.  Looks for date columns and normalizes them.
     step = PrimitiveStep(primitive_description=EnrichDatesPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(attributes_step))
+    step.add_output('produce')
+    tabular_pipeline.add_step(step)
+    previous_step += 1
+
+    # append list encoder. Take list and expand them across columns
+    step = PrimitiveStep(primitive_description=ListEncoderPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(attributes_step))
     step.add_output('produce')
     tabular_pipeline.add_step(step)
@@ -111,6 +118,7 @@ def create_pipeline(metric: str,
     tabular_pipeline.add_step(step)
     previous_step += 1
 
+
     # Adds a one hot encoder for categoricals of low cardinality.
     if cat_mode == 'one_hot' and include_one_hot:
         step = PrimitiveStep(primitive_description=OneHotEncoderPrimitive.metadata.query())
@@ -132,16 +140,17 @@ def create_pipeline(metric: str,
     previous_step += 1
 
     # Failing during eval - https://github.com/uncharted-distil/distil-auto-ml/issues/105
-    # Adds SK learn missing value indicator
-    # step = PrimitiveStep(primitive_description=SKMissingIndicator.SKMissingIndicator.metadata.query())
-    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    # step.add_output('produce')
-    # step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
-    # step.add_hyperparameter('return_result', ArgumentType.VALUE, 'append')
-    # step.add_hyperparameter('error_on_new', ArgumentType.VALUE, False)
-    # step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
-    # tabular_pipeline.add_step(step)
-    # previous_step += 1
+    # Adds SK learn missing value indicator (list encoder must be run first to prevent the above failure)
+    step = PrimitiveStep(primitive_description=SKMissingIndicator.SKMissingIndicator.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
+    step.add_hyperparameter('return_result', ArgumentType.VALUE, 'append')
+    step.add_hyperparameter('error_on_new', ArgumentType.VALUE, False)
+    step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
+    tabular_pipeline.add_step(step)
+    previous_step += 1
+
 
     # Adds SK learn simple imputer
     step = PrimitiveStep(primitive_description=SKImputer.SKImputer.metadata.query())
