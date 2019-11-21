@@ -55,7 +55,7 @@ def create_pipeline(metric: str,
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
-    semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
+    semantic_types = ('http://schema.org/Integer', 'http://schema.org/Float',
                       'https://metadata.datadrivendiscovery.org/types/FloatVector')
     step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
     tabular_pipeline.add_step(step)

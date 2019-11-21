@@ -42,6 +42,8 @@ def create_pipeline(metric: str) -> Pipeline:
     step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
     tsf_pipeline.add_step(step)
 
+
+
     # step 2 - Parrot ARIMA
     step = PrimitiveStep(primitive_description=Parrot.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
