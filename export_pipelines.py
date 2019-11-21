@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
             with open(run_filename, 'w') as f:
                 f.write('#!/bin/bash\n')
-                f.write(f'python3 -m d3m runtime {runtime_args} fit-score {fit_score_args}\n')
+                f.write(f'python3 -m d3m runtime {runtime_args} fit-score {fit_score_args} && \n')
                 f.write(f'tar -cvf {archive_filename} {output_filename}')
                 f.write('\n')
             st = os.stat(run_filename)
