@@ -69,7 +69,6 @@ def create_pipeline(metric: str) -> Pipeline:
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(attributes_step))
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
     step.add_output('produce')
-    step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     cf_pipeline.add_step(step)
     previous_step += 1
 
