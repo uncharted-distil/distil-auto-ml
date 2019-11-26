@@ -7,30 +7,88 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
+from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
+from common_primitives.column_parser import ColumnParserPrimitive
+from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 from d3m.primitives.time_series_classification.k_neighbors import Kanine
 from distil.primitives.timeseries_formatter import TimeSeriesFormatterPrimitive
 
 def create_pipeline(metric: str) -> Pipeline:
+    input_val = 'steps.{}.produce'
 
     # create the basic pipeline
-    kanine_pipeline = Pipeline()
-    kanine_pipeline.add_input(name='inputs')
+    pipeline = Pipeline()
+    pipeline.add_input(name='inputs')
 
     # step 0 - flatten the timeseries if necessary
     step = PrimitiveStep(primitive_description=TimeSeriesFormatterPrimitive.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
-    kanine_pipeline.add_step(step)
+    pipeline.add_step(step)
+    previous_step = 0
 
-    # step 1 - kanine classification
-    step = PrimitiveStep(primitive_description=Kanine.metadata.query())
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
-    step.add_hyperparameter('long_format', ArgumentType.VALUE, True)
+    # extract dataframe from dataset
+    step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
-    kanine_pipeline.add_step(step)
+    pipeline.add_step(step)
+    previous_step += 1
+
+    # Parse columns.
+    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    semantic_types = ('http://schema.org/Integer', 'http://schema.org/Float',
+                      'https://metadata.datadrivendiscovery.org/types/FloatVector')
+    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
+    pipeline.add_step(step)
+    previous_step += 1
+
+    # Extract attributes
+    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    step.add_hyperparameter('semantic_types', ArgumentType.VALUE, ('https://metadata.datadrivendiscovery.org/types/Attribute',))
+    pipeline.add_step(step)
+    previous_step += 1
+    attributes_step = previous_step
+
+    # extract dataframe from dataset
+    step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
+    step.add_output('produce')
+    pipeline.add_step(step)
+    previous_step += 1
+
+    # Parse columns.
+    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    semantic_types = ('http://schema.org/Integer', 'http://schema.org/Float',
+                      'https://metadata.datadrivendiscovery.org/types/FloatVector')
+    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
+    pipeline.add_step(step)
+    previous_step += 1
+
+    # Extract targets
+    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    target_types = ('https://metadata.datadrivendiscovery.org/types/Target', 'https://metadata.datadrivendiscovery.org/types/TrueTarget')
+    step.add_hyperparameter('semantic_types', ArgumentType.VALUE, target_types)
+    pipeline.add_step(step)
+    previous_step += 1
+    target_step = previous_step
+
+    # kanine classification
+    step = PrimitiveStep(primitive_description=Kanine.metadata.query())
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(attributes_step))
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
+    step.add_output('produce')
+    pipeline.add_step(step)
+    previous_step += 1
 
     # Adding output step to the pipeline
-    kanine_pipeline.add_output(name='output', data_reference='steps.1.produce')
+    pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return kanine_pipeline
+    return pipeline

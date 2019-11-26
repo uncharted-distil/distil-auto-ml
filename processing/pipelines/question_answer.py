@@ -78,6 +78,7 @@ def create_pipeline(metric: str) -> Pipeline:
     step.add_output('produce')
     step.add_hyperparameter('doc_col_0', ArgumentType.VALUE, 1)
     step.add_hyperparameter('doc_col_1', ArgumentType.VALUE, 3)
+    step.add_hyperparameter('batch_size', ArgumentType.VALUE, 16)
     qa_pipeline.add_step(step)
     previous_step += 1
 
