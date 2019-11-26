@@ -1,0 +1,3 @@
+#!/bin/bash
+python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/LL1_VTXC_1369_synthetic/LL1_VTXC_1369_synthetic_problem/problemDoc.json 	-i $D3MINPUTDIR/LL1_VTXC_1369_synthetic/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/LL1_VTXC_1369_synthetic/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/LL1_VTXC_1369_synthetic/SCORE/dataset_TEST/datasetDoc.json -p pipelines/vertex_classification__1f408235-c45e-46c4-8164-d5cdc0c4913e.json -O pipelines/vertex_classification__1f408235-c45e-46c4-8164-d5cdc0c4913e_run.yaml && 
+gzip -f pipelines/vertex_classification__1f408235-c45e-46c4-8164-d5cdc0c4913e_run.yaml
