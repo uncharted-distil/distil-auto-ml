@@ -1,16 +1,15 @@
 #!/bin/sh
 
-# arg 1 - directory where pipeline resides
-# arg 2 - pipeline ID (don't include .json / .meta)
-# arg 3 - dataset location
-# arg 4 - dataset name
+# arg 1 - path to pipeline json
+# arg 2 - dataset name
+
 python3 -m d3m \
     runtime \
     -v ${D3MSTATICDIR} \
-    -d ${3} \
+    -d ${D3MINPUTDIR} \
     fit-score \
-    -r ${3}/${4}/${4}_problem/problemDoc.json \
-    -i ${3}/${4}/TRAIN/dataset_TRAIN/datasetDoc.json \
-    -t ${3}/${4}/TEST/dataset_TEST/datasetDoc.json \
-    -a ${3}/${4}/SCORE/dataset_TEST/datasetDoc.json \
-    -p ${1}/${2}.json
+    -r ${D3MINPUTDIR}/${2}/${2}_problem/problemDoc.json \
+    -i ${D3MINPUTDIR}/${2}/TRAIN/dataset_TRAIN/datasetDoc.json \
+    -t ${D3MINPUTDIR}/${2}/TEST/dataset_TEST/datasetDoc.json \
+    -a ${D3MINPUTDIR}/${2}/SCORE/dataset_SCORE/datasetDoc.json \
+    -p ${1}
