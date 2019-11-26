@@ -19,7 +19,7 @@ META_DIR = 'pipelines'
 # Map of default datasets to configure .meta files
 # and metric for pipeline config
 PIPE_TO_DATASET = {
-    'tabular': ('185_baseball', 'f1Macro', {}),
+    'tabular': ('LL0_acled_reduced', 'f1Macro', {}),
     'audio': ('31_urbansound', 'accuracy', {}),
     'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', {
         'num_clusters': 100,
@@ -86,8 +86,8 @@ if __name__ == '__main__':
     for pipe in pipelines:
         p = pipe.replace('.py', '')
         print("Handling {}...".format(p))
-        lib = importlib.import_module('processing.pipelines.' + p)
         try:
+            lib = importlib.import_module('processing.pipelines.' + p)
             dataset_to_use, metric, hyperparams = PIPE_TO_DATASET[p]
             pipe_obj = lib.create_pipeline(metric=metric, **hyperparams)
             pipe_json = pipe_obj.to_json_structure()
@@ -110,8 +110,7 @@ if __name__ == '__main__':
 
             json_filename = os.path.join(META_DIR, filename + '.json')
             run_filename = os.path.join(META_DIR, filename + '.sh')
-            output_filename = os.path.join(META_DIR, filename + '_run.json')
-            archive_filename = os.path.join(META_DIR, filename + '.tar.gz')
+            output_filename = os.path.join(META_DIR, filename + '_run.yaml')
 
             print(f'Writing {filename}')
 
@@ -132,10 +131,11 @@ if __name__ == '__main__':
             with open(run_filename, 'w') as f:
                 f.write('#!/bin/bash\n')
                 f.write(f'python3 -m d3m runtime {runtime_args} fit-score {fit_score_args} && \n')
-                f.write(f'tar -cvf {archive_filename} {output_filename}')
+                f.write(f'gzip -f {output_filename}')
                 f.write('\n')
             st = os.stat(run_filename)
             os.chmod(run_filename, st.st_mode | stat.S_IEXEC)
 
         except Exception as e:
+            print(e)
             print(f'Skipping errored pipeline {p}.')

@@ -14,3 +14,4 @@ output/*
 test.db
 distil.log
 static
+.pytest_cache

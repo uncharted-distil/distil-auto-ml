@@ -14,22 +14,21 @@ def clean_pipelines(folder_path):
             shutil.rmtree(pathd)
 
 # Generate the list of run archive files, and store the set of their ids.
-run_files = glob.glob('pipelines/*.tar.gz')
+run_files = glob.glob('pipelines/*_run.yaml.gz')
 run_ids = set()
 for p in run_files:
-    id = p.split('/')[-1].replace('.tar.gz', '').split('__')[1]
+    id = p.split('/')[-1].replace('_run.yaml.gz', '').split('__')[1]
     run_ids.add(id)
 
 # Load the pipeline files and store the json for lookup by pipeline id.
-pipeline_files = glob.glob('pipelines/*[!_run].json')
+pipeline_files = glob.glob('pipelines/*.json')
 pipelines = {}
 for p in pipeline_files:
     with open(p) as f:
-        print(f'testing pipeline {p}')
         id = p.split('/')[-1].replace('.json', '').split('__')[1]
-        print(f'testing pipeline id {id} against ids {run_ids}')
         if id in run_ids:
             pipelines[id] = json.load(f)
+        # pipelines[id] = json.load(f)
 
 # Loop over each primitive that we have a generated annotation for
 primitive_files = glob.glob('../distil-primitives/annotations/*.json')
@@ -72,7 +71,7 @@ for p in primitive_files:
                 new_pipeline_path = os.path.join(folder_path, 'pipelines', pipeline_id + '.json')
 
                 old_run_path = [p for p in run_files if pipeline_id in p][0]
-                new_run_path = os.path.join(folder_path, 'pipeline_runs', pipeline_id + '.tar.gz')
+                new_run_path = os.path.join(folder_path, 'pipeline_runs', pipeline_id + '_run.yaml.gz')
 
                 dir_name, _ = os.path.split(new_pipeline_path)
                 os.makedirs(dir_name, exist_ok=True)
