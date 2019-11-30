@@ -133,7 +133,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     return pipeline, train_dataset
 
 
-def fit(pipeline: pipeline.Pipeline, problem: problem.Problem, input_dataset: container.Dataset) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
+def fit(pipeline: pipeline.Pipeline, problem: problem.Problem, input_dataset: container.Dataset, is_standard_pipeline = True) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
     hyperparams = None
     random_seed = 0
     volumes_dir = config.D3MSTATICDIR
