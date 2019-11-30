@@ -124,9 +124,9 @@ def exline_task(logger, session, task):
 
         # Check to see if this is a fully specified pipeline.  If so, we'll run it as a non-standard since
         # it doesn't need to be serialized.
-        run_as_stanard = not ex_pipeline.is_fully_specified(search_template)
+        run_as_standard = not ex_pipeline.is_fully_specified(search_template)
         fitted_pipeline, result = ex_pipeline.fit(
-            pipe, problem_d3m, dataset, is_standard_pipeline=run_as_stanard)
+            pipe, problem_d3m, dataset, is_standard_pipeline=run_as_standard)
 
         pipeline_json = fitted_pipeline.pipeline.to_json(
             nest_subpipelines=True)
