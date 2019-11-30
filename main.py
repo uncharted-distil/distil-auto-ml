@@ -117,11 +117,19 @@ def exline_task(logger, session, task):
             problem_d3m = None
             target_name = None
 
-        search_template = pipeline.Pipeline.from_json(task.pipeline) if task.pipeline else None
-        pipe, dataset = ex_pipeline.create(task.dataset_uri, problem_d3m, search_template)
-        fitted_pipeline, result = ex_pipeline.fit(pipe, problem_d3m, dataset)
+        search_template = pipeline.Pipeline.from_json(
+            task.pipeline) if task.pipeline else None
+        pipe, dataset = ex_pipeline.create(
+            task.dataset_uri, problem_d3m, search_template)
 
-        pipeline_json = fitted_pipeline.pipeline.to_json(nest_subpipelines=True)
+        # Check to see if this is a fully specified pipeline.  If so, we'll run it as a non-standard since
+        # it doesn't need to be serialized.
+        run_as_stanard = not ex_pipeline.is_fully_specified(search_template)
+        fitted_pipeline, result = ex_pipeline.fit(
+            pipe, problem_d3m, dataset, is_standard_pipeline=run_as_stanard)
+
+        pipeline_json = fitted_pipeline.pipeline.to_json(
+            nest_subpipelines=True)
         str_buf = io.StringIO()
         try:
             result.pipeline_run.to_yaml(str_buf)
