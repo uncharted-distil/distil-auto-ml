@@ -103,7 +103,7 @@ class Tasks(Base):
     worker_id = Column(String)
     dataset_uri = Column(String)
     # Start -- PRODUCE specific --
-    output_key = Column(String)
+    output_keys = Column(String)
     # End -- PRODUCE specific --
     pipeline = Column(String)
     pipeline_run = Column(String)

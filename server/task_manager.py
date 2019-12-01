@@ -5,6 +5,7 @@ protobuf messages and DAG tasks for the worker.
 import json
 import logging
 import time
+import pathlib
 from sqlalchemy import exists, and_
 
 import config
@@ -291,7 +292,10 @@ class TaskManager():
 
         # Validate request is in required format, extract if it is
         extracted_fields = self.validator.validate_produce_solution_request(message)
-        fitted_solution_id, dataset_uri, output_key = extracted_fields
+        fitted_solution_id, dataset_uri, output_keys = extracted_fields
+
+        # serialize the output key list json for storage
+        output_keys_json = json.dumps(output_keys)
 
         # Get existing fit_solution.id
         fit_solution = self.session.query(models.FitSolution) \
@@ -309,7 +313,7 @@ class TaskManager():
                             fit_solution_id=fitted_solution_id,
                             solution_id=fit_solution.solution_id,
                             dataset_uri=dataset_uri,
-                            output_key=output_key)
+                            output_keys=output_keys_json)
         self.session.add(task)
         self.session.commit()
 
@@ -343,15 +347,22 @@ class TaskManager():
                 if task.error:
                     raise RuntimeError("ProduceSolution task didn't complete successfully")
 
-                # TODO(jtorrez): predictions filename creation should live somewhere better than utils
-                preds_path = utils.make_preds_filename(task.fit_solution_id)
+                # build a map of (output_key, URI)
+                task_keys = json.loads(task.output_keys)
+                output_key_map = {}
+                for task_key in task_keys:
+                    # generate a uri from the key and make sure the file exists
+                    # TODO(jtorrez): predictions filename creation should live somewhere better than utils
+                    preds_path = utils.make_preds_filename(task.fit_solution_id, task_key)
+                    if not preds_path.exists() and not preds_path.is_file():
+                        raise FileNotFoundError("Predictions file {} doesn't exist".format(preds_path))
 
-                # check the file actually exists
-                if not preds_path.exists() and not preds_path.is_file():
-                    raise FileNotFoundError("Predictions file {} doesn't exist".format(preds_path))
+                    preds_uri = pathlib.Path(preds_path).absolute().as_uri()
+                    output_key_map[task_key] = preds_uri
 
                 progress_msg = self.msg.make_progress_msg("COMPLETED")
-                yield self.msg.make_get_produce_solution_results_response(preds_path, task.output_key, progress_msg)
+
+                yield self.msg.make_get_produce_solution_results_response(output_key_map, progress_msg)
                 break
 
 

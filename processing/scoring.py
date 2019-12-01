@@ -19,10 +19,6 @@ from processing import pipeline
 
 import copy
 
-
-PipelineContext = dutils.Enum(value='PipelineContext', names=['TESTING'], start=1)
-
-
 class Scorer:
     def __init__(self, logger, task, score_config, dats):
         self.logger = logger
@@ -167,7 +163,13 @@ class Scorer:
         # produce predictions from the fitted model and extract to single col dataframe
         # with the d3mIndex as the index
         _in = copy.deepcopy(self.inputs)
-        result_df = pipeline.produce(self.fitted_pipeline, _in)
+        results = pipeline.produce(self.fitted_pipeline, _in)
+        # Not sure how to do this properly - we assume that we will use `outputs.0` for scoring, but it is
+        # possible that, in a non-standard pipeline, `outputs.0` could be the output from another step,
+        # and `outputs.1` contains the predictions.
+        if len(results.values) > 1:
+            self.logger.warning("Pipleine produced > 1 outputs. Scoring first output only.")
+        result_df = results.values['outputs.0']
         result_df = result_df.set_index(result_df['d3mIndex'])
         result_df.index = result_df.index.map(int)
 

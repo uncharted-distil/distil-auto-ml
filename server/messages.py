@@ -145,19 +145,19 @@ class Messaging:
                                                       progress=progess_msg)
         return resp
 
-    def get_output_key(self, message):
+    def get_output_keys(self, message):
         output_keys = message.expose_outputs
+        output_keys = list(message.expose_outputs)
         if len(output_keys) != 0:
-            output_key = output_keys[-1]
+            return output_keys
         else:
-            output_key = None
-        return output_key
+            return None
 
     def unpack_produce_solution_request(self, message):
         fitted_solution_id = self.get_fitted_solution_id(message)
         dataset_uri = self.get_dataset_uri(message)
-        expose_output_key = self.get_output_key(message)
-        return fitted_solution_id, dataset_uri, expose_output_key
+        expose_output_keys = self.get_output_keys(message)
+        return fitted_solution_id, dataset_uri, expose_output_keys
 
     def make_produce_solution_response(self, request_id):
         return core_pb2.ProduceSolutionResponse(request_id=request_id)
@@ -177,12 +177,10 @@ class Messaging:
             pipeline=pipeline_description)
         return msg
 
-    def make_get_produce_solution_results_response(self, preds_fn, output_key, progress_msg):
-        # make a proper URI with file:// prefix
-        csv_uri = pathlib.Path(preds_fn).absolute().as_uri()
-        val = value_pb2.Value(csv_uri=csv_uri)
+    def make_get_produce_solution_results_response(self, output_key_map, progress_msg):
+        pb_output_map = { output_id:value_pb2.Value(csv_uri=csv_uri) for (output_id, csv_uri) in output_key_map.items() }
         rsp = core_pb2.GetProduceSolutionResultsResponse(
-                exposed_outputs={output_key: val},
+                exposed_outputs=pb_output_map,
                 progress=progress_msg)
         return rsp
 
