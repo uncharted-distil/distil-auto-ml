@@ -148,11 +148,11 @@ def fit(pipeline: pipeline.Pipeline, problem: problem.Problem, input_dataset: co
     return fitted_runtime, result
 
 
-def produce(fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset) -> container.DataFrame:
-    predictions, result = runtime.produce(fitted_pipeline, [input_dataset])
+def produce(fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset) -> runtime.Result:
+    _, result = runtime.produce(fitted_pipeline, [input_dataset])
     if result.has_error():
         raise result.error
-    return predictions
+    return result
 
 
 def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
