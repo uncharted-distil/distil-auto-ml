@@ -1,8 +1,8 @@
 export DATASET=$1
 export NUMROWS=${2:-1000}
 #  some datasets are big, it can be nice to test a subset.
-mv ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv2
-head -n $NUMROWS ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv
+#mv ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv2
+#head -n $NUMROWS ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv
 python -m dummy_ta3.dummy_ta3 -p ./seed_datasets_current/$DATASET/TRAIN/problem_TRAIN/problemDoc.json -d ./seed_datasets_current -e 0.0.0.0 -t 45042
 
 echo "Ran search successfully!"
@@ -26,11 +26,11 @@ mkdir -p ${D3MOUTPUTDIR}/score
 
 cp ./test_scripts/scoring_pipeline.yml ${D3MOUTPUTDIR}
 #
-mv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2
-head -n $NUMROWS ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv
-
-mv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2
-head -n $NUMROWS ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv
+#mv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2
+#head -n $NUMROWS ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv
+#
+#mv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2
+#head -n $NUMROWS ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv
 
 
 
