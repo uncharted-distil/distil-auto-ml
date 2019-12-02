@@ -232,7 +232,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
 
     elif is_community_detection(problem):
         # TODO what should subtype be?
-        assert problem['problem']['task_subtype'] == _problem.TaskKeyword.COMMUNITY_DETECTION
+        assert _problem.TaskKeyword.COMMUNITY_DETECTION in problem['problem']['task_keyword']
         return 'community_detection', {
             'overlapping': False,
         }
