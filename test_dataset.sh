@@ -6,8 +6,7 @@ head -n $NUMROWS ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/lear
 python -m dummy_ta3.dummy_ta3 -p ./seed_datasets_current/$DATASET/TRAIN/problem_TRAIN/problemDoc.json -d ./seed_datasets_current -e 0.0.0.0 -t 45042
 
 echo "Ran search successfully!"
-mv seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv2 seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv
-
+#mv seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv2 seed_datase#
 eval $(cat pipeline_id.txt | sed 's/^/export /')
 
 export D3MINPUTDIR=seed_datasets_current
@@ -26,12 +25,14 @@ mkdir -p ${D3MOUTPUTDIR}/pipeline_runs && \
 mkdir -p ${D3MOUTPUTDIR}/score
 
 cp ./test_scripts/scoring_pipeline.yml ${D3MOUTPUTDIR}
-
+#
 mv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2
 head -n $NUMROWS ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv
 
 mv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2
 head -n $NUMROWS ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv
+
+
 
 python -m d3m runtime \
     --volumes "${D3MSTATICDIR}" \
@@ -41,13 +42,14 @@ python -m d3m runtime \
     -r ${D3MINPUTDIR}/$DATASET/TRAIN/problem_TRAIN/problemDoc.json \
     -i ${D3MINPUTDIR}/$DATASET/TRAIN/dataset_TRAIN/datasetDoc.json \
     -t ${D3MINPUTDIR}/$DATASET/TEST/dataset_TEST/datasetDoc.json \
-    -a ${D3MINPUTDIR}/$DATASET/SCORE/dataset_TEST/datasetDoc.json
+    -a ${D3MINPUTDIR}/$DATASET/TEST/dataset_TEST/datasetDoc.json
 
 echo "Ran score successfully!"
-
-#when done
-mv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2 ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv
-mv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2 ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv
-
-
-
+#
+##when done
+##mv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2 ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv
+##mv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2 ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv
+##
+##
+#
+ts_current/$DATASET/${DATASET}_dataset/tables/learningData.csv

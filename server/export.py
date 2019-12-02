@@ -73,10 +73,10 @@ def export(solution_task, rank):
     """
     # WRITE TO pipelines_ranked
     # ensure it is proper JSON by loading it first
-    if isinstance(solution_task.pipeline, str):
-        pipeline_json = json.loads(solution_task.pipeline)
+    if isinstance(solution_task.pipelines, str):
+        pipeline_json = json.loads(solution_task.pipelines)
     else:
-        pipeline_json = fit_solution_task.pipeline
+        pipeline_json = solution_task.pipelines
     # Set name
     name = pipeline_json.get('name', False)
     if not name:
