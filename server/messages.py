@@ -17,10 +17,11 @@ class Messaging:
         return msg.inputs[0].dataset_uri or msg.inputs[0].csv_uri
 
     def get_problem_type(self, msg):
-        _type = msg.problem.problem.task_type
-        if _type is problem_pb2.TASK_TYPE_UNDEFINED:
+        _type = msg.problem.problem.task_keywords
+        if _type is problem_pb2.TASK_KEYWORD_UNDEFINED:
             return False
-        _type_str = problem_pb2.TaskType.Name(_type).upper()
+        # this seems to only be used for validation, not used in router.
+        _type_str = problem_pb2.TaskKeyword.Name(_type[0]).upper()
         return _type_str
 
     def get_search_id(self, msg):

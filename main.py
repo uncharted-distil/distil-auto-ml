@@ -43,7 +43,7 @@ def produce_task(logger, session, task):
         test_dataset = dataset.Dataset.load(task.dataset_uri)
         results = ex_pipeline.produce(fitted_pipeline, test_dataset)
         for result_key, result_df in results.values.items():
-            preds_path = utils.make_preds_filename(task.fit_solution_id, result_key)
+            preds_path = utils.make_preds_filename(task.fit_solution_id, output_key=result_key)
             result_df.to_csv(preds_path, index=False)
         session.commit()
     except Exception as e:

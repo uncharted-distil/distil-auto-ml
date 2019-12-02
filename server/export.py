@@ -50,6 +50,7 @@ def export_predictions(solution_task):
     # copy predictions from original scoring output path to the expected D3M location
     solution_results_dir = pathlib.Path(D3MOUTPUTDIR, 'predictions', str(solution_task.id))
     solution_results_dir.mkdir(parents=True, exist_ok=True)
+    # TODO solution_task.output_keys is none, but make_preds_filename requires it.
     original_preds_path = utils.make_preds_filename(solution_task.id)
     # check if predictions were actually generated and export them if so
     if os.path.exists(original_preds_path):
