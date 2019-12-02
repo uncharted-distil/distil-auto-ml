@@ -78,7 +78,7 @@ class TaskManager():
 
     def GetSearchSolutionsResults(self, request):
         """
-        Searches for correctly exited EXLINE tasks
+        Searches for pipelines
         associated with given search id
         """
         search_id = self.validator.validate_get_search_solutions_results_request(request, self.session)
@@ -120,58 +120,7 @@ class TaskManager():
                 yield False
 
 
-        # while True:
-        #     task = self.session.query(models.Tasks) \
-        #                        .filter(models.Tasks.search_id==str(search_id)) \
-        #                        .filter(models.Tasks.type=="EXLINE") \
-        #                        .filter(models.Tasks.error==False) \
-        #                        .first()
-        #
-        #     if task:
-        #         self.session.refresh(task)
-        #         # Add id to seen_ids so don't return again
-        #         # Check if Solution already exists
-        #         solution = self.session.query(models.Solutions) \
-        #                                .filter(models.Solutions.search_id==search_id) \
-        #                                .filter(models.Solutions.pipeline_id==task.id) \
-        #                                .first()
-        #         # Generate ValidSolution row if has not
-        #         # been previously verified
-        #         if not solution:
-        #             # Link the task to the solution
-        #             solution_id = task.id
-        #
-        #             solution = models.Solutions(
-        #                 id=solution_id,
-        #                 search_id=search_id,
-        #                 task_id=task.id)
-        #             self.session.add(solution)
-        #
-        #         # End session
-        #         self.session.commit()
-        #
-        #         if task.ended:
-        #             # Make the Fit solution message here
-        #             fit_solution_id = self._generate_id()
-        #             fit_solution = models.FitSolution(
-        #                 id=fit_solution_id,
-        #                 solution_id=solution_id,
-        #                 task_id=task.id)
-        #             self.session.add(fit_solution)
-        #             self.session.commit()
-        #             progress = "COMPLETED"
-        #             progress_msg = self.msg.make_progress_msg(progress)
-        #             yield self.msg.make_get_search_solutions_result(solution_id, progress_msg)
-        #             break
-        #         else:
-        #             if time.time() - start > config.PROGRESS_INTERVAL:
-        #                 start = time.time()
-        #                 progress_msg = self.msg.make_progress_msg("RUNNING")
-        #                 yield self.msg.make_get_search_solutions_result(None, progress_msg)
-        #             else:
-        #                 yield False
-        #     else:
-        #         yield False
+
 
     def ScoreSolution(self, request):
         """
@@ -282,23 +231,77 @@ class TaskManager():
 
 
         # TODO don't assume already fitted as it will be removed from search.
-        task = models.Tasks(problem=prob,
-                            pipeline=search_template,
-                            type="EXLINE",
-                            dataset_uri=dataset_uri,
-                            id=self._generate_id(),
-                            search_id=search_id)
-        self.session.add(task)
-
-        # Add all to DB
-        self.session.commit()
+        # task = models.Tasks(problem=prob,
+        #                     pipeline=search_template,
+        #                     type="EXLINE",
+        #                     dataset_uri=dataset_uri,
+        #                     id=self._generate_id(),
+        #                     search_id=search_id)
+        # self.session.add(task)
+        #
+        # # Add all to DB
+        # self.session.commit()
 
         # Should already be fitted as part of search
-        fit_solution = self.session.query(models.FitSolution) \
-            .filter(models.FitSolution.solution_id==solution_id) \
-            .first()
+        if not task:
+            while True:
+                task = self.session.query(models.Tasks) \
+                                   .filter(models.Tasks.search_id==str(search_id)) \
+                                   .filter(models.Tasks.type=="EXLINE") \
+                                   .filter(models.Tasks.error==False) \
+                                   .first()
 
-        request.fit_solution_id = fit_solution.id
+                if task:
+                    self.session.refresh(task)
+                    # Add id to seen_ids so don't return again
+                    # Check if Solution already exists
+                    solution = self.session.query(models.Solutions) \
+                                           .filter(models.Solutions.search_id==solution_id) \
+                                           .filter(models.Solutions.pipeline_id==task.id) \
+                                           .first()
+                    # Generate ValidSolution row if has not
+                    # been previously verified
+                    if not solution:
+                        # Link the task to the solution
+                        solution_id = task.id
+
+                        solution = models.Solutions(
+                            id=solution_id,
+                            search_id=solution_id,
+                            task_id=task.id)
+                        self.session.add(solution)
+
+                    # End session
+                    self.session.commit()
+
+                    if task.ended:
+                        # Make the Fit solution message here
+                        fit_solution_id = self._generate_id()
+                        fit_solution = models.FitSolution(
+                            id=fit_solution_id,
+                            solution_id=solution_id,
+                            task_id=task.id)
+                        self.session.add(fit_solution)
+                        self.session.commit()
+                        progress = "COMPLETED"
+                        progress_msg = self.msg.make_progress_msg(progress)
+                        yield self.msg.make_get_search_solutions_result(solution_id, progress_msg)
+                        break
+                    else:
+                        if time.time() - start > config.PROGRESS_INTERVAL:
+                            start = time.time()
+                            progress_msg = self.msg.make_progress_msg("RUNNING")
+                            yield self.msg.make_get_search_solutions_result(None, progress_msg)
+                        else:
+                            yield False
+                else:
+                    yield False
+        else:
+            fit_solution = self.session.query(models.FitSolution) \
+                .filter(models.FitSolution.solution_id==solution_id) \
+                .first()
+
+        request.fit_solution_id = fit_solution.id #TODO does this need to be part of above
         self.session.commit()
         return request_id
 
