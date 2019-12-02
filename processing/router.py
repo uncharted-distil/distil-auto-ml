@@ -15,18 +15,21 @@ logger = logging.getLogger(__name__)
 
 SMALL_DATASET_THRESH = 2000
 
+
 # --
 # Detect semantic problem type
 
 def get_resource_types(dataset_doc: dict) -> Sequence[str]:
     return sorted([dr['resType'] for dr in dataset_doc['dataResources']])
 
+
 def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
     resource_types = get_resource_types(dataset_doc)
-    task_type = problem_desc['problem']['task_type']
+    task_keywords = problem_desc['problem']['task_keywords']
     if 'data_augmentation' in problem_desc:
         return False
-    elif task_type not in [_problem.TaskKeyword.REGRESSION, _problem.TaskKeyword.CLASSIFICATION]:
+    elif len(set(task_keywords)
+             & set([_problem.TaskKeyword.REGRESSION, _problem.TaskKeyword.CLASSIFICATION])) == 0:
         return False
     elif resource_types == ['table']:
         return True
@@ -36,80 +39,103 @@ def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
     else:
         return False
 
+
 def is_edgelist(dataset_doc: dict, problem_desc: dict) -> bool:
     resource_types = get_resource_types(dataset_doc)
-    task_type = problem_desc['problem']['task_type']
+    task_keywords = problem_desc['problem']['task_keywords']
 
-    if task_type not in [_problem.TaskKeyword.VERTEX_CLASSIFICATION, _problem.TaskKeyword.VERTEX_NOMINATION]:
+    if len(set(task_keywords)
+           & set([_problem.TaskKeyword.VERTEX_CLASSIFICATION, _problem.TaskKeyword.VERTEX_NOMINATION])) == 0:
         return False
     elif set(resource_types) == {'table'}:
         return True
     else:
         return False
 
+
 def is_multitable(dataset_doc: dict) -> bool:
     return ['table', 'table'] == get_resource_types(dataset_doc)
 
+
 def is_timeseries_classification(dataset_doc: dict, problem: dict) -> bool:
     timeseries_resource = ['table', 'timeseries'] == get_resource_types(dataset_doc)
-    classification_task = problem['problem']['task_type'] == _problem.TaskKeyword.CLASSIFICATION
+    classification_task = _problem.TaskKeyword.CLASSIFICATION in problem['problem']['task_keywords']
     return timeseries_resource and classification_task
 
+
 def is_timeseries_forecasting(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskKeyword.FORECASTING
+    return _problem.TaskKeyword.FORECASTING in problem['problem']['task_keywords']
+
 
 def is_question_answering(dataset_doc: dict) -> bool:
     res_paths = sorted([r['resPath'] for r in dataset_doc['dataResources']])
-    return res_paths == ['tables/learningData.csv', 'tables/questions.csv', 'tables/sentences.csv', 'tables/vocabulary.csv']
+    return res_paths == ['tables/learningData.csv', 'tables/questions.csv', 'tables/sentences.csv',
+                         'tables/vocabulary.csv']
+
 
 def is_audio(dataset_doc: dict) -> bool:
     return 'audio' in get_resource_types(dataset_doc)
 
+
 def is_image(dataset_doc: dict, problem: dict) -> bool:
-    classification = problem['problem']['task_type'] == _problem.TaskKeyword.CLASSIFICATION
-    regression = problem['problem']['task_type'] == _problem.TaskKeyword.REGRESSION
+    classification = _problem.TaskKeyword.CLASSIFICATION in problem['problem']['task_keywords']
+    regression = _problem.TaskKeyword.REGRESSION in problem['problem']['task_keywords']
     return 'image' in get_resource_types(dataset_doc) and (classification or regression)
 
+
 def is_object_detection(problem: dict) -> bool:
-   return problem['problem']['task_type'] == _problem.TaskKeyword.OBJECT_DETECTION
+    return _problem.TaskKeyword.OBJECT_DETECTION in problem['problem']['task_keywords']
+
 
 def is_graph_matching(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskKeyword.GRAPH_MATCHING
+    return _problem.TaskKeyword.GRAPH_MATCHING in problem['problem']['task_keywords']
+
 
 def is_community_detection(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskKeyword.COMMUNITY_DETECTION
+    return _problem.TaskKeyword.COMMUNITY_DETECTION in problem['problem']['task_keywords']
+
 
 def is_clustering(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskKeyword.CLUSTERING
+    return _problem.TaskKeyword.CLUSTERING in problem['problem']['task_keywords']
+
 
 def is_vertex_classification(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskKeyword.VERTEX_CLASSIFICATION
+    return _problem.TaskKeyword.VERTEX_CLASSIFICATION in problem['problem']['task_keywords']
+
 
 def is_vertex_nomination(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskKeyword.VERTEX_NOMINATION
+    return _problem.TaskKeyword.VERTEX_NOMINATION in problem['problem']['task_keywords']
+
 
 def is_collaborative_filtering(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskKeyword.COLLABORATIVE_FILTERING
+    return _problem.TaskKeyword.COLLABORATIVE_FILTERING in problem['problem']['task_keywords']
+
 
 def is_link_prediction(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskKeyword.LINK_PREDICTION
+    return _problem.TaskKeyword.LINK_PREDICTION in problem['problem']['task_keywords']
+
 
 def is_text(dataset_doc: dict) -> bool:
     return ['table', 'text'] == get_resource_types(dataset_doc)
 
+
 def is_semisupervised_tabular(problem: dict) -> bool:
-    return problem['problem']['task_type'] == _problem.TaskKeyword.SEMISUPERVISED
+    return _problem.TaskKeyword.SEMISUPERVISED in problem['problem']['task_keywords']
+
 
 def is_data_augmentation_tabular(dataset_doc: dict, problem: dict) -> bool:
     is_data_aug = True if 'data_augmentation' in problem else False
-    is_classification_regression = True if (problem['problem']['task_type']) in [_problem.TaskKeyword.REGRESSION, _problem.TaskKeyword.CLASSIFICATION] else False
+    is_classification_regression = len(set(_problem['problem']['task_keywords'])
+                                       in set(
+        [_problem.TaskKeyword.REGRESSION, _problem.TaskKeyword.CLASSIFICATION])) > 0
     is_tabular = ['table'] == get_resource_types(dataset_doc)
     return is_data_aug and is_classification_regression and is_tabular
+
+
 # --
 # Routing
 
 def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str, dict]:
-
     # Shouldn't evaluate these in serial -- should do in parallel, then check for
     # conflicts
 
@@ -127,8 +153,8 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
 
         assert len(resources) == 1
         other_resource = resources[0]
-        is_table       = other_resource['resType'] == 'table'
-        is_collection  = other_resource['isCollection']
+        is_table = other_resource['resType'] == 'table'
+        is_collection = other_resource['isCollection']
 
         if is_table and is_collection:
             return 'multitable', {}
@@ -139,7 +165,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
             ), file=sys.stderr)
 
             return 'table', {
-                #"num_fits"  : 5 if X_train.shape[0] < SMALL_DATASET_THRESH else 1,
+                # "num_fits"  : 5 if X_train.shape[0] < SMALL_DATASET_THRESH else 1,
                 'num_fits': 1
             }
 
@@ -165,20 +191,20 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         n_clusters = problem['inputs'][0]['targets'][0]['clusters_number']
 
         all_float = set([r['colType'] for r in learning_resource['columns'] if
-            ('suggestedTarget' not in r['role']) and
-            ('d3mIndex' != r['colName'])]) == {'real'}
+                         ('suggestedTarget' not in r['role']) and
+                         ('d3mIndex' != r['colName'])]) == {'real'}
 
         return 'clustering', {
-            "n_clusters" : n_clusters,
-            "all_float"  : all_float,
+            "n_clusters": n_clusters,
+            "all_float": all_float,
         }
 
     elif is_timeseries_classification(dataset_doc, problem):
         return 'timeseries_classification', {
-            "metrics"       : ['euclidean', 'cityblock', 'dtw'],
-            "diffusion"     : True,
-            "forest"        : True,
-            "ensemble_size" : 3,
+            "metrics": ['euclidean', 'cityblock', 'dtw'],
+            "diffusion": True,
+            "forest": True,
+            "ensemble_size": 3,
         }
 
     elif is_timeseries_forecasting(problem):
@@ -195,7 +221,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
 
     elif is_vertex_classification(problem):
         return 'vertex_classification', {
-            "edgelist" : is_edgelist(dataset_doc, problem)
+            "edgelist": is_edgelist(dataset_doc, problem)
         }
 
     elif is_collaborative_filtering(problem):
@@ -205,10 +231,10 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         return 'link_prediction', {}
 
     elif is_community_detection(problem):
-        #TODO what should subtype be?
-        assert problem['problem']['task_subtype'] == _problem.TaskKeyword.COMMUNITY_DETECTION
+        # TODO what should subtype be?
+        assert _problem.TaskKeyword.COMMUNITY_DETECTION in problem['problem']['task_keyword']
         return 'community_detection', {
-            'overlapping' : False,
+            'overlapping': False,
         }
     elif is_semisupervised_tabular(problem):
         return 'semisupervised_tabular', {}
