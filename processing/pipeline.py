@@ -34,8 +34,8 @@ from processing.pipelines import (clustering,
                                   timeseries_kanine,
                                   timeseries_var,
                                   timeseries_lstm_fcn,
-                                  semisupervised_tabular,
-                                  data_augmentation_tabular)
+                                  semisupervised_tabular)
+                                #   data_augmentation_tabular) TODO: Looks like the data aug stuff has moved.
 
 import utils
 
@@ -133,14 +133,14 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
     return pipeline, train_dataset
 
 
-def fit(pipeline: pipeline.Pipeline, problem: problem.Problem, input_dataset: container.Dataset) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
+def fit(pipeline: pipeline.Pipeline, problem: problem.Problem, input_dataset: container.Dataset, is_standard_pipeline = True) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
     hyperparams = None
     random_seed = 0
     volumes_dir = config.D3MSTATICDIR
 
     fitted_runtime, _, result = runtime.fit(pipeline, [input_dataset], problem_description=problem, hyperparams=hyperparams, random_seed=random_seed,
-        volumes_dir=volumes_dir, context=metadata_base.Context.TESTING, runtime_environment=pipeline_run.RuntimeEnvironment()
-    )
+                                            volumes_dir=volumes_dir, context=metadata_base.Context.TESTING, runtime_environment=pipeline_run.RuntimeEnvironment(),
+                                            is_standard_pipeline=is_standard_pipeline)
 
     if result.has_error():
         raise result.error
@@ -148,11 +148,16 @@ def fit(pipeline: pipeline.Pipeline, problem: problem.Problem, input_dataset: co
     return fitted_runtime, result
 
 
-def produce(fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset) -> container.DataFrame:
-    predictions, result = runtime.produce(fitted_pipeline, [input_dataset])
+def produce(fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset) -> runtime.Result:
+    _, result = runtime.produce(fitted_pipeline, [input_dataset])
     if result.has_error():
         raise result.error
-    return predictions
+    return result
+
+
+def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
+    # if there's a pipeline and it doesn't have a placeholder then its fully specified
+    return prepend and not [True for s in prepend.steps if isinstance(s, PlaceholderStep)]
 
 
 def _prepend_pipeline(base: pipeline.Pipeline, prepend: pipeline.Pipeline) -> pipeline.Pipeline:

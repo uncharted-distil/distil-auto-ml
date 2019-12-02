@@ -59,12 +59,12 @@ def make_job_fn(task_id):
     filepath = pathlib.Path(config.OUTPUT_DIR, filename)
     return filepath.resolve()
 
-def make_preds_filename(task_id):
+def make_preds_filename(task_id, output_key):
     """Return the absolute path to the predictions filename.
 
     None of that os.path.join garbage, just good sweet Path.absolute()
 
     Down with os.path.join. I have learned my lesson.
     """
-    path = pathlib.Path(config.OUTPUT_DIR, '{}.csv'.format(task_id)).resolve()
+    path = pathlib.Path(config.OUTPUT_DIR, f'{format(task_id)}_{output_key}.csv').resolve()
     return path

@@ -14,3 +14,6 @@ output/*
 test.db
 distil.log
 static
+.pytest_cache
+pipelines/*_run.yaml.gz
+pipelines/*_run.yaml
