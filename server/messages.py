@@ -18,8 +18,9 @@ class Messaging:
 
     def get_problem_type(self, msg):
         _type = msg.problem.problem.task_keywords
-        if _type is problem_pb2.TASK_KEYWORD_UNDEFINED:
+        if len(_type) == 0 or problem_pb2.TASK_KEYWORD_UNDEFINED in _type:
             return False
+
         # this seems to only be used for validation, not used in router.
         _type_str = problem_pb2.TaskKeyword.Name(_type[0]).upper()
         return _type_str
