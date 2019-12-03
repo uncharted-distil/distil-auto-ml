@@ -33,6 +33,7 @@ from processing.pipelines import (clustering,
                                   community_detection,
                                   timeseries_kanine,
                                   timeseries_var,
+                                  timeseries_deepar,
                                   timeseries_lstm_fcn,
                                   semisupervised_tabular)
                                 #   data_augmentation_tabular) TODO: Looks like the data aug stuff has moved.
@@ -116,7 +117,10 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
         # for now
         # pipeline = tabular.create_pipeline(metric)
         # the above was in the exline repo not sure what is the most up to date?
-        pipeline = timeseries_var.create_pipeline(metric)
+        if gpu:
+            pipeline = timeseries_deepar.create_pipeline(metric)
+        else:
+            pipeline = timeseries_var.create_pipeline(metric)
         # pipeline = timeseries_forecasting.create_pipeline(metric)
     elif pipeline_type == 'semisupervised_tabular':
         pipeline = semisupervised_tabular.create_pipeline(metric)

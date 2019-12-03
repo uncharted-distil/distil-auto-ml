@@ -25,12 +25,13 @@ mkdir -p ${D3MOUTPUTDIR}/pipeline_runs && \
 mkdir -p ${D3MOUTPUTDIR}/score
 
 cp ./test_scripts/scoring_pipeline.yml ${D3MOUTPUTDIR}
-#
-#mv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2
-#head -n $NUMROWS ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv
-#
-#mv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2
-#head -n $NUMROWS ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv
+
+mv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2
+head -n $NUMROWS ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv
+
+mv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2
+head -n $NUMROWS ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv
+
 
 
 
@@ -39,17 +40,17 @@ python -m d3m runtime \
     -d ${DATASET} \
     fit-score \
     -p ${D3MOUTPUTDIR}/pipelines_ranked/$PIPELINE_ID.json \
-    -r ${D3MINPUTDIR}/$DATASET/TRAIN/problem_TRAIN/problemDoc.json \
+    -r ${D3MINPUTDIR}/$DATASET/${DATASET}_problem/problemDoc.json \
     -i ${D3MINPUTDIR}/$DATASET/TRAIN/dataset_TRAIN/datasetDoc.json \
     -t ${D3MINPUTDIR}/$DATASET/TEST/dataset_TEST/datasetDoc.json \
-    -a ${D3MINPUTDIR}/$DATASET/TEST/dataset_TEST/datasetDoc.json
+    -a ${D3MINPUTDIR}/$DATASET/SCORE/dataset_SCORE/datasetDoc.json
 
 echo "Ran score successfully!"
 #
 ##when done
-##mv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2 ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv
-##mv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2 ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv
+mv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2 ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv
+mv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2 ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv
 ##
 ##
 #
-ts_current/$DATASET/${DATASET}_dataset/tables/learningData.csv
+#ts_current/$DATASET/${DATASET}_dataset/tables/learningData.csv
