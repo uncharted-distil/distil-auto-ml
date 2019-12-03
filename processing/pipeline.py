@@ -149,7 +149,7 @@ def fit(pipeline: pipeline.Pipeline, problem: problem.Problem, input_dataset: co
 
 
 def produce(fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset) -> runtime.Result:
-    _, result = runtime.produce(fitted_pipeline, [input_dataset])
+    _, result = runtime.produce(fitted_pipeline, [input_dataset], expose_produced_outputs=True)
     if result.has_error():
         raise result.error
     return result
