@@ -39,12 +39,17 @@ def produce_task(logger, session, task):
         logger.info('Starting produce task ID {}'.format(task.id))
         dats = QUATTO_LIVES[task.solution_id]
 
+
         fitted_pipeline = dats['pipeline']
         test_dataset = dataset.Dataset.load(task.dataset_uri)
         results = ex_pipeline.produce(fitted_pipeline, test_dataset)
-        for result_key, result_df in results.values.items():
-            preds_path = utils.make_preds_filename(task.fit_solution_id, output_key=result_key)
-            result_df.to_csv(preds_path, index=False)
+
+        # pull out the results the caller requested, ignore any others that were exposed
+        output_keys = json.loads(task.output_keys)
+        for output_key in output_keys:
+            if output_key in results.values:
+                preds_path = utils.make_preds_filename(task.fit_solution_id, output_key=output_key)
+                results.values[output_key].to_csv(preds_path, index=False)
         session.commit()
     except Exception as e:
         logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
