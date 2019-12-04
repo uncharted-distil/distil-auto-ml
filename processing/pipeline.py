@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Dict
 import GPUtil
 import sys
 
@@ -161,17 +161,44 @@ def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
 
 
 def _prepend_pipeline(base: pipeline.Pipeline, prepend: pipeline.Pipeline) -> pipeline.Pipeline:
-    # find the placeholder node in the prepend and replace it with the first node from the base pipeline
-    for i, step in enumerate(prepend.steps):
-        if isinstance(step, pipeline.PlaceholderStep):
-            # need to clear this out, otherwise an overly-aggressive check on a pre-existing index
-            # causes the replace to fail
-            base.steps[0].index = None
-            prepend.replace_step(i, base.steps[0])
-            return prepend
+    # find the placeholder node
+    replace_index = -1
+    for i, prepend_step in enumerate(prepend.steps):
+        if isinstance(prepend_step, pipeline.PlaceholderStep):
+            replace_index = i
+            break
 
-    logger.warn(f'Failed to prepend pipeline {prepend.id} - continuing with base unmodified')
-    return base
+    if replace_index < 0:
+        logger.warn(f'Failed to prepend pipeline {prepend.id} - continuing with base unmodified')
+        return base
+
+    # update prepend outputs to use those from base pipeline
+    updated_outputs: List[Dict[str, str]] = []
+    for base_output in base.outputs:
+        # use the base pipeline output but increase the index to account for the appended base pipeline length
+        base_ref = base_output['data'].split('.')
+        updated_base_ref = f'{base_ref[0]}.{int(base_ref[1])+replace_index}.{base_ref[2]}'
+        updated_outputs.append({'data': updated_base_ref, 'name': base_output['name']})
+    prepend.outputs = updated_outputs
+
+    # add each of the base steps, updating their references as necessary
+    for base_idx, base_step in enumerate(base.steps):
+        base_step.index = replace_index + base_idx
+        if base_idx == 0:
+            prepend.steps[base_step.index] = base_step
+        else:
+            prepend.steps.append(base_step)
+
+        # update the inputs to account account for concatenation
+        for arg_name, arg_val in base_step.arguments.items():
+            arg_ref = arg_val['data'].split('.')
+            if arg_ref[0] == 'inputs':
+                # if this was taking inputs, take the last prepend node instead
+                arg_val['data'] = f'steps.{int(arg_ref[1]) + replace_index-1}.produce'
+            else:
+                arg_val['data'] = f'{arg_ref[0]}.{int(arg_ref[1])+replace_index}.{arg_ref[2]}'
+
+    return prepend
 
 def _use_gpu() -> bool:
     # check for gpu presence - exception can be thrown when none available depending on
