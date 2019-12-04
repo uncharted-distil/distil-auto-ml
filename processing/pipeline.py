@@ -161,19 +161,13 @@ def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
 
 
 def _prepend_pipeline(base: pipeline.Pipeline, prepend: pipeline.Pipeline) -> pipeline.Pipeline:
-    # wrap pipeline in a sub pipeline - d3m core node replacement function doesn't work otherwise
-    subpipeline = pipeline.SubpipelineStep(pipeline=base)
-
-    # find the placeholder node in the prepend and replace it with the base sub pipeline
+    # find the placeholder node in the prepend and replace it with the first node from the base pipeline
     for i, step in enumerate(prepend.steps):
         if isinstance(step, pipeline.PlaceholderStep):
-            # set inputs/outputs manually since the replace doesn't infer them
-            for input_ref in step.inputs:
-                subpipeline.add_input(input_ref)
-            for output_id in step.outputs:
-                subpipeline.add_output(output_id)
-
-            prepend.replace_step(i, subpipeline)
+            # need to clear this out, otherwise an overly-aggressive check on a pre-existing index
+            # causes the replace to fail
+            base.steps[0].index = None
+            prepend.replace_step(i, base.steps[0])
             return prepend
 
     logger.warn(f'Failed to prepend pipeline {prepend.id} - continuing with base unmodified')
