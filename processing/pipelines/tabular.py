@@ -21,7 +21,7 @@ from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
-
+from dsbox.datapreprocessing.cleaner.iterative_regression import IterativeRegressionImputation
 from sklearn_wrap import SKMissingIndicator
 from sklearn_wrap import SKImputer
 from sklearn_wrap import SKStandardScaler
@@ -153,14 +153,16 @@ def create_pipeline(metric: str,
     # step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
     # tabular_pipeline.add_step(step)
     # previous_step += 1
-
-
+    #
+    #
     # Adds SK learn simple imputer
-    step = PrimitiveStep(primitive_description=SKImputer.SKImputer.metadata.query())
+    # step = PrimitiveStep(primitive_description=SKImputer.SKImputer.metadata.query())
+    # use dsbox imputer since sklearn has issues with mismatch datasets
+    step = PrimitiveStep(primitive_description=IterativeRegressionImputation.metadata.query())
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
-    step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
+    # step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
     step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
     tabular_pipeline.add_step(step)
     previous_step += 1
