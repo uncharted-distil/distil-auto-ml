@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Dict, Optional
 import GPUtil
 import sys
 
@@ -8,7 +8,7 @@ from d3m.container import dataset
 from d3m import container, exceptions, runtime
 from d3m.base import utils as base_utils
 from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
-from d3m.metadata.pipeline import Pipeline, PlaceholderStep
+from d3m.metadata.pipeline import Pipeline, PlaceholderStep, Resolver
 
 from processing import metrics
 from distil.primitives import utils as distil_utils
@@ -35,15 +35,15 @@ from processing.pipelines import (clustering,
                                   timeseries_var,
                                   timeseries_deepar,
                                   timeseries_lstm_fcn,
-                                  semisupervised_tabular)
-                                #   data_augmentation_tabular) TODO: Looks like the data aug stuff has moved.
+                                  semisupervised_tabular,
+                                  data_augmentation_tabular)
 
 import utils
 
 logger = logging.getLogger(__name__)
 
 
-def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None) -> Tuple[pipeline.Pipeline, container.Dataset]:
+def create(dataset_doc_path: str, problem: dict, prepend: Optional[Pipeline]=None, resolver: Optional[Resolver] = None) -> Tuple[pipeline.Pipeline, container.Dataset]:
 
     # allow for use of GPU optimized pipelines
     gpu = _use_gpu()
@@ -72,60 +72,60 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
 
     pipeline: Pipeline = None
     if pipeline_type == 'table':
-        pipeline = tabular.create_pipeline(metric)
+        pipeline = tabular.create_pipeline(metric, resolver)
     elif pipeline_type == 'graph_matching':
-        pipeline = graph_matching.create_pipeline(metric)
+        pipeline = graph_matching.create_pipeline(metric, resolver)
     elif pipeline_type == 'timeseries_classification':
         if gpu:
-            pipeline = timeseries_lstm_fcn.create_pipeline(metric)
+            pipeline = timeseries_lstm_fcn.create_pipeline(metric, resolver)
         else:
-            pipeline = timeseries_kanine.create_pipeline(metric)
+            pipeline = timeseries_kanine.create_pipeline(metric, resolver)
     elif pipeline_type == 'question_answering':
         if gpu:
-            pipeline = question_answer.create_pipeline(metric)
+            pipeline = question_answer.create_pipeline(metric, resolver)
         else:
-            pipeline = tabular.create_pipeline(metric)
+            pipeline = tabular.create_pipeline(metric, resolver)
     elif pipeline_type == 'text':
-        pipeline = text.create_pipeline(metric)
+        pipeline = text.create_pipeline(metric, resolver)
     elif pipeline_type == 'image':
-        pipeline = image.create_pipeline(metric)
+        pipeline = image.create_pipeline(metric, resolver)
     elif pipeline_type == 'object_detection':
-        pipeline = object_detection.create_pipeline(metric)
+        pipeline = object_detection.create_pipeline(metric, resolver)
     elif pipeline_type == 'audio':
-       pipeline = audio.create_pipeline(metric)
+       pipeline = audio.create_pipeline(metric, resolver)
     elif pipeline_type == 'collaborative_filtering':
         if gpu:
-            pipeline = collaborative_filtering.create_pipeline(metric)
+            pipeline = collaborative_filtering.create_pipeline(metric, resolver)
         else:
-            pipeline = tabular.create_pipeline(metric)
+            pipeline = tabular.create_pipeline(metric, resolver)
     elif pipeline_type == 'vertex_nomination':
-        pipeline = vertex_nomination.create_pipeline(metric)
+        pipeline = vertex_nomination.create_pipeline(metric, resolver)
     elif pipeline_type == 'vertex_classification':
         # force using vertex classification
         # TODO - should determine the graph data format
-        pipeline = vertex_classification.create_pipeline(metric)
+        pipeline = vertex_classification.create_pipeline(metric, resolver)
     elif pipeline_type == 'link_prediction':
-        pipeline = link_prediction.create_pipeline(metric)
+        pipeline = link_prediction.create_pipeline(metric, resolver)
     elif pipeline_type == 'community_detection':
-        pipeline = community_detection.create_pipeline(metric)
+        pipeline = community_detection.create_pipeline(metric, resolver)
     elif pipeline_type == 'clustering':
         n_clusters = problem['inputs'][0]['targets'][0]['clusters_number']
         col_name = problem['inputs'][0]['targets'][0]['column_name']
-        pipeline = clustering.create_pipeline(metric, num_clusters=n_clusters, cluster_col_name=col_name)
+        pipeline = clustering.create_pipeline(metric, num_clusters=n_clusters, cluster_col_name=col_name, resolver=resolver)
     elif pipeline_type == 'timeseries_forecasting':
         # VAR hyperparameters for period need to be tuned to get meaningful results so we're using regression
         # for now
         # pipeline = tabular.create_pipeline(metric)
         # the above was in the exline repo not sure what is the most up to date?
         if gpu:
-            pipeline = timeseries_deepar.create_pipeline(metric)
+            pipeline = timeseries_deepar.create_pipeline(metric, resolver)
         else:
-            pipeline = timeseries_var.create_pipeline(metric)
-        # pipeline = timeseries_forecasting.create_pipeline(metric)
+            pipeline = timeseries_var.create_pipeline(metric, resolver)
+
     elif pipeline_type == 'semisupervised_tabular':
-        pipeline = semisupervised_tabular.create_pipeline(metric)
+        pipeline = semisupervised_tabular.create_pipeline(metric, resolver)
     elif pipeline_type == 'data_augmentation_tabular':
-        pipeline = data_augmentation_tabular.create_pipeline(metric, dataset=train_dataset, keywords=pipeline_info)
+        pipeline = data_augmentation_tabular.create_pipeline(metric, dataset=train_dataset, keywords=pipeline_info, resolver=resolver)
     else:
         logger.error(f'Pipeline type [{pipeline_type}] is not yet supported.')
         return None, train_dataset
@@ -165,23 +165,44 @@ def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
 
 
 def _prepend_pipeline(base: pipeline.Pipeline, prepend: pipeline.Pipeline) -> pipeline.Pipeline:
-    # wrap pipeline in a sub pipeline - d3m core node replacement function doesn't work otherwise
-    subpipeline = pipeline.SubpipelineStep(pipeline=base)
+    # find the placeholder node
+    replace_index = -1
+    for i, prepend_step in enumerate(prepend.steps):
+        if isinstance(prepend_step, pipeline.PlaceholderStep):
+            replace_index = i
+            break
 
-    # find the placeholder node in the prepend and replace it with the base sub pipeline
-    for i, step in enumerate(prepend.steps):
-        if isinstance(step, pipeline.PlaceholderStep):
-            # set inputs/outputs manually since the replace doesn't infer them
-            for input_ref in step.inputs:
-                subpipeline.add_input(input_ref)
-            for output_id in step.outputs:
-                subpipeline.add_output(output_id)
+    if replace_index < 0:
+        logger.warn(f'Failed to prepend pipeline {prepend.id} - continuing with base unmodified')
+        return base
 
-            prepend.replace_step(i, subpipeline)
-            return prepend
+    # update prepend outputs to use those from base pipeline
+    updated_outputs: List[Dict[str, str]] = []
+    for base_output in base.outputs:
+        # use the base pipeline output but increase the index to account for the appended base pipeline length
+        base_ref = base_output['data'].split('.')
+        updated_base_ref = f'{base_ref[0]}.{int(base_ref[1])+replace_index}.{base_ref[2]}'
+        updated_outputs.append({'data': updated_base_ref, 'name': base_output['name']})
+    prepend.outputs = updated_outputs
 
-    logger.warn(f'Failed to prepend pipeline {prepend.id} - continuing with base unmodified')
-    return base
+    # add each of the base steps, updating their references as necessary
+    for base_idx, base_step in enumerate(base.steps):
+        base_step.index = replace_index + base_idx
+        if base_idx == 0:
+            prepend.steps[base_step.index] = base_step
+        else:
+            prepend.steps.append(base_step)
+
+        # update the inputs to account account for concatenation
+        for arg_name, arg_val in base_step.arguments.items():
+            arg_ref = arg_val['data'].split('.')
+            if arg_ref[0] == 'inputs':
+                # if this was taking inputs, take the last prepend node instead
+                arg_val['data'] = f'steps.{int(arg_ref[1]) + replace_index-1}.produce'
+            else:
+                arg_val['data'] = f'{arg_ref[0]}.{int(arg_ref[1])+replace_index}.{arg_ref[2]}'
+
+    return prepend
 
 def _use_gpu() -> bool:
     # check for gpu presence - exception can be thrown when none available depending on

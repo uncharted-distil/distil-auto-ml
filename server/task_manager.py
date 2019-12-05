@@ -51,7 +51,7 @@ class TaskManager():
         # serialize the pipeline to a string for storage in db if one is provided
         search_template: str = None
         if message.HasField('template'):
-            search_template_obj = api_utils.decode_pipeline_description(message.template, pipeline.Resolver())
+            search_template_obj = api_utils.decode_pipeline_description(message.template, pipeline.Resolver(load_all_primitives=False))
             search_template = search_template_obj.to_json()
 
         # Create search row in DB

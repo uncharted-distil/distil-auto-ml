@@ -107,6 +107,8 @@ def fit_task(logger, session, task):
         session.commit()
 
 def exline_task(logger, session, task):
+
+
     try:
         logger.info('Starting distil task ID {}'.format(task.id))
         task.started_at = datetime.datetime.utcnow()
@@ -121,19 +123,16 @@ def exline_task(logger, session, task):
             problem_d3m = None
             target_name = None
 
-        search_template = pipeline.Pipeline.from_json(
-            task.pipeline) if task.pipeline else None
-        pipe, dataset = ex_pipeline.create(
-            task.dataset_uri, problem_d3m, search_template)
+        resolver = pipeline.Resolver(load_all_primitives=False) # lazy load
+        search_template = pipeline.Pipeline.from_json(task.pipeline, resolver=resolver) if task.pipeline else None
+        pipe, dataset = ex_pipeline.create(task.dataset_uri, problem_d3m, search_template, resolver)
 
         # Check to see if this is a fully specified pipeline.  If so, we'll run it as a non-standard since
         # it doesn't need to be serialized.
         run_as_standard = not ex_pipeline.is_fully_specified(search_template)
-        fitted_pipeline, result = ex_pipeline.fit(
-            pipe, problem_d3m, dataset, is_standard_pipeline=run_as_standard)
+        fitted_pipeline, result = ex_pipeline.fit(pipe, problem_d3m, dataset, is_standard_pipeline=run_as_standard)
 
-        pipeline_json = fitted_pipeline.pipeline.to_json(
-            nest_subpipelines=True)
+        pipeline_json = fitted_pipeline.pipeline.to_json()
         str_buf = io.StringIO()
         try:
             result.pipeline_run.to_yaml(str_buf)

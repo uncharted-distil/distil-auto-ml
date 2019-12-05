@@ -1,34 +1,43 @@
 from d3m import index
+
+from typing import Optional
+
+from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 
-def create_pipeline(metric: str) -> Pipeline:
+
+def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
     pipeline_description = Pipeline()
     pipeline_description.add_input(name='inputs')
 
     # Step 1: Ts formatter
     step_0 = PrimitiveStep(
-        primitive=index.get_primitive('d3m.primitives.data_preprocessing.data_cleaning.DistilTimeSeriesFormatter'))
+        primitive=index.get_primitive('d3m.primitives.data_preprocessing.data_cleaning.DistilTimeSeriesFormatter'),
+        resolver=resolver)
     step_0.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step_0.add_output('produce')
     pipeline_description.add_step(step_0)
 
     # Step 2: DS to DF on formatted ts DS
     step_1 = PrimitiveStep(
-        primitive=index.get_primitive('d3m.primitives.data_transformation.dataset_to_dataframe.Common'))
+        primitive=index.get_primitive('d3m.primitives.data_transformation.dataset_to_dataframe.Common'),
+        resolver=resolver)
     step_1.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
     step_1.add_output('produce')
     pipeline_description.add_step(step_1)
 
     # Step 3: DS to DF on input DS
     step_2 = PrimitiveStep(
-        primitive=index.get_primitive('d3m.primitives.data_transformation.dataset_to_dataframe.Common'))
+        primitive=index.get_primitive('d3m.primitives.data_transformation.dataset_to_dataframe.Common'),
+        resolver=resolver)
     step_2.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step_2.add_output('produce')
     pipeline_description.add_step(step_2)
 
     # step 3: column parser on input DF
-    step_3 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.data_transformation.column_parser.Common'))
+    step_3 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.data_transformation.column_parser.Common'),
+                           resolver=resolver)
     step_3.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.2.produce')
     step_3.add_output('produce')
     step_3.add_hyperparameter(name='parse_semantic_types', argument_type=ArgumentType.VALUE,
@@ -40,7 +49,8 @@ def create_pipeline(metric: str) -> Pipeline:
 
     # Step 5: parse target semantic types
     step_4 = PrimitiveStep(
-        primitive=index.get_primitive('d3m.primitives.data_transformation.extract_columns_by_semantic_types.Common'))
+        primitive=index.get_primitive('d3m.primitives.data_transformation.extract_columns_by_semantic_types.Common'),
+        resolver=resolver)
     step_4.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
     step_4.add_hyperparameter(name='semantic_types', argument_type=ArgumentType.VALUE,
                               data=["https://metadata.datadrivendiscovery.org/types/Target",
@@ -51,7 +61,8 @@ def create_pipeline(metric: str) -> Pipeline:
 
     # Step 6: LSTM_FCN
     step_5 = PrimitiveStep(
-        primitive=index.get_primitive('d3m.primitives.time_series_classification.convolutional_neural_net.LSTM_FCN'))
+        primitive=index.get_primitive('d3m.primitives.time_series_classification.convolutional_neural_net.LSTM_FCN'),
+        resolver=resolver)
     step_5.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step_5.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
     step_5.add_output('produce')
@@ -59,7 +70,8 @@ def create_pipeline(metric: str) -> Pipeline:
 
     # Step 7: construct predictions
     step_6 = PrimitiveStep(
-        primitive=index.get_primitive('d3m.primitives.data_transformation.construct_predictions.Common'))
+        primitive=index.get_primitive('d3m.primitives.data_transformation.construct_predictions.Common'),
+        resolver=resolver)
     step_6.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.5.produce')
     step_6.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.2.produce')
     step_6.add_output('produce')
