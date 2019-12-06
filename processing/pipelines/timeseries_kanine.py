@@ -1,9 +1,10 @@
 import logging
 import numpy as np
 import pandas as pd
+from typing import Optional
 
 from d3m import container, utils
-from d3m.metadata.pipeline import Pipeline, PrimitiveStep
+from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
@@ -13,7 +14,7 @@ from common_primitives.extract_columns_semantic_types import ExtractColumnsBySem
 from d3m.primitives.time_series_classification.k_neighbors import Kanine
 from distil.primitives.timeseries_formatter import TimeSeriesFormatterPrimitive
 
-def create_pipeline(metric: str) -> Pipeline:
+def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
 
     # create the basic pipeline
@@ -21,21 +22,21 @@ def create_pipeline(metric: str) -> Pipeline:
     pipeline.add_input(name='inputs')
 
     # step 0 - flatten the timeseries if necessary
-    step = PrimitiveStep(primitive_description=TimeSeriesFormatterPrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=TimeSeriesFormatterPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
     pipeline.add_step(step)
     previous_step = 0
 
     # extract dataframe from dataset
-    step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     pipeline.add_step(step)
     previous_step += 1
 
     # Parse columns.
-    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     semantic_types = ('http://schema.org/Integer', 'http://schema.org/Float',
@@ -45,7 +46,7 @@ def create_pipeline(metric: str) -> Pipeline:
     previous_step += 1
 
     # Extract attributes
-    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     step.add_hyperparameter('semantic_types', ArgumentType.VALUE, ('https://metadata.datadrivendiscovery.org/types/Attribute',))
@@ -54,14 +55,14 @@ def create_pipeline(metric: str) -> Pipeline:
     attributes_step = previous_step
 
     # extract dataframe from dataset
-    step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
     pipeline.add_step(step)
     previous_step += 1
 
     # Parse columns.
-    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     semantic_types = ('http://schema.org/Integer', 'http://schema.org/Float',
@@ -71,7 +72,7 @@ def create_pipeline(metric: str) -> Pipeline:
     previous_step += 1
 
     # Extract targets
-    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query())
+    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     target_types = ('https://metadata.datadrivendiscovery.org/types/Target', 'https://metadata.datadrivendiscovery.org/types/TrueTarget')
@@ -81,7 +82,7 @@ def create_pipeline(metric: str) -> Pipeline:
     target_step = previous_step
 
     # kanine classification
-    step = PrimitiveStep(primitive_description=Kanine.metadata.query())
+    step = PrimitiveStep(primitive_description=Kanine.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(attributes_step))
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
     step.add_output('produce')

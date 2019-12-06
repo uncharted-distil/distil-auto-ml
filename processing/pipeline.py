@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Tuple, Optional, List, Dict
+from typing import Tuple, Optional, List, Dict, Optional
 import GPUtil
 import sys
 
@@ -8,7 +8,7 @@ from d3m.container import dataset
 from d3m import container, exceptions, runtime
 from d3m.base import utils as base_utils
 from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
-from d3m.metadata.pipeline import Pipeline, PlaceholderStep
+from d3m.metadata.pipeline import Pipeline, PlaceholderStep, Resolver
 
 from processing import metrics
 from distil.primitives import utils as distil_utils
@@ -34,15 +34,15 @@ from processing.pipelines import (clustering,
                                   timeseries_kanine,
                                   timeseries_var,
                                   timeseries_lstm_fcn,
-                                  semisupervised_tabular)
-                                #   data_augmentation_tabular) TODO: Looks like the data aug stuff has moved.
+                                  semisupervised_tabular,
+                                  data_augmentation_tabular)
 
 import utils
 
 logger = logging.getLogger(__name__)
 
 
-def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None) -> Tuple[pipeline.Pipeline, container.Dataset]:
+def create(dataset_doc_path: str, problem: dict, prepend: Optional[Pipeline]=None, resolver: Optional[Resolver] = None) -> Tuple[pipeline.Pipeline, container.Dataset]:
 
     # allow for use of GPU optimized pipelines
     gpu = _use_gpu()
@@ -71,57 +71,52 @@ def create(dataset_doc_path: str, problem: dict, prepend: pipeline.Pipeline=None
 
     pipeline: Pipeline = None
     if pipeline_type == 'table':
-        pipeline = tabular.create_pipeline(metric)
+        pipeline = tabular.create_pipeline(metric, resolver)
     elif pipeline_type == 'graph_matching':
-        pipeline = graph_matching.create_pipeline(metric)
+        pipeline = graph_matching.create_pipeline(metric, resolver)
     elif pipeline_type == 'timeseries_classification':
         if gpu:
-            pipeline = timeseries_lstm_fcn.create_pipeline(metric)
+            pipeline = timeseries_lstm_fcn.create_pipeline(metric, resolver)
         else:
-            pipeline = timeseries_kanine.create_pipeline(metric)
+            pipeline = timeseries_kanine.create_pipeline(metric, resolver)
     elif pipeline_type == 'question_answering':
         if gpu:
-            pipeline = question_answer.create_pipeline(metric)
+            pipeline = question_answer.create_pipeline(metric, resolver)
         else:
-            pipeline = tabular.create_pipeline(metric)
+            pipeline = tabular.create_pipeline(metric, resolver)
     elif pipeline_type == 'text':
-        pipeline = text.create_pipeline(metric)
+        pipeline = text.create_pipeline(metric, resolver)
     elif pipeline_type == 'image':
-        pipeline = image.create_pipeline(metric)
+        pipeline = image.create_pipeline(metric, resolver)
     elif pipeline_type == 'object_detection':
-        pipeline = object_detection.create_pipeline(metric)
+        pipeline = object_detection.create_pipeline(metric, resolver)
     elif pipeline_type == 'audio':
-       pipeline = audio.create_pipeline(metric)
+       pipeline = audio.create_pipeline(metric, resolver)
     elif pipeline_type == 'collaborative_filtering':
         if gpu:
-            pipeline = collaborative_filtering.create_pipeline(metric)
+            pipeline = collaborative_filtering.create_pipeline(metric, resolver)
         else:
-            pipeline = tabular.create_pipeline(metric)
+            pipeline = tabular.create_pipeline(metric, resolver)
     elif pipeline_type == 'vertex_nomination':
-        pipeline = vertex_nomination.create_pipeline(metric)
+        pipeline = vertex_nomination.create_pipeline(metric, resolver)
     elif pipeline_type == 'vertex_classification':
         # force using vertex classification
         # TODO - should determine the graph data format
-        pipeline = vertex_classification.create_pipeline(metric)
+        pipeline = vertex_classification.create_pipeline(metric, resolver)
     elif pipeline_type == 'link_prediction':
-        pipeline = link_prediction.create_pipeline(metric)
+        pipeline = link_prediction.create_pipeline(metric, resolver)
     elif pipeline_type == 'community_detection':
-        pipeline = community_detection.create_pipeline(metric)
+        pipeline = community_detection.create_pipeline(metric, resolver)
     elif pipeline_type == 'clustering':
         n_clusters = problem['inputs'][0]['targets'][0]['clusters_number']
         col_name = problem['inputs'][0]['targets'][0]['column_name']
-        pipeline = clustering.create_pipeline(metric, num_clusters=n_clusters, cluster_col_name=col_name)
+        pipeline = clustering.create_pipeline(metric, num_clusters=n_clusters, cluster_col_name=col_name, resolver=resolver)
     elif pipeline_type == 'timeseries_forecasting':
-        # VAR hyperparameters for period need to be tuned to get meaningful results so we're using regression
-        # for now
-        # pipeline = tabular.create_pipeline(metric)
-        # the above was in the exline repo not sure what is the most up to date?
-        pipeline = timeseries_var.create_pipeline(metric)
-        # pipeline = timeseries_forecasting.create_pipeline(metric)
+        pipeline = timeseries_var.create_pipeline(metric, resolver)
     elif pipeline_type == 'semisupervised_tabular':
-        pipeline = semisupervised_tabular.create_pipeline(metric)
+        pipeline = semisupervised_tabular.create_pipeline(metric, resolver)
     elif pipeline_type == 'data_augmentation_tabular':
-        pipeline = data_augmentation_tabular.create_pipeline(metric, dataset=train_dataset, keywords=pipeline_info)
+        pipeline = data_augmentation_tabular.create_pipeline(metric, dataset=train_dataset, keywords=pipeline_info, resolver=resolver)
     else:
         logger.error(f'Pipeline type [{pipeline_type}] is not yet supported.')
         return None, train_dataset
