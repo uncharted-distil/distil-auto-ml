@@ -422,18 +422,13 @@ class TaskManager():
 
     def DescribeSolution(self, request):
         # Validate the solution_id
-        solution_id = self.validator.validate_describe_solution_request(request,
-                                                                        self.session)
+        solution_id = self.validator.validate_describe_solution_request(request, self.session)
 
-        # Get the task that ran with the solution
-        _, task = self.session.query(models.Solutions,models.Tasks) \
-                                     .filter(models.Solutions.id==solution_id) \
-                                     .filter(models.Solutions.task_id==models.Tasks.id) \
-                                     .first()
-
-        pipeline = task.pipeline
-
-        return pipeline
+        _, pipeline = self.session.query(models.Solutions, models.Pipelines) \
+                                        .filter(models.Solutions.id==solution_id) \
+                                        .filter(models.Solutions.pipeline_id==models.Pipelines.id) \
+                                        .first()
+        return pipeline.pipelines
 
     def SolutionExport(self, request):
         """
