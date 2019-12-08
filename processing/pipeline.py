@@ -33,6 +33,7 @@ from processing.pipelines import (clustering,
                                   community_detection,
                                   timeseries_kanine,
                                   timeseries_var,
+                                  timeseries_deepar,
                                   timeseries_lstm_fcn,
                                   semisupervised_tabular)
                                   #data_augmentation_tabular)
@@ -112,7 +113,15 @@ def create(dataset_doc_path: str, problem: dict, prepend: Optional[Pipeline]=Non
         col_name = problem['inputs'][0]['targets'][0]['column_name']
         pipeline = clustering.create_pipeline(metric, num_clusters=n_clusters, cluster_col_name=col_name, resolver=resolver)
     elif pipeline_type == 'timeseries_forecasting':
-        pipeline = timeseries_var.create_pipeline(metric, resolver)
+        # VAR hyperparameters for period need to be tuned to get meaningful results so we're using regression
+        # for now
+        # pipeline = tabular.create_pipeline(metric)
+        # the above was in the exline repo not sure what is the most up to date?
+        if gpu:
+            pipeline = timeseries_deepar.create_pipeline(metric, resolver)
+        else:
+            pipeline = timeseries_var.create_pipeline(metric, resolver)
+
     elif pipeline_type == 'semisupervised_tabular':
         pipeline = semisupervised_tabular.create_pipeline(metric, resolver)
     elif pipeline_type == 'data_augmentation_tabular':

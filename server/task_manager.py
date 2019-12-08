@@ -55,85 +55,72 @@ class TaskManager():
             search_template = search_template_obj.to_json()
 
         # Create search row in DB
-        search = models.Searches(id=search_id)
+        search = models.Searches(id=search_id, problem=prob, dataset_uri=dataset_uri)
+
         self.session.add(search)
         self.session.commit()
 
-        task = models.Tasks(problem=prob,
-                            pipeline=search_template,
-                            type="EXLINE",
-                            dataset_uri=dataset_uri,
-                            id=self._generate_id(),
-                            search_id=search_id)
-        self.session.add(task)
+        # task = models.Tasks(problem=prob,
+        #                     pipeline=search_template,
+        #                     type="EXLINE",
+        #                     dataset_uri=dataset_uri,
+        #                     id=self._generate_id(),
+        #                     search_id=search_id)
+        #
+        #
+        # self.session.add(task)
 
         # Add all to DB
-        self.session.commit()
+        # self.session.commit()
         return search_id
 
         return not unended_validate_tasks
 
     def GetSearchSolutionsResults(self, request):
         """
-        Searches for correctly exited EXLINE tasks
+        Searches for pipelines
         associated with given search id
         """
         search_id = self.validator.validate_get_search_solutions_results_request(request, self.session)
         seen_ids = []
 
         start = time.time()
-        while True:
-            task = self.session.query(models.Tasks) \
-                               .filter(models.Tasks.search_id==str(search_id)) \
-                               .filter(models.Tasks.type=="EXLINE") \
-                               .filter(models.Tasks.error==False) \
-                               .first()
 
-            if task:
-                self.session.refresh(task)
-                # Add id to seen_ids so don't return again
+        while True:
+            pipeline = self.session.query(models.Pipelines) \
+                            .filter(models.Pipelines.search_id==str(search_id)) \
+                            .filter(models.Pipelines.error == False) \
+                            .filter(models.Pipelines.ended == True) \
+                            .first()
+            if pipeline:
                 # Check if Solution already exists
                 solution = self.session.query(models.Solutions) \
                                        .filter(models.Solutions.search_id==search_id) \
-                                       .filter(models.Solutions.task_id==task.id) \
+                                       .filter(models.Solutions.pipeline_id==pipeline.id) \
                                        .first()
                 # Generate ValidSolution row if has not
                 # been previously verified
                 if not solution:
                     # Link the task to the solution
-                    solution_id = task.id
+                    solution_id = pipeline.id
 
                     solution = models.Solutions(
                         id=solution_id,
                         search_id=search_id,
-                        task_id=task.id)
+                        pipeline_id=pipeline.id)
                     self.session.add(solution)
 
                 # End session
                 self.session.commit()
-
-                if task.ended:
-                    # Make the Fit solution message here
-                    fit_solution_id = self._generate_id()
-                    fit_solution = models.FitSolution(
-                        id=fit_solution_id,
-                        solution_id=solution_id,
-                        task_id=task.id)
-                    self.session.add(fit_solution)
-                    self.session.commit()
-                    progress = "COMPLETED"
-                    progress_msg = self.msg.make_progress_msg(progress)
-                    yield self.msg.make_get_search_solutions_result(solution_id, progress_msg)
-                    break
-                else:
-                    if time.time() - start > config.PROGRESS_INTERVAL:
-                        start = time.time()
-                        progress_msg = self.msg.make_progress_msg("RUNNING")
-                        yield self.msg.make_get_search_solutions_result(None, progress_msg)
-                    else:
-                        yield False
+                self.session.refresh(pipeline)
+                progress_msg = self.msg.make_progress_msg("COMPLETED")
+                yield self.msg.make_get_search_solutions_result(pipeline.id, progress_msg)
+                break
             else:
                 yield False
+
+
+
 
     def ScoreSolution(self, request):
         """
@@ -242,12 +229,79 @@ class TaskManager():
                          .filter(models.Solutions.task_id==models.Tasks.id) \
                          .first()
 
-        # Should already be fitted as part of search
-        fit_solution = self.session.query(models.FitSolution) \
-            .filter(models.FitSolution.solution_id==solution_id) \
-            .first()
 
-        request.fit_solution_id = fit_solution.id
+        # TODO don't assume already fitted as it will be removed from search.
+        # task = models.Tasks(problem=prob,
+        #                     pipeline=search_template,
+        #                     type="EXLINE",
+        #                     dataset_uri=dataset_uri,
+        #                     id=self._generate_id(),
+        #                     search_id=search_id)
+        # self.session.add(task)
+        #
+        # # Add all to DB
+        # self.session.commit()
+
+        # Should already be fitted as part of search
+        if not task:
+            while True:
+                task = self.session.query(models.Tasks) \
+                                   .filter(models.Tasks.search_id==str(search_id)) \
+                                   .filter(models.Tasks.type=="EXLINE") \
+                                   .filter(models.Tasks.error==False) \
+                                   .first()
+
+                if task:
+                    self.session.refresh(task)
+                    # Add id to seen_ids so don't return again
+                    # Check if Solution already exists
+                    solution = self.session.query(models.Solutions) \
+                                           .filter(models.Solutions.search_id==solution_id) \
+                                           .filter(models.Solutions.pipeline_id==task.id) \
+                                           .first()
+                    # Generate ValidSolution row if has not
+                    # been previously verified
+                    if not solution:
+                        # Link the task to the solution
+                        solution_id = task.id
+
+                        solution = models.Solutions(
+                            id=solution_id,
+                            search_id=solution_id,
+                            task_id=task.id)
+                        self.session.add(solution)
+
+                    # End session
+                    self.session.commit()
+
+                    if task.ended:
+                        # Make the Fit solution message here
+                        fit_solution_id = self._generate_id()
+                        fit_solution = models.FitSolution(
+                            id=fit_solution_id,
+                            solution_id=solution_id,
+                            task_id=task.id)
+                        self.session.add(fit_solution)
+                        self.session.commit()
+                        progress = "COMPLETED"
+                        progress_msg = self.msg.make_progress_msg(progress)
+                        yield self.msg.make_get_search_solutions_result(solution_id, progress_msg)
+                        break
+                    else:
+                        if time.time() - start > config.PROGRESS_INTERVAL:
+                            start = time.time()
+                            progress_msg = self.msg.make_progress_msg("RUNNING")
+                            yield self.msg.make_get_search_solutions_result(None, progress_msg)
+                        else:
+                            yield False
+                else:
+                    yield False
+        else:
+            fit_solution = self.session.query(models.FitSolution) \
+                .filter(models.FitSolution.solution_id==solution_id) \
+                .first()
+
+        request.fit_solution_id = fit_solution.id #TODO does this need to be part of above
         self.session.commit()
         return request_id
 
@@ -368,18 +422,13 @@ class TaskManager():
 
     def DescribeSolution(self, request):
         # Validate the solution_id
-        solution_id = self.validator.validate_describe_solution_request(request,
-                                                                        self.session)
+        solution_id = self.validator.validate_describe_solution_request(request, self.session)
 
-        # Get the task that ran with the solution
-        _, task = self.session.query(models.Solutions,models.Tasks) \
-                                     .filter(models.Solutions.id==solution_id) \
-                                     .filter(models.Solutions.task_id==models.Tasks.id) \
-                                     .first()
-
-        pipeline = task.pipeline
-
-        return pipeline
+        _, pipeline = self.session.query(models.Solutions, models.Pipelines) \
+                                        .filter(models.Solutions.id==solution_id) \
+                                        .filter(models.Solutions.pipeline_id==models.Pipelines.id) \
+                                        .first()
+        return pipeline.pipelines
 
     def SolutionExport(self, request):
         """
@@ -387,10 +436,10 @@ class TaskManager():
         """
         solution_id, rank = self.validator.validate_solution_export_request(request)
 
-        _, task = self.session.query(models.Solutions, models.Tasks) \
+        _, pipeline = self.session.query(models.Solutions, models.Pipelines) \
                                          .filter(models.Solutions.id==solution_id) \
-                                         .filter(models.Solutions.task_id==models.Tasks.id) \
+                                         .filter(models.Solutions.pipeline_id==models.Pipelines.id) \
                                          .first()
-        export.export(task, rank)
-        export.export_run(task)
-        export.export_predictions(task)
+        export.export(pipeline, rank)
+        # export.export_run(pipeline)
+        # export.export_predictions(pipeline)

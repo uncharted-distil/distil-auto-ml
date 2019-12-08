@@ -125,8 +125,8 @@ def is_semisupervised_tabular(problem: dict) -> bool:
 
 def is_data_augmentation_tabular(dataset_doc: dict, problem: dict) -> bool:
     is_data_aug = True if 'data_augmentation' in problem else False
-    is_classification_regression = len(set(_problem['problem']['task_keywords'])
-                                       in set(
+    is_classification_regression = len(set(problem['problem']['task_keywords'])
+                                       & set(
         [_problem.TaskKeyword.REGRESSION, _problem.TaskKeyword.CLASSIFICATION])) > 0
     is_tabular = ['table'] == get_resource_types(dataset_doc)
     return is_data_aug and is_classification_regression and is_tabular
@@ -232,7 +232,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
 
     elif is_community_detection(problem):
         # TODO what should subtype be?
-        assert _problem.TaskKeyword.COMMUNITY_DETECTION in problem['problem']['task_keyword']
+        assert _problem.TaskKeyword.COMMUNITY_DETECTION in problem['problem']['task_keywords']
         return 'community_detection', {
             'overlapping': False,
         }

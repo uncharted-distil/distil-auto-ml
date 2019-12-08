@@ -11,7 +11,7 @@ import config
 
 import utils
 import models
-
+import uuid
 from server.server import Server
 from server.export import export_run
 
@@ -161,9 +161,61 @@ def exline_task(logger, session, task):
         task.ended_at = datetime.datetime.utcnow()
         session.commit()
 
+def search_task(logger, session, search):
+
+    try:
+        logger.info('Starting distil search ID {}'.format(search.id))
+        search.started_at = datetime.datetime.utcnow()
+
+        # load the problem supplied by the search request into a d3m Problem type if one is provided
+        if search.problem:
+            problem_proto = json_format.Parse(search.problem, problem_pb2.ProblemDescription())
+            problem_d3m = api_utils.decode_problem_description(problem_proto)
+
+            target_name = problem_d3m['inputs'][0]['targets'][0]['column_name']
+        else:
+            problem_d3m = None
+            target_name = None
+
+        search_template = None
+        pipe, dataset = ex_pipeline.create(search.dataset_uri, problem_d3m, search_template)
+        pipeline_json = pipe.to_json(nest_subpipelines=True)
+        pipeline = models.Pipelines(id=str(uuid.uuid4()),
+                                   search_id=search.id,
+                                   pipelines=pipeline_json,
+                                   ended=True,
+                                   error=False)
+        session.add(pipeline)
+
+    except Exception as e:
+        logger.warn('Exception running search ID {}: {}'.format(search.id, e), exc_info=True)
+        search.error = True
+        search.error_message = str(e)
+        # TODO error pipeline entry out.
+    finally:
+        # Update DB with task results
+        # and mark task 'ended' and when
+        search.ended = True
+        search.stopped_at = datetime.datetime.utcnow()
+        session.commit()
 
 def job_loop(logger, session):
     task = False
+    search = False
+
+    # check for searches first and create pipelines
+    try:
+        search = session.query(models.Searches) \
+                      .order_by(models.Searches.created_at.asc()) \
+                      .filter(models.Searches.ended == False) \
+                      .first()
+    except Exception as e:
+        logger.warn('Exception getting task: {}'.format(e), exc_info=True)
+
+    if search:
+        search_task(logger, session, search)
+
+    # look for tasks to run
     try:
         task = session.query(models.Tasks) \
                       .order_by(models.Tasks.created_at.asc()) \

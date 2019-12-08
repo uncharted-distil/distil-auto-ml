@@ -49,12 +49,13 @@ class Searches(Base):
         default=datetime.datetime.utcnow)
     started_at = Column(DateTime)
     stopped_at = Column(DateTime)
-    running = Column(Boolean)
-    ended = Column(Boolean)
-    ended_at = Column(Boolean)
+    running = Column(Boolean, default=False)
+    ended = Column(Boolean, default=False)
     error = Column(String)
     user_agent = Column(String)
     api_version = Column(String)
+    problem = Column(String)
+    dataset_uri = Column(String)
 
 class Requests(Base):
     __tablename__ = 'requests'
@@ -82,11 +83,22 @@ class Solutions(Base):
     __tablename__ = 'solutions'
     id = Column(String, primary_key=True)
     search_id = Column(String, ForeignKey('searches.id'))
-    task_id = Column(String, ForeignKey('tasks.id'))
+    pipeline_id = Column(String, ForeignKey('pipelines.id'))
     created_at = Column(
         DateTime,
         default=datetime.datetime.utcnow)
     internal_score = Column(Float)
+
+class PipelineSolutions(Base):
+    __tablename__ = 'pipeline_solutions'
+    id = Column(String, primary_key=True)
+    search_id = Column(String, ForeignKey('searches.id'))
+    pipeline_id = Column(String, ForeignKey('pipelines.id'))
+    created_at = Column(
+        DateTime,
+        default=datetime.datetime.utcnow)
+    internal_score = Column(Float)
+
 
 class Tasks(Base):
     __tablename__ = 'tasks'
@@ -121,6 +133,19 @@ class Tasks(Base):
         default=False)
     error_message = Column(String)
 
+class Pipelines(Base):
+    __tablename__ = 'pipelines'
+    id = Column(String, primary_key=True)
+    search_id = Column(String, ForeignKey('searches.id'))
+    created_at = Column(
+        DateTime,
+        default=datetime.datetime.utcnow)
+    pipelines = Column(String)  # [{}...{}]
+    error = Column(
+        Boolean,
+        default=False)
+    ended = Column(Boolean,
+                   default=False)
 
 class ScoreConfig(Base):
     __tablename__ = 'score_config'
