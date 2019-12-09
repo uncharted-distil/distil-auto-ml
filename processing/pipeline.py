@@ -35,8 +35,8 @@ from processing.pipelines import (clustering,
                                   timeseries_var,
                                   timeseries_deepar,
                                   timeseries_lstm_fcn,
-                                  semisupervised_tabular,
-                                  data_augmentation_tabular)
+                                  semisupervised_tabular)
+                                  #data_augmentation_tabular)
 
 import utils
 
