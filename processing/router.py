@@ -220,12 +220,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         return 'vertex_nomination', {}
 
     elif is_vertex_classification(problem):
-        if is_edgelist(dataset_doc, problem):
-            return 'table', {
-                'num_fits': 1
-            }
-        else:
-            return 'vertex_nomination', {}
+        return 'vertex_nomination', {'is_edgelist': is_edgelist(dataset_doc, problem)}
 
 
     elif is_collaborative_filtering(problem):

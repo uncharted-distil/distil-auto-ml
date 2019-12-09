@@ -99,7 +99,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: Optional[Pipeline]=Non
         else:
             pipeline = tabular.create_pipeline(metric, resolver)
     elif pipeline_type == 'vertex_nomination':
-        pipeline = vertex_nomination.create_pipeline(metric, resolver)
+        pipeline = vertex_nomination.create_pipeline(metric, resolver, **pipeline_info)
     elif pipeline_type == 'vertex_classification':
         # force using vertex classification
         # TODO - should determine the graph data format
