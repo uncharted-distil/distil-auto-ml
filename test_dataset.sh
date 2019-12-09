@@ -45,7 +45,7 @@ python -m d3m runtime \
     -r ${D3MINPUTDIR}/$DATASET/${DATASET}_problem/problemDoc.json \
     -i ${D3MINPUTDIR}/$DATASET/TRAIN/dataset_TRAIN/datasetDoc.json \
     -t ${D3MINPUTDIR}/$DATASET/TEST/dataset_TEST/datasetDoc.json \
-    -a ${D3MINPUTDIR}/$DATASET/SCORE/dataset_SCORE/datasetDoc.json
+    -a ${D3MINPUTDIR}/$DATASET/SCORE/dataset_TEST/datasetDoc.json
 
 echo "Ran score successfully!"
 #

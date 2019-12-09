@@ -1,22 +1,12 @@
-import sys
-from typing import List, Dict, Any, Tuple, Set, Optional
-import logging
-import numpy as np
-import pandas as pd
-
-from d3m import container, utils
+from typing import Optional
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.metadata.base import ArgumentType
-from d3m.metadata import hyperparams
 
 from distil.primitives.load_single_graph import DistilSingleGraphLoaderPrimitive
 from distil.primitives.vertex_nomination import DistilVertexNominationPrimitive
 
-from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
-from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
 def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
-
     # create the basic pipeline
     vertex_nomination_pipeline = Pipeline()
     vertex_nomination_pipeline.add_input(name='inputs')
