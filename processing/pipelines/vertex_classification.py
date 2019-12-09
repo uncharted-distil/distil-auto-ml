@@ -14,6 +14,8 @@ from sri.psl.vertex_classification import VertexClassification
 
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
+# from d3m.primitives.vertex_nomination.spectral_graph_clustering import JHU
+from jhu_primitives.sgc  import SpectralGraphClustering
 
 def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
 
@@ -34,7 +36,13 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_output('produce')
     vertex_classification_pipeline.add_step(step)
 
+    # step = PrimitiveStep(primitive_description=SpectralGraphClustering.metadata.query(), resolver=resolver)
+    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
+    # step.add_output('produce')
+    # vertex_classification_pipeline.add_step(step)
+
+
     # Adding output step to the pipeline
-    vertex_classification_pipeline.add_output(name='output', data_reference='steps.1.produce')
+    vertex_classification_pipeline.add_output(name='output', data_reference='steps.0.produce')
 
     return vertex_classification_pipeline

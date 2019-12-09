@@ -28,12 +28,12 @@ cp ./test_scripts/scoring_pipeline.yml ${D3MOUTPUTDIR}
 
 #mv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2
 #head -n $NUMROWS ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv
-###shuf -n $NUMROWS ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2 >> ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv
-###
+####shuf -n $NUMROWS ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv2 >> ./seed_datasets_current/$DATASET/TEST/dataset_TEST/tables/learningData.csv
+####
 #mv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2
 #head -n $NUMROWS ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv
-###shuf -n $NUMROWS ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2 >> ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv
-##
+####shuf -n $NUMROWS ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv2 >> ./seed_datasets_current/$DATASET/TRAIN/dataset_TRAIN/tables/learningData.csv
+###
 
 
 

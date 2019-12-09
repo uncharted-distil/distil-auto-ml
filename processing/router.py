@@ -220,7 +220,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         return 'vertex_nomination', {}
 
     elif is_vertex_classification(problem):
-        return 'vertex_classification', {
+        return 'vertex_nomination', {
             "edgelist": is_edgelist(dataset_doc, problem)
         }
 
