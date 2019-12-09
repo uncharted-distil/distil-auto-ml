@@ -117,11 +117,10 @@ def create(dataset_doc_path: str, problem: dict, prepend: Optional[Pipeline]=Non
         # for now
         # pipeline = tabular.create_pipeline(metric)
         # the above was in the exline repo not sure what is the most up to date?
-        # if gpu:
-            # pipeline = timeseries_deepar.create_pipeline(metric, resolver)
-        # else:
-        #    pipeline = timeseries_var.create_pipeline(metric, resolver)
-        pipeline = timeseries_var.create_pipeline(metric, resolver)
+        if gpu:
+            pipeline = timeseries_deepar.create_pipeline(metric, resolver)
+        else:
+            pipeline = timeseries_var.create_pipeline(metric, resolver)
 
     elif pipeline_type == 'semisupervised_tabular':
         pipeline = semisupervised_tabular.create_pipeline(metric, resolver)
