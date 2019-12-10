@@ -56,6 +56,7 @@ class Searches(Base):
     api_version = Column(String)
     problem = Column(String)
     dataset_uri = Column(String)
+    search_template = Column(String)
 
 class Requests(Base):
     __tablename__ = 'requests'
@@ -89,17 +90,6 @@ class Solutions(Base):
         default=datetime.datetime.utcnow)
     internal_score = Column(Float)
 
-class PipelineSolutions(Base):
-    __tablename__ = 'pipeline_solutions'
-    id = Column(String, primary_key=True)
-    search_id = Column(String, ForeignKey('searches.id'))
-    pipeline_id = Column(String, ForeignKey('pipelines.id'))
-    created_at = Column(
-        DateTime,
-        default=datetime.datetime.utcnow)
-    internal_score = Column(Float)
-
-
 class Tasks(Base):
     __tablename__ = 'tasks'
     id = Column(String, primary_key=True)
@@ -132,20 +122,19 @@ class Tasks(Base):
         Boolean,
         default=False)
     error_message = Column(String)
+    # Start -- FIT specific --
+    fully_specified = Column(Boolean, default=False)
+    # End -- FIT specific
 
 class Pipelines(Base):
     __tablename__ = 'pipelines'
     id = Column(String, primary_key=True)
     search_id = Column(String, ForeignKey('searches.id'))
-    created_at = Column(
-        DateTime,
-        default=datetime.datetime.utcnow)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
     pipelines = Column(String)  # [{}...{}]
-    error = Column(
-        Boolean,
-        default=False)
-    ended = Column(Boolean,
-                   default=False)
+    error = Column(Boolean, default=False)
+    ended = Column(Boolean, default=False)
+    fully_specified = Column(Boolean, default=False)
 
 class ScoreConfig(Base):
     __tablename__ = 'score_config'

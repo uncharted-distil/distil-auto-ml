@@ -20,7 +20,7 @@ from processing import pipeline
 import copy
 
 class Scorer:
-    def __init__(self, logger, task, score_config, dats):
+    def __init__(self, logger, task, score_config, fitted_pipeline, target_name):
         self.logger = logger
         self.solution_id = task.solution_id
 
@@ -33,7 +33,8 @@ class Scorer:
         self.stratified = score_config.stratified
         self.num_folds = score_config.num_folds
         self.train_size = score_config.train_size
-        self.dats = dats
+        self.fitted_pipeline = fitted_pipeline
+        self.target_name = target_name
 
     def run(self):
 
@@ -43,7 +44,7 @@ class Scorer:
         #    unpacked = dill.load(f)
         #    runtime = unpacked['runtime']
         #    fitted_pipeline = unpacked['pipeline']
-        self.fitted_pipeline = self.dats['pipeline']
+
 
         # Load the data to test
         self.inputs = dataset.Dataset.load(self.dataset_uri)
@@ -158,8 +159,6 @@ class Scorer:
         return score
 
     def hold_out_score(self):
-        target_col = self.dats['target_name']
-
         # produce predictions from the fitted model and extract to single col dataframe
         # with the d3mIndex as the index
         _in = copy.deepcopy(self.inputs)
@@ -173,7 +172,7 @@ class Scorer:
         result_df = result_df.set_index(result_df['d3mIndex'])
         result_df.index = result_df.index.map(int)
 
-        result_series = result_df[target_col]
+        result_series = result_df[self.target_name]
 
         # put the ground truth predictions into a single col dataframe with the d3mIndex
         # as the index
@@ -182,7 +181,7 @@ class Scorer:
         # make sure the result and truth have the same d3mIndex
         true_df = true_df.loc[result_df.index]
 
-        true_series = true_df[target_col]
+        true_series = true_df[self.target_name]
         true_series = true_series.astype(result_series.dtype)
 
         score = self._score(self.metric, true_series, result_series)
