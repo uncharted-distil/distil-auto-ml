@@ -28,6 +28,7 @@ from d3m.metadata import pipeline, problem, pipeline_run
 import pickle
 import pandas as pd
 
+# TODO: ICK.
 QUATTO_LIVES = {}
 
 
@@ -38,7 +39,6 @@ def produce_task(logger, session, task):
     try:
         logger.info('Starting produce task ID {}'.format(task.id))
         dats = QUATTO_LIVES[task.solution_id]
-
 
         fitted_pipeline = dats['pipeline']
         test_dataset = dataset.Dataset.load(task.dataset_uri)
@@ -71,7 +71,8 @@ def score_task(logger, session, task):
                               .first()
 
         dats = QUATTO_LIVES[task.solution_id]
-        scorer = Scorer(logger, task, score_config, dats)
+
+        scorer = Scorer(logger, task, score_config, dats['pipeline'], dats['target_name'])
         score_values = scorer.run()
         for score_value in score_values:
             score = models.Scores(
@@ -93,46 +94,23 @@ def score_task(logger, session, task):
 
 def fit_task(logger, session, task):
     try:
-        logger.info('Starting task task ID {}'.format(task.id))
-        session.commit()
-    except Exception as e:
-        logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
-        task.error = True
-        task.error_message = str(e)
-    finally:
-        # Update DB with task results
-        # and mark task 'ended' and when
-        task.ended = True
-        task.ended_at = datetime.datetime.utcnow()
-        session.commit()
-
-def exline_task(logger, session, task):
-
-
-    try:
         logger.info('Starting distil task ID {}'.format(task.id))
         task.started_at = datetime.datetime.utcnow()
 
-        # load the problem supplied by the search request into a d3m Problem type if one is provided
-        if task.problem:
-            problem_proto = json_format.Parse(task.problem, problem_pb2.ProblemDescription())
-            problem_d3m = api_utils.decode_problem_description(problem_proto)
+        # reconstruct the problem object from the saved json if present
+        problem_obj = problem.Problem.from_json_structure(json.loads(task.problem)) if task.problem else None
 
-            target_name = problem_d3m['inputs'][0]['targets'][0]['column_name']
-        else:
-            problem_d3m = None
-            target_name = None
-
+        # fetch the pipeline from the DB
         resolver = pipeline.Resolver(load_all_primitives=False) # lazy load
-        search_template = pipeline.Pipeline.from_json(task.pipeline, resolver=resolver) if task.pipeline else None
-        pipe, dataset = ex_pipeline.create(task.dataset_uri, problem_d3m, search_template, resolver)
+        pipeline_obj = pipeline.Pipeline.from_json(task.pipeline, resolver=resolver) if task.pipeline else None
 
         # Check to see if this is a fully specified pipeline.  If so, we'll run it as a non-standard since
         # it doesn't need to be serialized.
-        run_as_standard = not ex_pipeline.is_fully_specified(search_template)
-        fitted_pipeline, result = ex_pipeline.fit(pipe, problem_d3m, dataset, is_standard_pipeline=run_as_standard)
+        run_as_standard = not task.fully_specified
 
-        pipeline_json = fitted_pipeline.pipeline.to_json()
+        train_dataset = dataset.Dataset.load(task.dataset_uri)
+        fitted_runtime, result = ex_pipeline.fit(pipeline_obj, problem_obj, train_dataset, is_standard_pipeline=run_as_standard)
+
         str_buf = io.StringIO()
         try:
             result.pipeline_run.to_yaml(str_buf)
@@ -145,9 +123,10 @@ def exline_task(logger, session, task):
             pipeline_run_yaml = None
             logger.warn('Could not parse result')
 
-        save_me = {'pipeline': fitted_pipeline, 'target_name': target_name}
-        QUATTO_LIVES[task.id] = save_me
-        task.pipeline = pipeline_json
+        # TODO: warn if we have multiple data and targets as we are forcing a single here
+        target_name = problem_obj['inputs'][0]['targets'][0]['column_name'] if problem_obj else None
+        save_me = {'pipeline': fitted_runtime, 'target_name': target_name}
+        QUATTO_LIVES[task.solution_id] = save_me
         task.pipeline_run = pipeline_run_yaml
 
     except Exception as e:
@@ -167,25 +146,33 @@ def search_task(logger, session, search):
         logger.info('Starting distil search ID {}'.format(search.id))
         search.started_at = datetime.datetime.utcnow()
 
+        # Generate search ID
+        search_id = search.id
+
+        resolver = pipeline.Resolver(load_all_primitives=False) # lazy load
+        search_template_obj = None
+        if search.search_template is not None:
+            search_template_obj = pipeline.Pipeline.from_json(search.search_template, resolver=resolver)
+
+        # flag to run fully specified pipelines as non-standard for extra flexibiltiy
+        fully_specified = ex_pipeline.is_fully_specified(search_template_obj)
+
         # load the problem supplied by the search request into a d3m Problem type if one is provided
-        if search.problem:
-            problem_proto = json_format.Parse(search.problem, problem_pb2.ProblemDescription())
-            problem_d3m = api_utils.decode_problem_description(problem_proto)
+        problem_obj = problem.Problem.from_json_structure(json.loads(search.problem)) if search.problem else None
 
-            target_name = problem_d3m['inputs'][0]['targets'][0]['column_name']
-        else:
-            problem_d3m = None
-            target_name = None
+        # based on our problem type and data type, create a pipeline
+        pipeline_obj, dataset = ex_pipeline.create(search.dataset_uri, problem_obj, search_template_obj, resolver=resolver)
+        pipeline_json = pipeline_obj.to_json(nest_subpipelines=True)
 
-        search_template = None
-        pipe, dataset = ex_pipeline.create(search.dataset_uri, problem_d3m, search_template)
-        pipeline_json = pipe.to_json(nest_subpipelines=True)
-        pipeline = models.Pipelines(id=str(uuid.uuid4()),
-                                   search_id=search.id,
-                                   pipelines=pipeline_json,
-                                   ended=True,
-                                   error=False)
-        session.add(pipeline)
+        # save the pipeline to the DB
+        solution_pipeline = models.Pipelines(id=str(uuid.uuid4()),
+                                             search_id=search.id,
+                                             pipelines=pipeline_json,
+                                             fully_specified=fully_specified,
+                                             ended=True,
+                                             error=False)
+        session.add(solution_pipeline)
+        session.commit()
 
     except Exception as e:
         logger.warn('Exception running search ID {}: {}'.format(search.id, e), exc_info=True)
@@ -225,15 +212,12 @@ def job_loop(logger, session):
         logger.warn('Exception getting task: {}'.format(e), exc_info=True)
     # If there is work to be done...
     if task:
-        if task.type == "EXLINE":
-            exline_task(logger, session, task)
+        if task.type == "FIT":
+            fit_task(logger, session, task)
         elif task.type == "SCORE":
             score_task(logger, session, task)
         elif task.type == "PRODUCE":
             produce_task(logger, session, task)
-        elif task.type == "FIT":
-            fit_task(logger, session, task)
-
 
 def main(once=False):
     # override config vals D3M values

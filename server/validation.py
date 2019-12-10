@@ -54,10 +54,17 @@ class RequestValidator:
         if not dataset_uri:
             raise ValueError("Must pass a dataset_uri {}".format(request))
 
+        # if the problem contents are empty set the returned problem to None
         problem_type = self.msg.get_problem_type(request)
+        problem = request.problem if problem_type else None
+
+        # if the template contents are empty, set the returned template to None
         template = self.msg.get_search_template(request)
         template_dict = self.msg.dump_solution_template(template)
+        if len(template_dict) == 0:
+            template = None
         placeholder_present = False
+
         if template_dict:
             step_types = [list(s.keys()).pop() for s in template_dict['steps']]
             if 'placeholder' in step_types:
@@ -75,7 +82,7 @@ class RequestValidator:
         # Also not ok
         if not problem_type and not template_dict:
             raise ValueError("Must pass a problem_type: {}".format(request))
-        return dataset_uri, problem_type
+        return dataset_uri, problem, template
 
     def validate_score_solution_request(self, request):
         r = self.msg.unpack_score_solution_request(request)
@@ -94,7 +101,10 @@ class RequestValidator:
         solution_id = self.msg.get_fit_solution_id(request)
         if not solution_id:
             raise ValueError("Must pass a solution_id: {}".format(request))
-        return solution_id
+        dataset_uri = self.msg.get_dataset_uri(request)
+        if not dataset_uri:
+            raise ValueError("Must pass a dataset URI: {}".format(request))
+        return solution_id, dataset_uri
 
     def validate_produce_solution_request(self, request):
         fitted_solution_id, dataset_uri, output_keys = self.msg.unpack_produce_solution_request(request)

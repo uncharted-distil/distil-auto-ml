@@ -139,8 +139,7 @@ class Messaging:
         return message.fitted_solution_id
 
     def make_fit_solution_message(self, request_id):
-        return core_pb2.FitSolutionResponse(
-            request_id=request_id)
+        return core_pb2.FitSolutionResponse(request_id=request_id)
 
     def make_get_fit_solution_results_response(self, fitted_solution_id, progess_msg):
         resp = core_pb2.GetFitSolutionResultsResponse(fitted_solution_id=fitted_solution_id,
