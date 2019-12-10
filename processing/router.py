@@ -47,7 +47,7 @@ def is_edgelist(dataset_doc: dict, problem_desc: dict) -> bool:
     if len(set(task_keywords)
            & set([_problem.TaskKeyword.VERTEX_CLASSIFICATION, _problem.TaskKeyword.VERTEX_NOMINATION])) == 0:
         return False
-    elif set(resource_types) == {'table'}:
+    elif 'edgeList' in resource_types:
         return True
     else:
         return False
@@ -220,9 +220,8 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         return 'vertex_nomination', {}
 
     elif is_vertex_classification(problem):
-        return 'vertex_classification', {
-            "edgelist": is_edgelist(dataset_doc, problem)
-        }
+        return 'vertex_nomination', {'is_edgelist': is_edgelist(dataset_doc, problem)}
+
 
     elif is_collaborative_filtering(problem):
         return 'collaborative_filtering', {}
