@@ -136,6 +136,17 @@ class TaskManager():
         self.session.add(_request)
         self.session.commit()
 
+          # Fetch the pipeline record
+        _, pipeline_record = self.session.query(models.Solutions, models.Pipelines) \
+                                         .filter(models.Solutions.id==solution_id) \
+                                         .filter(models.Solutions.pipeline_id==models.Pipelines.id) \
+                                         .first()
+
+        # Fetch the search record and extract the problem
+        search = self.session.query(models.Searches) \
+                             .filter(models.Searches.id==pipeline_record.search_id) \
+                             .first()
+
         # Attempt to create a scoring_config
         # Add a SCORE task per metric in the request
         for metric in metrics:
@@ -157,7 +168,8 @@ class TaskManager():
                                 type="SCORE",
                                 solution_id=solution_id,
                                 dataset_uri=dataset_uri,
-                                score_config_id=conf_id)
+                                score_config_id=conf_id,
+                                problem=search.problem)
             self.session.add(task)
             # Add configs and tasks to pool
             self.session.commit()

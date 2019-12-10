@@ -20,6 +20,7 @@ from processing.scoring import Scorer
 from server import export
 import api.utils as api_utils
 from api import problem_pb2
+from typing import Dict
 
 from d3m import runtime
 from d3m.container import dataset
@@ -28,8 +29,9 @@ from d3m.metadata import pipeline, problem, pipeline_run
 import pickle
 import pandas as pd
 
-# TODO: ICK.
-QUATTO_LIVES = {}
+# TODO: ICK.  We can't pickle all fitted pipelines, so they currently need to be stored here for access
+# by the tasks, using the solution ID as the key.
+fitted_runtimes: Dict[str, runtime.Runtime] = {}
 
 
 # Configure output dir
@@ -38,11 +40,11 @@ pathlib.Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 def produce_task(logger, session, task):
     try:
         logger.info('Starting produce task ID {}'.format(task.id))
-        dats = QUATTO_LIVES[task.solution_id]
 
-        fitted_pipeline = dats['pipeline']
+        # call produce on a fitted pipeline
+        fitted_runtime = fitted_runtimes[task.solution_id]
         test_dataset = dataset.Dataset.load(task.dataset_uri)
-        results = ex_pipeline.produce(fitted_pipeline, test_dataset)
+        results = ex_pipeline.produce(fitted_runtime, test_dataset)
 
         # pull out the results the caller requested, ignore any others that were exposed
         output_keys = json.loads(task.output_keys)
@@ -70,9 +72,14 @@ def score_task(logger, session, task):
                               .filter(models.ScoreConfig.id==task.score_config_id) \
                               .first()
 
-        dats = QUATTO_LIVES[task.solution_id]
+        # reconstruct the problem object from the saved json if present
+        problem_obj = problem.Problem.from_json_structure(json.loads(task.problem)) if task.problem else None
+        # TODO: warn if we have multiple data and targets as we are forcing a single here
+        target_name = problem_obj['inputs'][0]['targets'][0]['column_name'] if problem_obj else None
 
-        scorer = Scorer(logger, task, score_config, dats['pipeline'], dats['target_name'])
+        fitted_runtime = fitted_runtimes[task.solution_id]
+
+        scorer = Scorer(logger, task, score_config, fitted_runtime, target_name)
         score_values = scorer.run()
         for score_value in score_values:
             score = models.Scores(
@@ -110,6 +117,7 @@ def fit_task(logger, session, task):
 
         train_dataset = dataset.Dataset.load(task.dataset_uri)
         fitted_runtime, result = ex_pipeline.fit(pipeline_obj, problem_obj, train_dataset, is_standard_pipeline=run_as_standard)
+        fitted_runtimes[task.solution_id] = fitted_runtime
 
         str_buf = io.StringIO()
         try:
@@ -123,10 +131,6 @@ def fit_task(logger, session, task):
             pipeline_run_yaml = None
             logger.warn('Could not parse result')
 
-        # TODO: warn if we have multiple data and targets as we are forcing a single here
-        target_name = problem_obj['inputs'][0]['targets'][0]['column_name'] if problem_obj else None
-        save_me = {'pipeline': fitted_runtime, 'target_name': target_name}
-        QUATTO_LIVES[task.solution_id] = save_me
         task.pipeline_run = pipeline_run_yaml
 
     except Exception as e:
