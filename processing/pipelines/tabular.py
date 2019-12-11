@@ -9,7 +9,7 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from d3m.primitives.clustering.hdbscan_distil import Hdbscan
+from d3m.primitives.clustering.hdbscan import Hdbscan
 from distil.primitives.categorical_imputer import CategoricalImputerPrimitive
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.replace_singletons import ReplaceSingletonsPrimitive
