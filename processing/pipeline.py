@@ -72,42 +72,42 @@ def create(dataset_doc_path: str, problem: dict, prepend: Optional[Pipeline]=Non
 
     pipeline: Pipeline = None
     if pipeline_type == 'table':
-        pipeline = tabular.create_pipeline(metric, resolver)
+        pipeline = tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
     elif pipeline_type == 'graph_matching':
-        pipeline = graph_matching.create_pipeline(metric, resolver)
+        pipeline = graph_matching.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'timeseries_classification':
         if gpu:
-            pipeline = timeseries_lstm_fcn.create_pipeline(metric, resolver)
+            pipeline = timeseries_lstm_fcn.create_pipeline(metric=metric, resolver=resolver)
         else:
-            pipeline = timeseries_kanine.create_pipeline(metric, resolver)
+            pipeline = timeseries_kanine.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'question_answering':
         if gpu:
-            pipeline = question_answer.create_pipeline(metric, resolver)
+            pipeline = question_answer.create_pipeline(metric=metric, resolver=resolver)
         else:
-            pipeline = tabular.create_pipeline(metric, resolver)
+            pipeline = tabular.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'text':
-        pipeline = text.create_pipeline(metric, resolver)
+        pipeline = text.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'image':
-        pipeline = image.create_pipeline(metric, resolver)
+        pipeline = image.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'object_detection':
-        pipeline = object_detection.create_pipeline(metric, resolver)
+        pipeline = object_detection.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'audio':
-       pipeline = audio.create_pipeline(metric, resolver)
+       pipeline = audio.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'collaborative_filtering':
         if gpu:
-            pipeline = collaborative_filtering.create_pipeline(metric, resolver)
+            pipeline = collaborative_filtering.create_pipeline(metric=metric, resolver=resolver)
         else:
-            pipeline = tabular.create_pipeline(metric, resolver)
+            pipeline = tabular.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'vertex_nomination':
         pipeline = vertex_nomination.create_pipeline(metric, resolver, **pipeline_info)
     elif pipeline_type == 'vertex_classification':
         # force using vertex classification
         # TODO - should determine the graph data format
-        pipeline = vertex_classification.create_pipeline(metric, resolver)
+        pipeline = vertex_classification.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'link_prediction':
-        pipeline = link_prediction.create_pipeline(metric, resolver)
+        pipeline = link_prediction.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'community_detection':
-        pipeline = community_detection.create_pipeline(metric, resolver)
+        pipeline = community_detection.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'clustering':
         n_clusters = problem['inputs'][0]['targets'][0]['clusters_number']
         col_name = problem['inputs'][0]['targets'][0]['column_name']
@@ -118,12 +118,12 @@ def create(dataset_doc_path: str, problem: dict, prepend: Optional[Pipeline]=Non
         # pipeline = tabular.create_pipeline(metric)
         # the above was in the exline repo not sure what is the most up to date?
         if gpu:
-            pipeline = timeseries_deepar.create_pipeline(metric, resolver)
+            pipeline = timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
         else:
-            pipeline = timeseries_var.create_pipeline(metric, resolver)
+            pipeline = timeseries_var.create_pipeline(metric=metric, resolver=resolver)
 
     elif pipeline_type == 'semisupervised_tabular':
-        pipeline = semisupervised_tabular.create_pipeline(metric, resolver)
+        pipeline = semisupervised_tabular.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'data_augmentation_tabular':
         pipeline = data_augmentation_tabular.create_pipeline(metric, dataset=train_dataset, keywords=pipeline_info, resolver=resolver)
     else:
