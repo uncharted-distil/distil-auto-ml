@@ -31,6 +31,8 @@ def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
     elif len(set(task_keywords)
              & set([_problem.TaskKeyword.REGRESSION, _problem.TaskKeyword.CLASSIFICATION])) == 0:
         return False
+    elif _problem.TaskKeyword.SEMISUPERVISED in task_keywords:
+        return False
     elif resource_types == ['table']:
         return True
     elif set(resource_types) == {'table'} and len(resource_types) > 2 and not is_question_answering(dataset_doc):
@@ -236,7 +238,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
             'overlapping': False,
         }
     elif is_semisupervised_tabular(problem):
-        return 'semisupervised_tabular', {}
+        return 'table', {'semi': True}
     elif is_data_augmentation_tabular(dataset_doc, problem):
         return 'data_augmentation_tabular', problem['data_augmentation']
 
