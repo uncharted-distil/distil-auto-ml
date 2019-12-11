@@ -47,7 +47,8 @@ def is_edgelist(dataset_doc: dict, problem_desc: dict) -> bool:
     task_keywords = problem_desc['problem']['task_keywords']
 
     if len(set(task_keywords)
-           & set([_problem.TaskKeyword.VERTEX_CLASSIFICATION, _problem.TaskKeyword.VERTEX_NOMINATION])) == 0:
+           & set([_problem.TaskKeyword.VERTEX_CLASSIFICATION, _problem.TaskKeyword.VERTEX_NOMINATION,
+                  _problem.TaskKeyword.LINK_PREDICTION])) == 0:
         return False
     elif 'edgeList' in resource_types:
         return True
@@ -142,10 +143,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
     # conflicts
 
     if is_tabular(dataset_doc, problem):
-        return 'table', {
-            'num_fits': 1
-            # "num_fits"  : 5 if X_train.shape[0] < SMALL_DATASET_THRESH else 1,
-        }
+        return 'table', {}
 
     elif is_multitable(dataset_doc):
 
@@ -159,17 +157,16 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         is_collection = other_resource['isCollection']
 
         if is_table and is_collection:
-            return 'multitable', {}
+            # return 'multitable', {}
+            return 'table', {'multi': True}
+
         else:
             print((
                 'get_routing_info: is_multitable, but other_resource is not a collection\n'
                 ' falling back to table (eg. ignoring resources)'
             ), file=sys.stderr)
 
-            return 'table', {
-                # "num_fits"  : 5 if X_train.shape[0] < SMALL_DATASET_THRESH else 1,
-                'num_fits': 1
-            }
+            return 'table', {}
 
     elif is_question_answering(dataset_doc):
         return 'question_answering', {}
@@ -229,7 +226,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         return 'collaborative_filtering', {}
 
     elif is_link_prediction(problem):
-        return 'link_prediction', {}
+        return 'link_prediction', {'is_edgelist': is_edgelist(dataset_doc, problem)}
 
     elif is_community_detection(problem):
         # TODO what should subtype be?
