@@ -9,6 +9,7 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
+from d3m.primitives.clustering.hdbscan import Hdbscan
 from distil.primitives.categorical_imputer import CategoricalImputerPrimitive
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.replace_singletons import ReplaceSingletonsPrimitive
@@ -30,6 +31,7 @@ from sklearn_wrap import SKStandardScaler
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
 # in a naively implemented state for readability for now.
 def create_pipeline(metric: str,
+                    semi: bool = False,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False,
@@ -145,15 +147,7 @@ def create_pipeline(metric: str,
     # missing data present.  This leads to issues when there is missing data in the fit set and not the produce set, as the
     # training features don't match the produce features.
     #
-    # step = PrimitiveStep(primitive_description=SKMissingIndicator.SKMissingIndicator.metadata.query(), resolver=resolver)
-    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    # step.add_output('produce')
-    # step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
-    # step.add_hyperparameter('return_result', ArgumentType.VALUE, 'append')
-    # step.add_hyperparameter('error_on_new', ArgumentType.VALUE, False)
-    # step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
-    # tabular_pipeline.add_step(step)
-    # previous_step += 1
+
     #
     #
     # Adds SK learn simple imputer
@@ -175,6 +169,29 @@ def create_pipeline(metric: str,
         step.add_output('produce')
         step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
         step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
+        tabular_pipeline.add_step(step)
+        previous_step += 1
+
+    if semi:
+        step = PrimitiveStep(primitive_description=SKMissingIndicator.SKMissingIndicator.metadata.query(),
+                             resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
+                          data_reference=input_val.format(previous_step))
+        step.add_output('produce')
+        step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
+        step.add_hyperparameter('return_result', ArgumentType.VALUE, 'append')
+        step.add_hyperparameter('error_on_new', ArgumentType.VALUE, False)
+        step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
+        tabular_pipeline.add_step(step)
+        previous_step += 1
+
+        #hdb scan to add clustering features.
+        step = PrimitiveStep(primitive_description=Hdbscan.metadata.query(),
+                               resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
+                            data_reference=input_val.format(previous_step))
+        step.add_hyperparameter('required_output', ArgumentType.VALUE, 'feature')
+        step.add_output('produce')
         tabular_pipeline.add_step(step)
         previous_step += 1
 
