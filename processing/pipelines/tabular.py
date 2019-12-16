@@ -1,13 +1,6 @@
-import sys
-from typing import List, Dict, Any, Tuple, Set, Optional
-import logging
-import numpy as np
-import pandas as pd
-
-from d3m import container, utils
+from typing import Optional
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.metadata.base import ArgumentType
-from d3m.metadata import hyperparams
 
 from d3m.primitives.clustering.hdbscan import Hdbscan
 from distil.primitives.categorical_imputer import CategoricalImputerPrimitive
@@ -23,15 +16,16 @@ from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 from dsbox.datapreprocessing.cleaner.iterative_regression import IterativeRegressionImputation
-
+from d3m.primitives.data_transformation import denormalize
 from sklearn_wrap import SKMissingIndicator
-from sklearn_wrap import SKImputer
 from sklearn_wrap import SKStandardScaler
-
+from d3m.primitives.data_transformation import remove_duplicate_columns
+from d3m.primitives.data_preprocessing.dataset_text_reader import DatasetTextReader
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
 # in a naively implemented state for readability for now.
 def create_pipeline(metric: str,
                     semi: bool = False,
+                    multi: bool = False,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False,
@@ -46,12 +40,35 @@ def create_pipeline(metric: str,
     tabular_pipeline = Pipeline()
     tabular_pipeline.add_input(name='inputs')
 
-    # extract dataframe from dataset
+    if multi:
+        # mark new columns as text (this doesn't do anything meaningful, except svm encode deals with text later)
+        # TODO make a real multitable primitive.
+        step = PrimitiveStep(primitive_description=DatasetTextReader.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
+        step.add_output('produce')
+        tabular_pipeline.add_step(step)
+        previous_step = 0
+
+    else:
+        step = PrimitiveStep(primitive_description=denormalize.Common.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
+        step.add_output('produce')
+        tabular_pipeline.add_step(step)
+        previous_step = 0
+
+    # # extract dataframe from dataset
     step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     tabular_pipeline.add_step(step)
-    previous_step = 0
+    previous_step += 1
+
+    # # drop duplicates from denormalize step. 
+    step = PrimitiveStep(primitive_description=remove_duplicate_columns.Common.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    tabular_pipeline.add_step(step)
+    previous_step += 1
 
     # Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)
