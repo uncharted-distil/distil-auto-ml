@@ -65,6 +65,9 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         resolver=resolver)
     step_5.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step_5.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
+    step_5.add_hyperparameter('early_stopping_patience', ArgumentType.VALUE, 100)
+    step_5.add_hyperparameter('num_workers', ArgumentType.VALUE, 1)
+    step_5.add_hyperparameter('use_multiprocessing', ArgumentType.VALUE, False)
     step_5.add_output('produce')
     pipeline_description.add_step(step_5)
 
