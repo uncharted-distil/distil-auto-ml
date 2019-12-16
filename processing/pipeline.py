@@ -105,7 +105,7 @@ def create(dataset_doc_path: str, problem: dict, prepend: Optional[Pipeline]=Non
         # TODO - should determine the graph data format
         pipeline = vertex_classification.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'link_prediction':
-        pipeline = link_prediction.create_pipeline(metric=metric, resolver=resolver)
+        pipeline = link_prediction.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
     elif pipeline_type == 'community_detection':
         pipeline = community_detection.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'clustering':
