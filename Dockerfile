@@ -17,7 +17,7 @@ RUN pip3 install -e git+https://github.com/uncharted-distil/distil-fuzzy-join.gi
 RUN pip3 install -e git+https://github.com/uncharted-distil/distil-mi-ranking.git@2ce1d22e1b0c212af043a3fcd48079d8000647db#egg=DistilMIRanking
 RUN pip3 install -e git+https://github.com/NewKnowledge/duke-d3m-wrapper.git@1c5e5f20fced72f042581a2f9cfca41557a2d85d#egg=DukeD3MWrapper
 RUN pip3 install -e git+https://github.com/NewKnowledge/simon-d3m-wrapper.git@dd573f75402d5246882c1f9fa2809300a74a1eb8#egg=SimonD3MWrapper
-
+RUN pip3 install -e git+https://github.com/cdbethune/D3M-Unsupervised.git@f6d036b6f7fcedcf809fde0ec744f1862308fced#egg=D3MUnsupervised
 COPY . .
 
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
