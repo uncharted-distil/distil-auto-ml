@@ -21,11 +21,15 @@ from sklearn_wrap import SKMissingIndicator
 from sklearn_wrap import SKStandardScaler
 from d3m.primitives.data_transformation import remove_duplicate_columns
 from d3m.primitives.data_preprocessing.dataset_text_reader import DatasetTextReader
+from d3m.primitives.data_cleaning.column_type_profiler import Simon
+from distil.primitives.multitable_loader import MultiTableLoaderPrimitive
+from d3m.primitives.data_transformation.to_numeric import DSBOX as ToNumericPrimitive
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
 # in a naively implemented state for readability for now.
 def create_pipeline(metric: str,
                     semi: bool = False,
                     multi: bool = False,
+                    raw: bool = False,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False,
@@ -49,6 +53,32 @@ def create_pipeline(metric: str,
         tabular_pipeline.add_step(step)
         previous_step = 0
 
+    elif raw:
+        step = PrimitiveStep(primitive_description=MultiTableLoaderPrimitive.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
+        step.add_output('produce')
+        tabular_pipeline.add_step(step)
+        previous_step = 0
+
+        # # extract dataframe from dataset
+        step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
+                          data_reference=input_val.format(previous_step))
+        step.add_output('produce')
+        tabular_pipeline.add_step(step)
+        previous_step += 1
+
+        step = PrimitiveStep(primitive_description=Simon.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
+                          data_reference=input_val.format(previous_step))
+        step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER,
+                          data_reference=input_val.format(previous_step))
+        step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
+        step.add_output('produce')
+        tabular_pipeline.add_step(step)
+        previous_step += 1
+        parse_step = previous_step
+
     else:
         step = PrimitiveStep(primitive_description=denormalize.Common.metadata.query(), resolver=resolver)
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
@@ -57,18 +87,18 @@ def create_pipeline(metric: str,
         previous_step = 0
 
     # # extract dataframe from dataset
-    step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_output('produce')
-    tabular_pipeline.add_step(step)
-    previous_step += 1
+        step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+        step.add_output('produce')
+        tabular_pipeline.add_step(step)
+        previous_step += 1
 
-    # # drop duplicates from denormalize step. 
-    step = PrimitiveStep(primitive_description=remove_duplicate_columns.Common.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_output('produce')
-    tabular_pipeline.add_step(step)
-    previous_step += 1
+        # # drop duplicates from denormalize step.
+        step = PrimitiveStep(primitive_description=remove_duplicate_columns.Common.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+        step.add_output('produce')
+        tabular_pipeline.add_step(step)
+        previous_step += 1
 
     # Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)
@@ -138,6 +168,18 @@ def create_pipeline(metric: str,
     tabular_pipeline.add_step(step)
     previous_step += 1
 
+    #
+    # Adds SK learn simple imputer
+    # step = PrimitiveStep(primitive_description=SKImputer.SKImputer.metadata.query())
+    # use dsbox imputer since sklearn has issues with mismatch datasets
+    step = PrimitiveStep(primitive_description=IterativeRegressionImputation.metadata.query(),resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
+    # step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
+    step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
+    tabular_pipeline.add_step(step)
+    previous_step += 1
 
     # Adds a one hot encoder for categoricals of low cardinality.
     if cat_mode == 'one_hot' and include_one_hot:
@@ -165,19 +207,13 @@ def create_pipeline(metric: str,
     # training features don't match the produce features.
     #
 
-    #
-    #
-    # Adds SK learn simple imputer
-    # step = PrimitiveStep(primitive_description=SKImputer.SKImputer.metadata.query())
-    # use dsbox imputer since sklearn has issues with mismatch datasets
-    step = PrimitiveStep(primitive_description=IterativeRegressionImputation.metadata.query(),resolver=resolver)
+    # Make sure everything is numeric before fitting models
+    step = PrimitiveStep(primitive_description=ToNumericPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
-    step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
-    # step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
-    step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
     tabular_pipeline.add_step(step)
     previous_step += 1
+
 
     # Append scaler for numerical values.
     if scale:

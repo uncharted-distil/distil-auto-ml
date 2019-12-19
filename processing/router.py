@@ -134,6 +134,8 @@ def is_data_augmentation_tabular(dataset_doc: dict, problem: dict) -> bool:
     is_tabular = ['table'] == get_resource_types(dataset_doc)
     return is_data_aug and is_classification_regression and is_tabular
 
+def is_raw(dataset_doc: dict) -> bool:
+    return 'raw' in get_resource_types(dataset_doc)
 
 # --
 # Routing
@@ -238,6 +240,8 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         return 'table', {'semi': True}
     elif is_data_augmentation_tabular(dataset_doc, problem):
         return 'data_augmentation_tabular', problem['data_augmentation']
+    elif is_raw(dataset_doc):
+        return 'table', {'raw': True}
 
     else:
         raise Exception('!! router failed on problem')
