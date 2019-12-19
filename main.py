@@ -72,14 +72,25 @@ def score_task(logger, session, task):
                               .filter(models.ScoreConfig.id==task.score_config_id) \
                               .first()
 
-        # reconstruct the problem object from the saved json if present
+        # reconstruct the problem object from the saved json if present and extract the target index
         problem_obj = problem.Problem.from_json_structure(json.loads(task.problem)) if task.problem else None
-        # TODO: warn if we have multiple data and targets as we are forcing a single here
-        target_name = problem_obj['inputs'][0]['targets'][0]['column_name'] if problem_obj else None
+        target_idx = -1
+        if problem_obj != None:
+            inputs = problem_obj['inputs']
+            if len(inputs) > 1:
+                logger.warn(f'found {len(inputs)} inputs - using first and ignoring others')
+
+            targets = inputs[0]['targets']
+            if len(targets) > 1:
+                logger.warn(f'found {len(targets)} targets - using first and ignoring others')
+
+            target_idx = targets[0]['column_index']
+        else:
+            raise TypeError("no problem definition available for scoring")
 
         fitted_runtime = fitted_runtimes[task.solution_id]
 
-        scorer = Scorer(logger, task, score_config, fitted_runtime, target_name)
+        scorer = Scorer(logger, task, score_config, fitted_runtime, target_idx)
         score_values = scorer.run()
         for score_value in score_values:
             score = models.Scores(
