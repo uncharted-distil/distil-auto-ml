@@ -20,7 +20,7 @@ from processing import pipeline
 import copy
 
 class Scorer:
-    def __init__(self, logger, task, score_config, fitted_pipeline, target_name):
+    def __init__(self, logger, task, score_config, fitted_pipeline, target_idx):
         self.logger = logger
         self.solution_id = task.solution_id
 
@@ -34,7 +34,7 @@ class Scorer:
         self.num_folds = score_config.num_folds
         self.train_size = score_config.train_size
         self.fitted_pipeline = fitted_pipeline
-        self.target_name = target_name
+        self.target_idx = target_idx
 
     def run(self):
 
@@ -169,10 +169,10 @@ class Scorer:
         if len(results.values) > 1:
             self.logger.warning("Pipleine produced > 1 outputs. Scoring first output only.")
         result_df = results.values['outputs.0']
+        # d3m predictions format columns are [d3mIndex, prediction, weight (optional)]
+        result_series = result_df.iloc[:, 1]
         result_df = result_df.set_index(result_df['d3mIndex'])
         result_df.index = result_df.index.map(int)
-
-        result_series = result_df[self.target_name]
 
         # put the ground truth predictions into a single col dataframe with the d3mIndex
         # as the index
@@ -181,7 +181,7 @@ class Scorer:
         # make sure the result and truth have the same d3mIndex
         true_df = true_df.loc[result_df.index]
 
-        true_series = true_df[self.target_name]
+        true_series = true_df.iloc[:, self.target_idx]
         true_series = true_series.astype(result_series.dtype)
 
         score = self._score(self.metric, true_series, result_series)
