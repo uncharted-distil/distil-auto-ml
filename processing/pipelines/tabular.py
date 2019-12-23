@@ -22,6 +22,7 @@ from sklearn_wrap import SKStandardScaler
 from d3m.primitives.data_transformation import remove_duplicate_columns
 from d3m.primitives.data_preprocessing.dataset_text_reader import DatasetTextReader
 from d3m.primitives.data_cleaning.column_type_profiler import Simon
+from distil.primitives.rawtable_loader import RawTableLoaderPrimitive
 from distil.primitives.multitable_loader import MultiTableLoaderPrimitive
 from d3m.primitives.data_transformation.to_numeric import DSBOX as ToNumericPrimitive
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
@@ -44,17 +45,8 @@ def create_pipeline(metric: str,
     tabular_pipeline = Pipeline()
     tabular_pipeline.add_input(name='inputs')
 
-    if multi:
-        # mark new columns as text (this doesn't do anything meaningful, except svm encode deals with text later)
-        # TODO make a real multitable primitive.
-        step = PrimitiveStep(primitive_description=DatasetTextReader.metadata.query(), resolver=resolver)
-        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
-        step.add_output('produce')
-        tabular_pipeline.add_step(step)
-        previous_step = 0
-
-    elif raw:
-        step = PrimitiveStep(primitive_description=MultiTableLoaderPrimitive.metadata.query(), resolver=resolver)
+    if raw:
+        step = PrimitiveStep(primitive_description=RawTableLoaderPrimitive.metadata.query(), resolver=resolver)
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
         step.add_output('produce')
         tabular_pipeline.add_step(step)
@@ -100,6 +92,15 @@ def create_pipeline(metric: str,
         tabular_pipeline.add_step(step)
         previous_step += 1
 
+        if multi:
+            step = PrimitiveStep(primitive_description=MultiTableLoaderPrimitive.metadata.query(), resolver=resolver)
+            step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+            step.add_output('produce')
+            tabular_pipeline.add_step(step)
+            previous_step += 1
+
+
+
     # Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
@@ -126,7 +127,8 @@ def create_pipeline(metric: str,
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
     step.add_output('produce')
     target_types = ('https://metadata.datadrivendiscovery.org/types/Target',
-                    'https://metadata.datadrivendiscovery.org/types/TrueTarget')
+                    'https://metadata.datadrivendiscovery.org/types/TrueTarget',
+                    'https://metadata.datadrivendiscovery.org/types/SuggestedTarget')
     step.add_hyperparameter('semantic_types', ArgumentType.VALUE, target_types)
     tabular_pipeline.add_step(step)
     previous_step += 1
@@ -210,6 +212,7 @@ def create_pipeline(metric: str,
     # Make sure everything is numeric before fitting models
     step = PrimitiveStep(primitive_description=ToNumericPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_hyperparameter('drop_non_numeric_columns', ArgumentType.VALUE, True)
     step.add_output('produce')
     tabular_pipeline.add_step(step)
     previous_step += 1
