@@ -221,6 +221,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         return 'vertex_nomination', {}
 
     elif is_vertex_classification(problem):
+
         return 'vertex_nomination', {'is_edgelist': is_edgelist(dataset_doc, problem)}
 
 
@@ -228,7 +229,10 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         return 'collaborative_filtering', {}
 
     elif is_link_prediction(problem):
-        return 'link_prediction', {'is_edgelist': is_edgelist(dataset_doc, problem)}
+        if is_edgelist(dataset_doc, problem):
+            return 'table', {}
+        else:
+            return 'link_prediction', {'is_edgelist': is_edgelist(dataset_doc, problem)}
 
     elif is_community_detection(problem):
         # TODO what should subtype be?
