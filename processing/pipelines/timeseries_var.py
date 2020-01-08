@@ -34,7 +34,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
-                      'https://metadata.datadrivendiscovery.org/types/FloatVector')
+                      'https://metadata.datadrivendiscovery.org/types/FloatVector', 'http://schema.org/DateTime')
     step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
     var_pipeline.add_step(step)
     previous_step += 1
