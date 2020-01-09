@@ -156,7 +156,7 @@ class Server():
 
     def create_server(self, port):
         self.servicer = ServerServicer()
-        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=30))
         core_pb2_grpc.add_CoreServicer_to_server(
             self.servicer, self.server)
         address = '[::]:{}'.format(port)
