@@ -14,7 +14,7 @@ from common_primitives.extract_columns_semantic_types import ExtractColumnsBySem
 
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.audio_transfer import AudioTransferPrimitive
-from distil.primitives.audio_loader import AudioDatasetLoaderPrimitive
+from distil.primitives.audio_reader import AudioDatasetLoaderPrimitive
 
 # Overall implementation relies on passing the entire dataset through the pipeline, with the primitives
 # identifying columns to operate on based on type.  Alternative implementation (that better lines up with

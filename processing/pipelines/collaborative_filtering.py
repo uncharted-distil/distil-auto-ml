@@ -9,7 +9,7 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from distil.primitives.collaborative_filtering import CollaborativeFilteringPrimitive
+from distil.primitives.collaborative_filtering_link_prediction import CollaborativeFilteringPrimitive
 
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.column_parser import ColumnParserPrimitive

@@ -12,7 +12,7 @@ from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 from d3m.primitives.time_series_classification.k_neighbors import Kanine
-from distil.primitives.timeseries_formatter import TimeSeriesFormatterPrimitive
+from distil.primitives.time_series_formatter import TimeSeriesFormatterPrimitive
 
 def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'

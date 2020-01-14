@@ -10,7 +10,7 @@ from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
 from distil.primitives.load_graphs import DistilGraphLoaderPrimitive
-from distil.primitives.seeded_graph_matcher import DistilSeededGraphMatchingPrimitive
+from distil.primitives.seeded_graph_matching import DistilSeededGraphMatchingPrimitive
 
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
