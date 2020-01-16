@@ -9,7 +9,7 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
 
-from distil.primitives.bert_classification import BertPairClassificationPrimitive
+from distil.primitives.bert_classifier import BertPairClassificationPrimitive
 
 from common_primitives.denormalize import DenormalizePrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive

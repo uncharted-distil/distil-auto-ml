@@ -17,7 +17,7 @@ from distil.primitives.one_hot_encoder import OneHotEncoderPrimitive
 from distil.primitives.binary_encoder import BinaryEncoderPrimitive
 from distil.primitives.text_encoder import TextEncoderPrimitive
 from distil.primitives.enrich_dates import EnrichDatesPrimitive
-from distil.primitives.list_encoder import ListEncoderPrimitive
+from distil.primitives.list_to_dataframe import ListEncoderPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive

@@ -235,7 +235,10 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
             'overlapping': False,
         }
     elif is_semisupervised_tabular(problem):
-        return 'table', {'semi': True}
+        # return 'table', {'semi': True}
+        return 'semisupervised_tabular', {}
+
+
     elif is_data_augmentation_tabular(dataset_doc, problem):
         return 'data_augmentation_tabular', problem['data_augmentation']
 
