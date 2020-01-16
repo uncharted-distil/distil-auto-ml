@@ -25,7 +25,7 @@ PIPE_TO_DATASET = {
         'num_clusters': 100,
         'cluster_col_name': 'Class'
     }),
-    'collaborative_filtering': ('60_jester', 'meanAbsoluteError', {}),
+    'collaborative_filtering': ('60_jester_MIN_METADATA', 'meanAbsoluteError', {}),
     'community_detection': ('6_70_com_amazon', 'normalizedMutualInformation', {}),
     'graph_matching': ('49_facebook', 'accuracy', {}),
     'image': ('22_handgeometry', 'meanSquaredError', {}),
@@ -124,7 +124,7 @@ if __name__ == '__main__':
             problem_arg = f'-r $D3MINPUTDIR/{dataset_to_use}/{dataset_to_use}_problem/problemDoc.json'
             train_arg = f'\t-i $D3MINPUTDIR/{dataset_to_use}/TRAIN/dataset_TRAIN/datasetDoc.json'
             test_arg = f'-t $D3MINPUTDIR/{dataset_to_use}/TEST/dataset_TEST/datasetDoc.json'
-            score_arg = f'-a $D3MINPUTDIR/{dataset_to_use}/SCORE/dataset_TEST/datasetDoc.json'
+            score_arg = f'-a $D3MINPUTDIR/{dataset_to_use}/SCORE/dataset_SCORE/datasetDoc.json'
             pipeline_arg = f'-p {json_filename}'
             output_arg = f'-O {output_filename}'
             fit_score_args = f'{problem_arg} {train_arg} {test_arg} {score_arg} {pipeline_arg} {output_arg}'

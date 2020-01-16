@@ -15,6 +15,7 @@ from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
+from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
 def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
     previous_step = 0
@@ -24,12 +25,21 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     cf_pipeline = Pipeline()
     cf_pipeline.add_input(name='inputs')
 
-   # extract dataframe from dataset
+    # extract dataframe from dataset
     step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
     cf_pipeline.add_step(step)
     previous_step = 0
+
+    # Profile columns.
+    step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    cf_pipeline.add_step(step)
+    previous_step += 1
+    parse_step = previous_step
+
 
     # Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)
