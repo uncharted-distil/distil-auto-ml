@@ -68,6 +68,16 @@ def create(dataset_doc_path: str, problem: dict, prepend: Optional[Pipeline]=Non
     # determine type of pipeline required for dataset
     pipeline_type, pipeline_info = router.get_routing_info(dataset_doc, problem, metric)
 
+    # Check if all columns have valid metadata
+    # TODO check for unknown types as well.
+    learning_data_col = [x for x in dataset_doc['dataResources'] if x['resID'] == 'learningData']
+    num_of_resources = len([x for x in learning_data_col[0]['columns'] if x.get('colType') is not None])
+    if num_of_resources < len(train_dataset['learningData'].columns):
+        MIN_META = True
+    else:
+        MIN_META = False
+    pipeline_info.update({'min_meta': MIN_META})
+
     pipeline_type = pipeline_type.lower()
 
     pipeline: Pipeline = None
@@ -86,16 +96,16 @@ def create(dataset_doc_path: str, problem: dict, prepend: Optional[Pipeline]=Non
         else:
             pipeline = tabular.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'text':
-        pipeline = text.create_pipeline(metric=metric, resolver=resolver)
+        pipeline = text.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
     elif pipeline_type == 'image':
-        pipeline = image.create_pipeline(metric=metric, resolver=resolver)
+        pipeline = image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
     elif pipeline_type == 'object_detection':
         pipeline = object_detection.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'audio':
        pipeline = audio.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'collaborative_filtering':
         if gpu:
-            pipeline = collaborative_filtering.create_pipeline(metric=metric, resolver=resolver)
+            pipeline = collaborative_filtering.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
         else:
             pipeline = tabular.create_pipeline(metric=metric, resolver=resolver)
     elif pipeline_type == 'vertex_nomination':
