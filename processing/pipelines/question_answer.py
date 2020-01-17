@@ -16,6 +16,7 @@ from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
+from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
 def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
     previous_step = 0
@@ -37,6 +38,8 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_output('produce')
     qa_pipeline.add_step(step)
     previous_step += 1
+
+
 
     # Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)

@@ -20,7 +20,7 @@ META_DIR = 'pipelines'
 # and metric for pipeline config
 PIPE_TO_DATASET = {
     'tabular': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', {}),
-    'audio': ('31_urbansound', 'accuracy', {}),
+    'audio': ('31_urbansound_MIN_METADATA', 'accuracy', {}),
     'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', {
         'num_clusters': 100,
         'cluster_col_name': 'Class'
@@ -31,17 +31,17 @@ PIPE_TO_DATASET = {
     'image': ('22_handgeometry_MIN_METADATA', 'meanSquaredError', {}),
     'object_detection': ('LL1_penn_fudan_pedestrian', 'objectDetectionAP', {}),
     'link_prediction': ('59_umls_MIN_METADATA', 'accuracy', {}),
-    'question_answer': ('32_wikiqa', 'f1', {}),
-    'text': ('30_personae', 'f1', {}),
+    'question_answer': ('32_wikiqa_MIN_METADATA', 'f1', {}),
+    'text': ('30_personae_MIN_METADATA', 'f1', {}),
     'timeseries_forecasting': ('56_sunspots_monthly', 'rootMeanSquaredError', {}),
     'timeseries_classification': ('LL1_50words', 'f1Macro', {}),
-    'timeseries_kanine': ('LL1_50words', 'f1Macro', {}),
+    'timeseries_kanine': ('66_chlorineConcentration_MIN_METADATA', 'f1Macro', {}),
     'timeseries_var': ('LL1_736_population_spawn_simpler', 'meanAbsoluteError', {}),
     'timeseries_deepar': ('LL1_736_population_spawn', 'meanAbsoluteError', {}),
     'vertex_nomination': ('LL1_net_nomination_seed_MIN_METADATA', 'accuracy', {}),
     'vertex_classification': ('LL1_VTXC_1369_synthetic', 'f1Macro', {}),
     'semisupervised_tabular': ('SEMI_1040_sylva_prior', 'f1Macro', {}),
-    'timeseries_lstm_fcn': ('LL1_50words', 'f1Macro', {}),
+    'timeseries_lstm_fcn': ('66_chlorineConcentration_MIN_METADATA', 'f1Macro', {}),
     'data_augmentation_tabular': ('DA_ny_taxi_demand', 'meanAbsoluteError', {})
 }
 
