@@ -3,7 +3,7 @@ import os
 import glob
 import json
 import shutil
-
+import sys
 
 def clean_pipelines(folder_path):
     sub_folders = ('pipelines', 'pipeline_runs')
@@ -89,9 +89,8 @@ for p in primitive_files:
                     shutil.copy(old_run_path, new_run_path)
 
     # copy the primitive annotation file into the target folder in the `primitives` project
-    if pipeline_match:
-        primitive_path = os.path.join(folder_path, 'primitive.json')
-        print("Moving {} to {}".format(p, primitive_path))
-        dir_name, _ = os.path.split(primitive_path)
-        os.makedirs(dir_name, exist_ok=True)
-        shutil.copy(p, primitive_path)
+    primitive_path = os.path.join(folder_path, 'primitive.json')
+    print("Moving {} to {}".format(p, primitive_path))
+    dir_name, _ = os.path.split(primitive_path)
+    os.makedirs(dir_name, exist_ok=True)
+    shutil.copy(p, primitive_path)
