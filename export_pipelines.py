@@ -30,7 +30,7 @@ PIPE_TO_DATASET = {
     'graph_matching': ('49_facebook', 'accuracy', {}),
     'image': ('22_handgeometry', 'meanSquaredError', {}),
     'object_detection': ('LL1_penn_fudan_pedestrian', 'objectDetectionAP', {}),
-    'link_prediction': ('59_umls', 'accuracy', {}),
+    'link_prediction': ('59_umls_MIN_METADATA', 'accuracy', {}),
     'question_answer': ('32_wikiqa', 'f1', {}),
     'text': ('30_personae', 'f1', {}),
     'timeseries_forecasting': ('56_sunspots_monthly', 'rootMeanSquaredError', {}),
