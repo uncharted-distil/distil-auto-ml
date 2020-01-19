@@ -11,6 +11,8 @@ from d3m.metadata import hyperparams
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
+from common_primitives.construct_predictions import ConstructPredictionsPrimitive
+from common_primitives.simple_profiler import SimpleProfilerPrimitive
 from d3m.primitives.time_series_classification.k_neighbors import Kanine
 from distil.primitives.time_series_formatter import TimeSeriesFormatterPrimitive
 
@@ -30,6 +32,13 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
 
     # extract dataframe from dataset
     step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    pipeline.add_step(step)
+    previous_step += 1
+
+    # Profile columns.
+    step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     pipeline.add_step(step)
@@ -61,6 +70,13 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     pipeline.add_step(step)
     previous_step += 1
 
+     # Profile columns.
+    step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    pipeline.add_step(step)
+    previous_step += 1
+
     # Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
@@ -70,6 +86,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
     pipeline.add_step(step)
     previous_step += 1
+    original_parse_step = previous_step
 
     # Extract targets
     step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query(), resolver=resolver)
@@ -85,6 +102,14 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step = PrimitiveStep(primitive_description=Kanine.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(attributes_step))
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
+    step.add_output('produce')
+    pipeline.add_step(step)
+    previous_step += 1
+
+    # construct predictions
+    step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(original_parse_step))
     step.add_output('produce')
     pipeline.add_step(step)
     previous_step += 1
