@@ -176,17 +176,19 @@ def search_task(logger, session, search):
         problem_obj = problem.Problem.from_json_structure(json.loads(search.problem)) if search.problem else None
 
         # based on our problem type and data type, create a pipeline
-        pipeline_obj, dataset = ex_pipeline.create(search.dataset_uri, problem_obj, search_template_obj, resolver=resolver)
-        pipeline_json = pipeline_obj.to_json(nest_subpipelines=True)
+        pipeline_objs, dataset, ranks = ex_pipeline.create(search.dataset_uri, problem_obj, search_template_obj, resolver=resolver)
+        for i, pipeline_obj in enumerate(pipeline_objs):
+            pipeline_json = pipeline_obj.to_json(nest_subpipelines=True)
 
-        # save the pipeline to the DB
-        solution_pipeline = models.Pipelines(id=str(uuid.uuid4()),
-                                             search_id=search.id,
-                                             pipelines=pipeline_json,
-                                             fully_specified=fully_specified,
-                                             ended=True,
-                                             error=False)
-        session.add(solution_pipeline)
+            # save the pipeline to the DB
+            solution_pipeline = models.Pipelines(id=str(uuid.uuid4()),
+                                                 search_id=search.id,
+                                                 pipelines=pipeline_json,
+                                                 fully_specified=fully_specified,
+                                                 ended=True,
+                                                 error=False,
+                                                 rank=ranks[i])
+            session.add(solution_pipeline)
         session.commit()
 
     except Exception as e:
@@ -201,7 +203,8 @@ def search_task(logger, session, search):
         search.stopped_at = datetime.datetime.utcnow()
         session.commit()
 
-def job_loop(logger, session):
+
+def job_loop(logger, session, server):
     task = False
     search = False
 
@@ -257,7 +260,7 @@ def main(once=False):
 
     # Main job loop
     while True:
-        job_loop(logger, session)
+        job_loop(logger, session, server)
         # Check for a new job every second
         time.sleep(1)
 

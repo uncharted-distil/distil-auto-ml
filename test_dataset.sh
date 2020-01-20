@@ -36,16 +36,28 @@ cp ./test_scripts/scoring_pipeline.yml ${D3MOUTPUTDIR}
 ###
 
 
-
-python -m d3m runtime \
-    --volumes "${D3MSTATICDIR}" \
-    -d ${DATASET} \
-    fit-score \
-    -p ${D3MOUTPUTDIR}/pipelines_ranked/$PIPELINE_ID.json \
-    -r ${D3MINPUTDIR}/$DATASET/${DATASET}_problem/problemDoc.json \
-    -i ${D3MINPUTDIR}/$DATASET/TRAIN/dataset_TRAIN/datasetDoc.json \
-    -t ${D3MINPUTDIR}/$DATASET/TEST/dataset_TEST/datasetDoc.json \
-    -a ${D3MINPUTDIR}/$DATASET/SCORE/dataset_TEST/datasetDoc.json
+FILE=${D3MINPUTDIR}/$DATASET/SCORE/dataset_SCORE/datasetDoc.json
+if test -f "$FILE"; then
+  python -m d3m runtime \
+      --volumes "${D3MSTATICDIR}" \
+      -d ${DATASET} \
+      fit-score \
+      -p ${D3MOUTPUTDIR}/pipelines_ranked/$PIPELINE_ID.json \
+      -r ${D3MINPUTDIR}/$DATASET/${DATASET}_problem/problemDoc.json \
+      -i ${D3MINPUTDIR}/$DATASET/TRAIN/dataset_TRAIN/datasetDoc.json \
+      -t ${D3MINPUTDIR}/$DATASET/TEST/dataset_TEST/datasetDoc.json \
+      -a ${D3MINPUTDIR}/$DATASET/SCORE/dataset_SCORE/datasetDoc.json
+else
+  python -m d3m runtime \
+      --volumes "${D3MSTATICDIR}" \
+      -d ${DATASET} \
+      fit-score \
+      -p ${D3MOUTPUTDIR}/pipelines_ranked/$PIPELINE_ID.json \
+      -r ${D3MINPUTDIR}/$DATASET/${DATASET}_problem/problemDoc.json \
+      -i ${D3MINPUTDIR}/$DATASET/TRAIN/dataset_TRAIN/datasetDoc.json \
+      -t ${D3MINPUTDIR}/$DATASET/TEST/dataset_TEST/datasetDoc.json \
+      -a ${D3MINPUTDIR}/$DATASET/SCORE/dataset_TEST/datasetDoc.json
+fi
 
 echo "Ran score successfully!"
 #

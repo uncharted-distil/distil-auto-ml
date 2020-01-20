@@ -2,7 +2,7 @@ import pathlib
 from google.protobuf import json_format
 
 import config
-
+import random
 from api import core_pb2, problem_pb2, value_pb2, pipeline_pb2, primitive_pb2, utils
 
 from d3m.metadata import pipeline
@@ -28,11 +28,12 @@ class Messaging:
     def get_search_id(self, msg):
         return msg.search_id
 
-    def make_get_search_solutions_result(self, solution_id, progess_msg):
+    def make_get_search_solutions_result(self, solution_id, progress_msg, rank):
 
         # if no solutin_id is set this is just a progress message and doesn't need
         # score info
         scores = []
+
         if solution_id is not None:
            scores = [core_pb2.SolutionSearchScore(
                 scoring_configuration=core_pb2.ScoringConfiguration(
@@ -44,7 +45,7 @@ class Messaging:
                     ),
                     value=value_pb2.Value(
                         raw=value_pb2.ValueRaw(
-                            int64=1
+                            int64=rank
                         )
                     )
                 )]
@@ -52,7 +53,7 @@ class Messaging:
 
         m = core_pb2.GetSearchSolutionsResultsResponse(
             solution_id=solution_id,
-            progress=progess_msg,
+            progress=progress_msg,
             internal_score=0.0,
             scores = scores
         )
