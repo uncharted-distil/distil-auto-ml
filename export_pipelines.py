@@ -20,7 +20,7 @@ META_DIR = 'pipelines'
 # and metric for pipeline config
 PIPE_TO_DATASET = {
     'tabular': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', {}),
-    'audio': ('31_urbansound_MIN_METADATA', 'accuracy', {}),
+    'audio': ('31_urbansound', 'accuracy', {}),
     'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', {
         'num_clusters': 100,
         'cluster_col_name': 'Class'
