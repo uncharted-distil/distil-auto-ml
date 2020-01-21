@@ -204,7 +204,7 @@ def search_task(logger, session, search):
         session.commit()
 
 
-def job_loop(logger, session, server):
+def job_loop(logger, session):
     task = False
     search = False
 
@@ -260,7 +260,7 @@ def main(once=False):
 
     # Main job loop
     while True:
-        job_loop(logger, session, server)
+        job_loop(logger, session)
         # Check for a new job every second
         time.sleep(1)
 
