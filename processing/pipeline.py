@@ -203,11 +203,9 @@ def create(
             pipeline = _prepend_pipeline(pipeline, prepend)
 
     # dummy rank pipelines for now. TODO replace this with hyperparameter tuning function
-    import random
-
     ranks = []
-    for _ in range(len(pipelines)):
-        ranks.append(random.randint(0, 100))
+    for i in range(len(pipelines)):
+        ranks.append(i)
 
     return pipelines, train_dataset, ranks
 
