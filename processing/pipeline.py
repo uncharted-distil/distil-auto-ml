@@ -102,11 +102,10 @@ def create(
             graph_matching.create_pipeline(metric=metric, resolver=resolver)
         )
     elif pipeline_type == "timeseries_classification":
-        # if gpu:
-        pipelines.append(
-            timeseries_lstm_fcn.create_pipeline(metric=metric, resolver=resolver)
-        )
-        # else:
+        if gpu:
+            pipelines.append(
+                timeseries_lstm_fcn.create_pipeline(metric=metric, resolver=resolver)
+            )
         pipelines.append(
             timeseries_kanine.create_pipeline(metric=metric, resolver=resolver)
         )
@@ -115,8 +114,7 @@ def create(
             pipelines.append(
                 question_answer.create_pipeline(metric=metric, resolver=resolver)
             )
-        else:
-            pipelines.append(tabular.create_pipeline(metric=metric, resolver=resolver))
+        pipelines.append(tabular.create_pipeline(metric=metric, resolver=resolver))
     elif pipeline_type == "text":
         pipelines.append(
             text.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
@@ -138,8 +136,7 @@ def create(
                     metric=metric, resolver=resolver, **pipeline_info
                 )
             )
-        else:
-            pipelines.append(tabular.create_pipeline(metric=metric, resolver=resolver))
+        pipelines.append(tabular.create_pipeline(metric=metric, resolver=resolver))
     elif pipeline_type == "vertex_nomination":
         pipelines.append(
             vertex_nomination.create_pipeline(metric, resolver, **pipeline_info)
@@ -174,11 +171,10 @@ def create(
         # for now
         # pipeline = tabular.create_pipeline(metric)
         # the above was in the exline repo not sure what is the most up to date?
-        # if gpu:
-        pipelines.append(
-            timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
-        )
-        # else:
+        if gpu:
+            pipelines.append(
+                timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
+            )
         pipelines.append(
             timeseries_var.create_pipeline(metric=metric, resolver=resolver)
         )
@@ -205,7 +201,7 @@ def create(
     # dummy rank pipelines for now. TODO replace this with hyperparameter tuning function
     ranks = []
     for i in range(len(pipelines)):
-        ranks.append(i)
+        ranks.append(i+1)
 
     return pipelines, train_dataset, ranks
 
