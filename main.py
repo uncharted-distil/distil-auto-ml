@@ -50,7 +50,7 @@ def produce_task(logger, session, task):
         output_keys = json.loads(task.output_keys)
         for output_key in output_keys:
             if output_key in results.values:
-                preds_path = utils.make_preds_filename(task.fit_solution_id, output_key=output_key)
+                preds_path = utils.make_preds_filename(task.request_id, output_key=output_key)
                 results.values[output_key].to_csv(preds_path, index=False)
         session.commit()
     except Exception as e:

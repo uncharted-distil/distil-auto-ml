@@ -371,7 +371,7 @@ class TaskManager():
                 for task_key in task_keys:
                     # generate a uri from the key and make sure the file exists
                     # TODO(jtorrez): predictions filename creation should live somewhere better than utils
-                    preds_path = utils.make_preds_filename(task.fit_solution_id, output_key=task_key)
+                    preds_path = utils.make_preds_filename(task.request_id, output_key=task_key)
                     if not preds_path.exists() and not preds_path.is_file():
                         raise FileNotFoundError("Predictions file {} doesn't exist".format(preds_path))
 
