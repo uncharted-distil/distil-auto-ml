@@ -8,6 +8,7 @@ from d3m import container, utils
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
+from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
 from distil.primitives.collaborative_filtering_link_prediction import CollaborativeFilteringPrimitive
 
@@ -16,7 +17,7 @@ from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 
-def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
+def create_pipeline(metric: str, resolver: Optional[Resolver] = None, min_meta: bool = False) -> Pipeline:
     previous_step = 0
     input_val = 'steps.{}.produce'
 
@@ -30,6 +31,15 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_output('produce')
     cf_pipeline.add_step(step)
     previous_step = 0
+
+    if min_meta:
+        # Profile columns.
+        step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
+                          data_reference=input_val.format(previous_step))
+        step.add_output('produce')
+        cf_pipeline.add_step(step)
+        previous_step += 1
 
     # Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)

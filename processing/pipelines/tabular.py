@@ -23,7 +23,7 @@ from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 from dsbox.datapreprocessing.cleaner.iterative_regression import IterativeRegressionImputation
-
+from d3m.primitives.data_cleaning.column_type_profiler import Simon
 from sklearn_wrap import SKMissingIndicator
 from sklearn_wrap import SKImputer
 from sklearn_wrap import SKStandardScaler
@@ -31,6 +31,7 @@ from sklearn_wrap import SKStandardScaler
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
 # in a naively implemented state for readability for now.
 def create_pipeline(metric: str,
+                    min_meta: bool = False,
                     semi: bool = False,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
@@ -52,6 +53,15 @@ def create_pipeline(metric: str,
     step.add_output('produce')
     tabular_pipeline.add_step(step)
     previous_step = 0
+
+    if min_meta:
+        step = PrimitiveStep(primitive_description=Simon.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
+                          data_reference=input_val.format(previous_step))
+        step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
+        step.add_output('produce')
+        tabular_pipeline.add_step(step)
+        previous_step += 1
 
     # Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)

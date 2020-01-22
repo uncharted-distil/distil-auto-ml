@@ -135,6 +135,7 @@ class Pipelines(Base):
     error = Column(Boolean, default=False)
     ended = Column(Boolean, default=False)
     fully_specified = Column(Boolean, default=False)
+    rank = Column(Integer, default=1)
 
 class ScoreConfig(Base):
     __tablename__ = 'score_config'

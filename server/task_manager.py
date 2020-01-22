@@ -77,34 +77,35 @@ class TaskManager():
 
 
         while True:
-            pipeline = self.session.query(models.Pipelines) \
+            pipelines = self.session.query(models.Pipelines) \
                             .filter(models.Pipelines.search_id==str(search_id)) \
                             .filter(models.Pipelines.error == False) \
                             .filter(models.Pipelines.ended == True) \
-                            .first()
-            if pipeline:
+                            .all()
+            if len(pipelines) > 0:
+                for pipeline in pipelines:
                 # Check if Solution already exists
-                solution = self.session.query(models.Solutions) \
-                                       .filter(models.Solutions.search_id==search_id) \
-                                       .filter(models.Solutions.pipeline_id==pipeline.id) \
-                                       .first()
-                # Generate ValidSolution row if has not
-                # been previously verified
-                if not solution:
-                    # Link the task to the solution
-                    solution_id = pipeline.id
+                    solution = self.session.query(models.Solutions) \
+                                           .filter(models.Solutions.search_id==search_id) \
+                                           .filter(models.Solutions.pipeline_id==pipeline.id) \
+                                           .first()
+                    # Generate ValidSolution row if has not
+                    # been previously verified
+                    if not solution:
+                        # Link the task to the solution
+                        solution_id = pipeline.id
 
-                    solution = models.Solutions(
-                        id=solution_id,
-                        search_id=search_id,
-                        pipeline_id=pipeline.id)
-                    self.session.add(solution)
+                        solution = models.Solutions(
+                            id=solution_id,
+                            search_id=search_id,
+                            pipeline_id=pipeline.id)
+                        self.session.add(solution)
 
-                # End session
-                self.session.commit()
-                self.session.refresh(pipeline)
-                progress_msg = self.msg.make_progress_msg("COMPLETED")
-                yield self.msg.make_get_search_solutions_result(pipeline.id, progress_msg)
+                    # End session
+                    self.session.commit()
+                    self.session.refresh(pipeline)
+                    progress_msg = self.msg.make_progress_msg("COMPLETED")
+                    yield self.msg.make_get_search_solutions_result(pipeline.id, progress_msg, pipeline.rank)
                 break
             else:
                 yield False
