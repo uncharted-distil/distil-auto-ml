@@ -27,6 +27,7 @@ from d3m.primitives.data_cleaning.column_type_profiler import Simon
 from sklearn_wrap import SKMissingIndicator
 from sklearn_wrap import SKImputer
 from sklearn_wrap import SKStandardScaler
+from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
 # in a naively implemented state for readability for now.
@@ -55,10 +56,10 @@ def create_pipeline(metric: str,
     previous_step = 0
 
     if min_meta:
-        step = PrimitiveStep(primitive_description=Simon.metadata.query(), resolver=resolver)
+        step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
                           data_reference=input_val.format(previous_step))
-        step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
+        step.add_hyperparameter(name='remove_untagged_cols', argument_type=ArgumentType.VALUE, data=True)
         step.add_output('produce')
         tabular_pipeline.add_step(step)
         previous_step += 1
@@ -109,17 +110,20 @@ def create_pipeline(metric: str,
     tabular_pipeline.add_step(step)
     previous_step += 1
 
-    # Append singleton replacer.  Looks for categorical values that only occur once in a column and replace them with a flag.
-    step = PrimitiveStep(primitive_description=ReplaceSingletonsPrimitive.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_output('produce')
-    tabular_pipeline.add_step(step)
-    previous_step += 1
+    # TODO if replacing rows with a flag, other encoders that depend on type will break.
+    # # Append singleton replacer.  Looks for categorical values that only occur once in a column and replace them with a flag.
+    # step = PrimitiveStep(primitive_description=ReplaceSingletonsPrimitive.metadata.query(), resolver=resolver)
+    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    # step.add_output('produce')
+    # tabular_pipeline.add_step(step)
+    # previous_step += 1
 
     # Append categorical imputer.  Finds missing categorical values and replaces them with an imputed value.
     step = PrimitiveStep(primitive_description=CategoricalImputerPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
+    # step.add_hyperparameter('fill_value', ArgumentType.VALUE, None)
+
     tabular_pipeline.add_step(step)
     previous_step += 1
 
@@ -127,6 +131,8 @@ def create_pipeline(metric: str,
     step = PrimitiveStep(primitive_description=TextEncoderPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
+    step.add_hyperparameter('encoder_type', ArgumentType.VALUE, 'svm')
+    step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     step.add_output('produce')
     tabular_pipeline.add_step(step)
     previous_step += 1
