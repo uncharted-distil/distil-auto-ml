@@ -51,7 +51,7 @@ def create(
     problem: dict,
     prepend: Optional[Pipeline] = None,
     resolver: Optional[Resolver] = None,
-) -> Tuple[pipeline.Pipeline, container.Dataset]:
+) -> Tuple[List[pipeline.Pipeline], container.Dataset, List[float]]:
     # allow for use of GPU optimized pipelines
     gpu = _use_gpu()
 
@@ -61,7 +61,7 @@ def create(
     # If there isn't a placeholder this is a fully specified pipeline.  Return the pipeline unmodified along with the
     # dataset.
     if prepend and not [True for s in prepend.steps if isinstance(s, PlaceholderStep)]:
-        return (prepend, train_dataset)
+        return ([prepend], train_dataset, [1.0])
 
     # Load the dataset doc itself
     modified_path = dataset_doc_path.replace("file://", "")
@@ -92,7 +92,7 @@ def create(
     pipeline_type = pipeline_type.lower()
 
     pipeline: Pipeline = None
-    pipelines = []
+    pipelines: List[Pipeline] = []
     if pipeline_type == "table":
         pipelines.append(
             tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
@@ -191,7 +191,7 @@ def create(
         )
     else:
         logger.error(f"Pipeline type [{pipeline_type}] is not yet supported.")
-        return None, train_dataset
+        return None, train_dataset, []
 
     # prepend to the base pipeline
     if prepend is not None:
@@ -199,7 +199,7 @@ def create(
             pipeline = _prepend_pipeline(pipeline, prepend)
 
     # dummy rank pipelines for now. TODO replace this with hyperparameter tuning function
-    ranks = []
+    ranks: List[float] = []
     for i in range(len(pipelines)):
         ranks.append(i+1)
 
