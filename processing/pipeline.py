@@ -195,8 +195,11 @@ def create(
 
     # prepend to the base pipeline
     if prepend is not None:
+        pipelines_prepend = []
         for pipeline in pipelines:
             pipeline = _prepend_pipeline(pipeline, prepend)
+            pipelines_prepend.append(pipeline)
+        pipelines = pipelines_prepend
 
     # dummy rank pipelines for now. TODO replace this with hyperparameter tuning function
     ranks: List[float] = []
