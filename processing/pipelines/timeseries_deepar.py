@@ -4,7 +4,7 @@ from d3m import container, utils
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.metadata.base import ArgumentType
 
-from d3m.primitives.time_series_forecasting.lstm import DeepAR
+from d3m.primitives.time_series_forecasting.convolutional_neural_net import DeepAR
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.grouping_field_compose import GroupingFieldComposePrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
