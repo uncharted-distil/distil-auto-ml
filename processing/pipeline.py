@@ -86,7 +86,6 @@ def create(
         [x for x in learning_data_col[0]["columns"] if x.get("colType") is not None]
     )
 
-
     if num_of_resources < len(train_dataset["learningData"].columns):
         MIN_META = True
     else:
@@ -95,10 +94,12 @@ def create(
     if prepend is not None:
         # if we have any prepend steps that modify semantic types, min_meta check no longer applies
         prepend_steps = {step.primitive for step in prepend.steps[:-1]}
-        semantic_modifiers = {primitives.data_transformation.add_semantic_types.Common,
-                              primitives.data_transformation.remove_semantic_types.Common,
-                              primitives.data_cleaning.column_type_profiler.Simon,
-                              SimpleProfilerPrimitive}
+        semantic_modifiers = {
+            primitives.data_transformation.add_semantic_types.Common,
+            primitives.data_transformation.remove_semantic_types.Common,
+            primitives.data_cleaning.column_type_profiler.Simon,
+            SimpleProfilerPrimitive,
+        }
         if len(prepend_steps & semantic_modifiers) > 0:
             MIN_META = False
 
@@ -219,7 +220,7 @@ def create(
     # dummy rank pipelines for now. TODO replace this with hyperparameter tuning function
     ranks: List[float] = []
     for i in range(len(pipelines)):
-        ranks.append(i+1)
+        ranks.append(i + 1)
 
     return pipelines, train_dataset, ranks
 
