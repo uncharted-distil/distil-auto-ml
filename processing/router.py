@@ -154,7 +154,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         assert len(resources) == 1
         other_resource = resources[0]
         is_table = other_resource['resType'] == 'table'
-        is_collection = other_resource['isCollection']
+        is_collection = other_resource.get('isCollection', False)
 
         if is_table and is_collection:
             # return 'multitable', {}
@@ -200,10 +200,10 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
 
     elif is_timeseries_classification(dataset_doc, problem):
         return 'timeseries_classification', {
-            "metrics": ['euclidean', 'cityblock', 'dtw'],
-            "diffusion": True,
-            "forest": True,
-            "ensemble_size": 3,
+            # "metrics": ['euclidean', 'cityblock', 'dtw'],
+            # "diffusion": True,
+            # "forest": True,
+            # "ensemble_size": 3,
         }
 
     elif is_timeseries_forecasting(problem):
