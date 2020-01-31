@@ -248,8 +248,8 @@ def main(once=False):
                                  log_file=config.LOG_FILENAME,
                                  system_version=system_version)
     logger.info("System version {}".format(system_version))
-
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging_level)
+    logger.info(f'Logging level to {logging_level}')
 
     # Get DB access
     session = models.start_session(config.DB_LOCATION)
