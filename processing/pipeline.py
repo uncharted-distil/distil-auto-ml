@@ -24,6 +24,7 @@ from processing.pipelines import (
     graph_matching,
     image,
     object_detection,
+    object_detection_yolo,
     question_answer,
     tabular,
     text,
@@ -126,6 +127,9 @@ def create(
     elif pipeline_type == "object_detection":
         pipelines.append(
             object_detection.create_pipeline(metric=metric, resolver=resolver)
+        )
+        pipelines.append(
+            object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
         )
     elif pipeline_type == "audio":
         pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))

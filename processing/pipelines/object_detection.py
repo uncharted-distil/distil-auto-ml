@@ -20,10 +20,10 @@ def create_pipeline(metric: str,
     step = PrimitiveStep(primitive_description=DenormalizePrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
-    step.add_hyperparameter('starting_resource', ArgumentType.VALUE, None)
-    step.add_hyperparameter('recursive', ArgumentType.VALUE, True)
-    step.add_hyperparameter('many_to_many', ArgumentType.VALUE, False)
-    step.add_hyperparameter('discard_not_joined_tabular_resources', ArgumentType.VALUE, False)
+    # stepadd_hyperparameter('starting_resource', ArgumentType.VALUE, None)
+    # step.add_hyperparameter('recursive', ArgumentType.VALUE, True)
+    # step.add_hyperparameter('many_to_many', ArgumentType.VALUE, False)
+    # step.add_hyperparameter('discard_not_joined_tabular_resources', ArgumentType.VALUE, False)
     objdetect_pipeline.add_step(step)
 
     # step 1 - extract dataframe from dataset
