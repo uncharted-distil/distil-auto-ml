@@ -29,6 +29,7 @@ from processing.pipelines import (
     question_answer,
     tabular,
     text,
+    text_sent2vec,
     link_prediction,
     link_prediction_jhu,
     audio,
@@ -136,6 +137,9 @@ def create(
     elif pipeline_type == "text":
         pipelines.append(
             text.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
+        )
+        pipelines.append(
+            text_sent2vec.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
         )
     elif pipeline_type == "image":
         pipelines.append(
