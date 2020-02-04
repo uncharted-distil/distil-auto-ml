@@ -3,6 +3,7 @@ from d3m.metadata.base import ArgumentType, Context
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from typing import Optional
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
+from d3m.primitives.data_cleaning.column_type_profiler import Simon
 
 import sys
 
@@ -43,7 +44,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
                         data_reference=input_val.format(previous_step))
     step_2.add_output('produce')
     step_2.add_hyperparameter(name='parse_semantic_types', argument_type=ArgumentType.VALUE,
-                              data=('https://metadata.datadrivendiscovery.org/types/CategoricalData',
+                              data=(
                                     'http://schema.org/Integer', 'http://schema.org/Float',
                                     'https://metadata.datadrivendiscovery.org/types/FloatVector',
                                     'http://schema.org/DateTime',
