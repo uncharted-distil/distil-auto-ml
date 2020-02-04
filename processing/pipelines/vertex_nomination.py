@@ -8,7 +8,7 @@ from distil.primitives.load_edgelist import DistilEdgeListLoaderPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 
 
-def create_pipeline(metric: str, resolver: Optional[Resolver] = None, is_edgelist=False) -> Pipeline:
+def create_pipeline(metric: str, resolver: Optional[Resolver] = None, is_edgelist=False, min_meta=False) -> Pipeline:
     # create the basic pipeline
     vertex_nomination_pipeline = Pipeline()
     vertex_nomination_pipeline.add_input(name='inputs')
