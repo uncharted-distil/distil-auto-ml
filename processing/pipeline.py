@@ -33,6 +33,7 @@ from processing.pipelines import (
     link_prediction_jhu,
     audio,
     vertex_nomination,
+    vertex_nomination_jhu,
     vertex_classification,
     community_detection,
     timeseries_kanine,
@@ -157,6 +158,9 @@ def create(
     elif pipeline_type == "vertex_nomination":
         pipelines.append(
             vertex_nomination.create_pipeline(metric, resolver, **pipeline_info)
+        )
+        pipelines.append(
+            vertex_nomination_jhu.create_pipeline(metric, resolver, **pipeline_info)
         )
     elif pipeline_type == "vertex_classification":
         # force using vertex classification
