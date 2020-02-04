@@ -20,6 +20,7 @@ from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.image_transfer import ImageTransferPrimitive
+from d3m.primitives.data_preprocessing.dataset_sample import Common as DatasetSamplePrimitive
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
@@ -36,6 +37,7 @@ def create_pipeline(metric: str,
                     max_one_hot: int = 16,
                     scale: bool = False,
                     min_meta: bool = False,
+                    sample: bool = False,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
     # create the basic pipeline
@@ -50,6 +52,13 @@ def create_pipeline(metric: str,
     image_pipeline.add_step(step)
     previous_step = 0
 
+    # step 1 - sample dataset down, since some take to long to run.
+    if sample:
+        step = PrimitiveStep(primitive_description=DatasetSamplePrimitive.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+        step.add_output('produce')
+        image_pipeline.add_step(step)
+        previous_step += 1
 
     # step 1 - extract dataframe from dataset
     step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query(), resolver=resolver)

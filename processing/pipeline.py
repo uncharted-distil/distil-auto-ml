@@ -122,6 +122,9 @@ def create(
         )
     elif pipeline_type == "image":
         pipelines.append(
+            image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, sample=True)
+        )
+        pipelines.append(
             image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
         )
     elif pipeline_type == "object_detection":
