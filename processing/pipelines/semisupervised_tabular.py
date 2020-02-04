@@ -4,11 +4,10 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from typing import Optional
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
 from d3m.primitives.data_cleaning.column_type_profiler import Simon
-
 import sys
 
 
-def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
+def create_pipeline(metric: str, exclude_column=None, resolver: Optional[Resolver] = None) -> Pipeline:
     # Creating pipeline
     input_val = 'steps.{}.produce'
     pipeline_description = Pipeline()
@@ -42,13 +41,8 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step_2 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.data_transformation.column_parser.Common'))
     step_2.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
                         data_reference=input_val.format(previous_step))
+    step_2.add_hyperparameter(name='exclude_columns', argument_type=ArgumentType.VALUE, data=[exclude_column])
     step_2.add_output('produce')
-    step_2.add_hyperparameter(name='parse_semantic_types', argument_type=ArgumentType.VALUE,
-                              data=(
-                                    'http://schema.org/Integer', 'http://schema.org/Float',
-                                    'https://metadata.datadrivendiscovery.org/types/FloatVector',
-                                    'http://schema.org/DateTime',
-                                    ), )
     pipeline_description.add_step(step_2)
     previous_step += 1
 
@@ -58,6 +52,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
                         data_reference=input_val.format(previous_step))
     step_3.add_hyperparameter(name='return_result', argument_type=ArgumentType.VALUE, data='replace')
     step_3.add_hyperparameter(name='use_semantic_types', argument_type=ArgumentType.VALUE, data=True)
+    step_3.add_hyperparameter(name='exclude_columns', argument_type=ArgumentType.VALUE, data=[exclude_column])
     step_3.add_output('produce')
     pipeline_description.add_step(step_3)
     previous_step += 1

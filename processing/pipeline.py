@@ -180,8 +180,10 @@ def create(
         )
 
     elif pipeline_type == "semisupervised_tabular":
+        # TODO use target attribute
+        exclude_column = len(train_dataset["learningData"].columns) - 1
         pipelines.append(
-            semisupervised_tabular.create_pipeline(metric=metric, resolver=resolver)
+            semisupervised_tabular.create_pipeline(metric=metric, resolver=resolver, exclude_column=exclude_column)
         )
     elif pipeline_type == "data_augmentation_tabular":
         pipelines.append(
