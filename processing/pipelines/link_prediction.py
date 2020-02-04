@@ -11,7 +11,7 @@ from d3m.metadata import hyperparams
 
 from distil.primitives.load_single_graph import DistilSingleGraphLoaderPrimitive
 from distil.primitives.link_prediction import DistilLinkPredictionPrimitive
-
+from d3m.primitives.data_transformation.load_edgelist import DistilEdgeListLoader
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 

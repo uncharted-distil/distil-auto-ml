@@ -30,6 +30,7 @@ from processing.pipelines import (
     tabular,
     text,
     link_prediction,
+    link_prediction_jhu,
     audio,
     vertex_nomination,
     vertex_classification,
@@ -166,6 +167,9 @@ def create(
     elif pipeline_type == "link_prediction":
         pipelines.append(
             link_prediction.create_pipeline(metric=metric, resolver=resolver)
+        )
+        pipelines.append(
+            link_prediction_jhu.create_pipeline(metric=metric, resolver=resolver)
         )
     elif pipeline_type == "community_detection":
         pipelines.append(
