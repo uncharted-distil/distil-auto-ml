@@ -181,9 +181,14 @@ def create(
 
     elif pipeline_type == "semisupervised_tabular":
         # TODO use target attribute
-        exclude_column = len(train_dataset["learningData"].columns) - 1
+        exclude_column = problem['inputs'][0]['targets'][0]['column_index']
         pipelines.append(
-            semisupervised_tabular.create_pipeline(metric=metric, resolver=resolver, exclude_column=exclude_column)
+            semisupervised_tabular.create_pipeline(metric=metric, resolver=resolver,
+                                                   exclude_column=exclude_column, profiler='simon')
+        )
+        pipelines.append(
+            semisupervised_tabular.create_pipeline(metric=metric, resolver=resolver,
+                                                   exclude_column=exclude_column, profiler='simple')
         )
     elif pipeline_type == "data_augmentation_tabular":
         pipelines.append(

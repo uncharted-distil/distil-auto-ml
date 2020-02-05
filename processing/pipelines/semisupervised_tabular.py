@@ -7,7 +7,7 @@ from d3m.primitives.data_cleaning.column_type_profiler import Simon
 import sys
 
 
-def create_pipeline(metric: str, exclude_column=None, resolver: Optional[Resolver] = None) -> Pipeline:
+def create_pipeline(metric: str, exclude_column=None, resolver: Optional[Resolver] = None, profiler='simple') -> Pipeline:
     # Creating pipeline
     input_val = 'steps.{}.produce'
     pipeline_description = Pipeline()
@@ -30,12 +30,20 @@ def create_pipeline(metric: str, exclude_column=None, resolver: Optional[Resolve
     previous_step += 1
 
     # run profiler
-    step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
-                      data_reference=input_val.format(previous_step))
-    step.add_output('produce')
-    pipeline_description.add_step(step)
-    previous_step += 1
+    if profiler == 'simon':
+        step = PrimitiveStep(primitive_description=Simon.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
+                          data_reference=input_val.format(previous_step))
+        step.add_output('produce')
+        pipeline_description.add_step(step)
+        previous_step += 1
+    else:
+        step = PrimitiveStep(primitive_description=Simon.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
+                          data_reference=input_val.format(previous_step))
+        step.add_output('produce')
+        pipeline_description.add_step(step)
+        previous_step += 1
 
     # Step 2 column parser -> labeled semantic types to data types
     step_2 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.data_transformation.column_parser.Common'))
