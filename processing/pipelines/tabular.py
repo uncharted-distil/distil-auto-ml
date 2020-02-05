@@ -8,6 +8,7 @@ from d3m import container, utils
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.metadata.base import ArgumentType
 from d3m.metadata import hyperparams
+from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
 from d3m.primitives.clustering.hdbscan import Hdbscan
 from distil.primitives.categorical_imputer import CategoricalImputerPrimitive
@@ -37,6 +38,8 @@ def create_pipeline(metric: str,
                     max_one_hot: int = 16,
                     scale: bool = False,
                     include_one_hot = True,
+                    profiler = 'simple',
+                    multi: bool =False,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
 
@@ -54,11 +57,19 @@ def create_pipeline(metric: str,
     tabular_pipeline.add_step(step)
     previous_step = 0
 
-    if min_meta:
+    if profiler == 'simon':
         step = PrimitiveStep(primitive_description=Simon.metadata.query(), resolver=resolver)
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
                           data_reference=input_val.format(previous_step))
-        step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
+        # step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
+        step.add_output('produce')
+        tabular_pipeline.add_step(step)
+        previous_step += 1
+    else:
+        step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
+                          data_reference=input_val.format(previous_step))
+        # step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
         step.add_output('produce')
         tabular_pipeline.add_step(step)
         previous_step += 1

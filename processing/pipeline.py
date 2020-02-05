@@ -95,7 +95,10 @@ def create(
     pipelines: List[Pipeline] = []
     if pipeline_type == "table":
         pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple')
+        )
+        pipelines.append(
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon')
         )
     elif pipeline_type == "graph_matching":
         pipelines.append(
@@ -180,7 +183,6 @@ def create(
         )
 
     elif pipeline_type == "semisupervised_tabular":
-        # TODO use target attribute
         exclude_column = problem['inputs'][0]['targets'][0]['column_index']
         pipelines.append(
             semisupervised_tabular.create_pipeline(metric=metric, resolver=resolver,
