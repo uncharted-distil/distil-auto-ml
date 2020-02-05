@@ -11,6 +11,7 @@ from common_primitives.construct_predictions import ConstructPredictionsPrimitiv
 from d3m.primitives.data_transformation import construct_predictions
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
+from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
@@ -28,6 +29,14 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
     deepar_pipeline.add_step(step)
+
+
+    step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
+                      data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    deepar_pipeline.add_step(step)
+    previous_step += 1
 
     # step 1 - Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)

@@ -120,7 +120,7 @@ def create(
     elif pipeline_type == "timeseries_classification":
         if gpu:
             pipelines.append(
-                timeseries_lstm_fcn.create_pipeline(metric=metric, resolver=resolver)
+                timeseries_lstm_fcn.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
             )
         pipelines.append(
             timeseries_kanine.create_pipeline(metric=metric, resolver=resolver)
