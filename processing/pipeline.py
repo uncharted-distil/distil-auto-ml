@@ -13,6 +13,8 @@ from d3m.metadata.pipeline import Pipeline, PlaceholderStep, Resolver
 from processing import metrics
 from distil.primitives import utils as distil_utils
 from distil.primitives.utils import CATEGORICALS
+from d3m import primitives
+from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
 from processing import router
 
@@ -24,6 +26,7 @@ from processing.pipelines import (
     graph_matching,
     image,
     object_detection,
+    object_detection_yolo,
     question_answer,
     tabular,
     text,
@@ -83,10 +86,24 @@ def create(
     num_of_resources = len(
         [x for x in learning_data_col[0]["columns"] if x.get("colType") is not None]
     )
+
     if num_of_resources < len(train_dataset["learningData"].columns):
         MIN_META = True
     else:
         MIN_META = False
+
+    if prepend is not None:
+        # if we have any prepend steps that modify semantic types, min_meta check no longer applies
+        prepend_steps = {step.primitive for step in prepend.steps[:-1]}
+        semantic_modifiers = {
+            primitives.data_transformation.add_semantic_types.Common,
+            primitives.data_transformation.remove_semantic_types.Common,
+            primitives.data_cleaning.column_type_profiler.Simon,
+            SimpleProfilerPrimitive,
+        }
+        if len(prepend_steps & semantic_modifiers) > 0:
+            MIN_META = False
+
     pipeline_info.update({"min_meta": MIN_META})
 
     pipeline_type = pipeline_type.lower()
@@ -107,7 +124,7 @@ def create(
     elif pipeline_type == "timeseries_classification":
         if gpu:
             pipelines.append(
-                timeseries_lstm_fcn.create_pipeline(metric=metric, resolver=resolver)
+                timeseries_lstm_fcn.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
             )
         pipelines.append(
             timeseries_kanine.create_pipeline(metric=metric, resolver=resolver)
@@ -124,11 +141,17 @@ def create(
         )
     elif pipeline_type == "image":
         pipelines.append(
+            image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, sample=True)
+        )
+        pipelines.append(
             image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
         )
     elif pipeline_type == "object_detection":
         pipelines.append(
             object_detection.create_pipeline(metric=metric, resolver=resolver)
+        )
+        pipelines.append(
+            object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
         )
     elif pipeline_type == "audio":
         pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))
@@ -213,7 +236,7 @@ def create(
     # dummy rank pipelines for now. TODO replace this with hyperparameter tuning function
     ranks: List[float] = []
     for i in range(len(pipelines)):
-        ranks.append(i+1)
+        ranks.append(i + 1)
 
     return pipelines, train_dataset, ranks
 

@@ -42,9 +42,6 @@ def override_config():
     config.OUTPUT_DIR = str(supporting_files_dir.resolve())
     # override db filename so it is saved properly and preserved between runs
     config.DB_LOCATION = str(pathlib.Path(supporting_files_dir, "eval_db.db").resolve())
-    # put system in debug mode always
-    config.DEBUG = True
-
 
 def export_predictions(solution_task):
     # copy predictions from original scoring output path to the expected D3M location

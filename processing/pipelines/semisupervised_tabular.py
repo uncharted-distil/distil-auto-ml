@@ -6,8 +6,8 @@ from common_primitives.simple_profiler import SimpleProfilerPrimitive
 from d3m.primitives.data_cleaning.column_type_profiler import Simon
 import sys
 
+def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
 
-def create_pipeline(metric: str, exclude_column=None, resolver: Optional[Resolver] = None, profiler='simple') -> Pipeline:
     # Creating pipeline
     input_val = 'steps.{}.produce'
     pipeline_description = Pipeline()
