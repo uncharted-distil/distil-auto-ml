@@ -13,6 +13,7 @@ from d3m.primitives.time_series_forecasting.vector_autoregression import VAR
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
+from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
 
 def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
@@ -28,6 +29,13 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
     var_pipeline.add_step(step)
+
+    step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
+                      data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    var_pipeline.add_step(step)
+    previous_step += 1
 
     # step 1 - Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)

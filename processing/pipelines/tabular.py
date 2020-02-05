@@ -27,7 +27,6 @@ from d3m.primitives.data_cleaning.column_type_profiler import Simon
 from sklearn_wrap import SKMissingIndicator
 from sklearn_wrap import SKImputer
 from sklearn_wrap import SKStandardScaler
-
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
 # in a naively implemented state for readability for now.
 def create_pipeline(metric: str,
