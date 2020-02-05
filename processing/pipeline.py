@@ -30,9 +30,12 @@ from processing.pipelines import (
     question_answer,
     tabular,
     text,
+    text_sent2vec,
     link_prediction,
+    link_prediction_jhu,
     audio,
     vertex_nomination,
+    vertex_nomination_jhu,
     vertex_classification,
     community_detection,
     timeseries_kanine,
@@ -139,6 +142,9 @@ def create(
         pipelines.append(
             text.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
         )
+        pipelines.append(
+            text_sent2vec.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
+        )
     elif pipeline_type == "image":
         pipelines.append(
             image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, sample=True)
@@ -167,6 +173,9 @@ def create(
         pipelines.append(
             vertex_nomination.create_pipeline(metric, resolver, **pipeline_info)
         )
+        pipelines.append(
+            vertex_nomination_jhu.create_pipeline(metric, resolver, **pipeline_info)
+        )
     elif pipeline_type == "vertex_classification":
         # force using vertex classification
         # TODO - should determine the graph data format
@@ -176,6 +185,9 @@ def create(
     elif pipeline_type == "link_prediction":
         pipelines.append(
             link_prediction.create_pipeline(metric=metric, resolver=resolver)
+        )
+        pipelines.append(
+            link_prediction_jhu.create_pipeline(metric=metric, resolver=resolver)
         )
     elif pipeline_type == "community_detection":
         pipelines.append(

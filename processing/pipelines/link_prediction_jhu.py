@@ -11,10 +11,12 @@ from d3m.metadata import hyperparams
 
 from distil.primitives.load_single_graph import DistilSingleGraphLoaderPrimitive
 from distil.primitives.link_prediction import DistilLinkPredictionPrimitive
-from d3m.primitives.data_transformation.load_edgelist import DistilEdgeListLoader
+
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
-
+from d3m.primitives.link_prediction.data_conversion import JHU as JHULinkLoader
+from d3m.primitives.link_prediction.rank_classification import JHU as JHURankPrimitive
+# from d3m.primitives.data_transformation.load_graphs import JHU as JHUGraphLoader
 def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
 
     # create the basic pipeline
@@ -22,17 +24,14 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     vertex_nomination_pipeline.add_input(name='inputs')
 
     # step 0 - extract the graphs
-    step = PrimitiveStep(primitive_description=DistilSingleGraphLoaderPrimitive.metadata.query(), resolver=resolver)
+    step = PrimitiveStep(primitive_description=JHULinkLoader.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
     step.add_output('produce')
-    step.add_output('produce_target')
     vertex_nomination_pipeline.add_step(step)
 
     # step 1 - predict links
-    step = PrimitiveStep(primitive_description=DistilLinkPredictionPrimitive.metadata.query(), resolver=resolver)
+    step = PrimitiveStep(primitive_description=JHURankPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce_target')
-    step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     step.add_output('produce')
     vertex_nomination_pipeline.add_step(step)
 
