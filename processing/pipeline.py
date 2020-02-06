@@ -145,7 +145,10 @@ def create(
         )
     elif pipeline_type == "object_detection":
         pipelines.append(
-            object_detection.create_pipeline(metric=metric, resolver=resolver)
+            object_detection.create_pipeline(metric=metric, resolver=resolver, n_steps=50)
+        )
+        pipelines.append(
+            object_detection.create_pipeline(metric=metric, resolver=resolver, n_steps=250)
         )
         pipelines.append(
             object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
