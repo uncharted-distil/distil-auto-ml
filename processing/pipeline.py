@@ -166,6 +166,9 @@ def create(
             object_detection.create_pipeline(metric=metric, resolver=resolver, n_steps=250)
         )
         pipelines.append(
+            object_detection.create_pipeline(metric=metric, resolver=resolver, n_steps=1000)
+        )
+        pipelines.append(
             object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
         )
     elif pipeline_type == "audio":
