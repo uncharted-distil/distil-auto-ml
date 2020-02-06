@@ -11,6 +11,7 @@ def create_pipeline(metric: str,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False,
+                    n_steps: int = 50,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     # create the basic pipeline
     objdetect_pipeline = Pipeline()
@@ -37,7 +38,8 @@ def create_pipeline(metric: str,
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step.add_hyperparameter('n_epochs', ArgumentType.VALUE, 30)
-    step.add_hyperparameter('n_steps', ArgumentType.VALUE, 5000)
+    step.add_hyperparameter('n_steps', ArgumentType.VALUE, n_steps)
+    step.add_hyperparameter('batch_size', ArgumentType.VALUE, 8)
     step.add_output('produce')
     objdetect_pipeline.add_step(step)
 

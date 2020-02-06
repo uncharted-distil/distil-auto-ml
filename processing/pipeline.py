@@ -115,10 +115,16 @@ def create(
     pipelines: List[Pipeline] = []
     if pipeline_type == "table":
         pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple')
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=False)
         )
         pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon')
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=False)
+        )
+        pipelines.append(
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=True)
+        )
+        pipelines.append(
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=True)
         )
     elif pipeline_type == "graph_matching":
         pipelines.append(
@@ -154,7 +160,13 @@ def create(
         )
     elif pipeline_type == "object_detection":
         pipelines.append(
-            object_detection.create_pipeline(metric=metric, resolver=resolver)
+            object_detection.create_pipeline(metric=metric, resolver=resolver, n_steps=50)
+        )
+        pipelines.append(
+            object_detection.create_pipeline(metric=metric, resolver=resolver, n_steps=250)
+        )
+        pipelines.append(
+            object_detection.create_pipeline(metric=metric, resolver=resolver, n_steps=1000)
         )
         pipelines.append(
             object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)

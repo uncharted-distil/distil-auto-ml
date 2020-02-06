@@ -28,6 +28,8 @@ from d3m.primitives.data_cleaning.column_type_profiler import Simon
 from sklearn_wrap import SKMissingIndicator
 from sklearn_wrap import SKImputer
 from sklearn_wrap import SKStandardScaler
+from common_primitives.xgboost_regressor import XGBoostGBTreeRegressorPrimitive
+from common_primitives.xgboost_gbtree import XGBoostGBTreeClassifierPrimitive
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
 # in a naively implemented state for readability for now.
 def create_pipeline(metric: str,
@@ -39,6 +41,7 @@ def create_pipeline(metric: str,
                     include_one_hot = True,
                     profiler = 'simple',
                     multi: bool =False,
+                    use_boost: bool = True,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
 
@@ -216,11 +219,19 @@ def create_pipeline(metric: str,
         previous_step += 1
 
     # Generates a random forest ensemble model.
-    step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query(), resolver=resolver)
+    # step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query(), resolver=resolver)
+    if use_boost:
+        if metric == 'regression':
+            step = PrimitiveStep(primitive_description=XGBoostGBTreeRegressorPrimitive.metadata.query(), resolver=resolver)
+        else:
+            step = PrimitiveStep(primitive_description=XGBoostGBTreeClassifierPrimitive.metadata.query(), resolver=resolver)
+    else:
+        step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
     step.add_output('produce')
-    step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
+    if not use_boost:
+        step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     tabular_pipeline.add_step(step)
     previous_step += 1
 
