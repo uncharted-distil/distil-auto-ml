@@ -30,9 +30,12 @@ from processing.pipelines import (
     question_answer,
     tabular,
     text,
+    text_sent2vec,
     link_prediction,
+    link_prediction_jhu,
     audio,
     vertex_nomination,
+    vertex_nomination_jhu,
     vertex_classification,
     community_detection,
     timeseries_kanine,
@@ -112,7 +115,10 @@ def create(
     pipelines: List[Pipeline] = []
     if pipeline_type == "table":
         pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple')
+        )
+        pipelines.append(
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon')
         )
     elif pipeline_type == "graph_matching":
         pipelines.append(
@@ -135,6 +141,9 @@ def create(
     elif pipeline_type == "text":
         pipelines.append(
             text.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
+        )
+        pipelines.append(
+            text_sent2vec.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
         )
     elif pipeline_type == "image":
         pipelines.append(
@@ -167,6 +176,9 @@ def create(
         pipelines.append(
             vertex_nomination.create_pipeline(metric, resolver, **pipeline_info)
         )
+        pipelines.append(
+            vertex_nomination_jhu.create_pipeline(metric, resolver, **pipeline_info)
+        )
     elif pipeline_type == "vertex_classification":
         # force using vertex classification
         # TODO - should determine the graph data format
@@ -176,6 +188,9 @@ def create(
     elif pipeline_type == "link_prediction":
         pipelines.append(
             link_prediction.create_pipeline(metric=metric, resolver=resolver)
+        )
+        pipelines.append(
+            link_prediction_jhu.create_pipeline(metric=metric, resolver=resolver)
         )
     elif pipeline_type == "community_detection":
         pipelines.append(
@@ -206,8 +221,14 @@ def create(
         )
 
     elif pipeline_type == "semisupervised_tabular":
+        exclude_column = problem['inputs'][0]['targets'][0]['column_index']
         pipelines.append(
-            semisupervised_tabular.create_pipeline(metric=metric, resolver=resolver)
+            semisupervised_tabular.create_pipeline(metric=metric, resolver=resolver,
+                                                   exclude_column=exclude_column, profiler='simon')
+        )
+        pipelines.append(
+            semisupervised_tabular.create_pipeline(metric=metric, resolver=resolver,
+                                                   exclude_column=exclude_column, profiler='simple')
         )
     elif pipeline_type == "data_augmentation_tabular":
         pipelines.append(
