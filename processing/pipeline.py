@@ -115,10 +115,16 @@ def create(
     pipelines: List[Pipeline] = []
     if pipeline_type == "table":
         pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple')
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=False)
         )
         pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon')
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=False)
+        )
+        pipelines.append(
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=True)
+        )
+        pipelines.append(
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=True)
         )
     elif pipeline_type == "graph_matching":
         pipelines.append(
