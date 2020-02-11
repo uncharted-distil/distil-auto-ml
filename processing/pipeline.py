@@ -46,7 +46,6 @@ from processing.pipelines import (
 )
 
 # data_augmentation_tabular)
-
 import utils
 import inspect
 import os
@@ -74,13 +73,13 @@ def get_valid_pipelines(pipelines, train_dataset, problem):
     grouping_cols = [x['metadata']['name'] for x in train_dataset.metadata.to_json_structure() if
                      'https://metadata.datadrivendiscovery.org/types/SuggestedGroupingKey' in x['metadata'].get(
                          'semantic_types', {})]
-    # if len(grouping_cols) > 0:
-    #     samples = train_dataset['learningData'].groupby(grouping_cols, as_index=False).nth(list(range(10))).index
-    #     train_dataset['learningData'] = train_dataset['learningData'].iloc[samples].reset_index(drop=True)
-    # else:
-    #     samples = max(100, int(len(train_dataset['learningData']) * 0.1))
-    #     train_dataset['learningData'] = train_dataset['learningData'][:samples]
-    # timeseries requires groups
+    if len(grouping_cols) > 0:
+        samples = train_dataset['learningData'].groupby(grouping_cols, as_index=False).nth(list(range(10))).index
+        train_dataset['learningData'] = train_dataset['learningData'].iloc[samples].reset_index(drop=True)
+    else:
+        samples = max(100, int(len(train_dataset['learningData']) * 0.1))
+        train_dataset['learningData'] = train_dataset['learningData'][:samples]
+
     D3MSTATICDIR = os.getenv("D3MSTATICDIR", '/static')
     for valid_index, pipeline in enumerate(pipelines):
         pipeline_steps = {}
@@ -111,9 +110,10 @@ def get_valid_pipelines(pipelines, train_dataset, problem):
                     **{k: pipeline_steps[v['data']] for k, v in arguments.items() if k in argspec.kwonlyargs})
                 primitive.fit()
             argspec = inspect.getfullargspec(primitive.produce)
-            data_step = primitive.produce(
+            for output in step.get_output_data_references():
+                data_step = getattr(primitive, output.split('.')[-1])(
                 **{k: pipeline_steps[v['data']] for k, v in arguments.items() if k in argspec.kwonlyargs})
-            pipeline_steps[list(step.get_output_data_references())[0]] = data_step.value
+                pipeline_steps[output] = data_step.value
 
         valid_indexes.append(valid_index)
         # except Exception as e:
@@ -335,7 +335,7 @@ def create(
 
     # dummy rank pipelines for now. TODO replace this with hyperparameter tuning function
 
-    # pipelines = get_valid_pipelines(pipelines, train_dataset, problem)
+    pipelines = get_valid_pipelines(pipelines, train_dataset, problem)
     ranks: List[float] = []
     for i in range(len(pipelines)):
         ranks.append(i + 1)
