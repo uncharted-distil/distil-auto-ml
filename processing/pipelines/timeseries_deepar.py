@@ -12,6 +12,7 @@ from d3m.primitives.data_transformation import construct_predictions
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
+from d3m.primitives.data_cleaning.column_type_profiler import Simon
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
