@@ -48,87 +48,15 @@ from processing.pipelines import (
 # data_augmentation_tabular)
 
 import utils
-import inspect
-import os
 
 logger = logging.getLogger(__name__)
 
 
-def get_valid_pipelines(pipelines, train_dataset, problem):
-    # load and first 100 lines of learning data to make sure everything runs.
-    valid_pipelines = []
-    valid_indexes = []
-    # TODO add timeout and group sampling
-
-
-    for target in problem['inputs'][0]['targets']:
-        target_index = target['column_index']
-        train_metadata = train_dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, target_index)).copy()
-        new_semantic_data = train_metadata['semantic_types'] + ("https://metadata.datadrivendiscovery.org/types/Target",
-                                                                "https://metadata.datadrivendiscovery.org/types/TrueTarget")
-        train_dataset.metadata = train_dataset.metadata.update(
-            ('learningData', metadata_base.ALL_ELEMENTS, target_index),
-            {'semantic_types': new_semantic_data})
-
-    # subset traindata
-    grouping_cols = [x['metadata']['name'] for x in train_dataset.metadata.to_json_structure() if
-                     'https://metadata.datadrivendiscovery.org/types/SuggestedGroupingKey' in x['metadata'].get(
-                         'semantic_types', {})]
-    # if len(grouping_cols) > 0:
-    #     samples = train_dataset['learningData'].groupby(grouping_cols, as_index=False).nth(list(range(10))).index
-    #     train_dataset['learningData'] = train_dataset['learningData'].iloc[samples].reset_index(drop=True)
-    # else:
-    #     samples = max(100, int(len(train_dataset['learningData']) * 0.1))
-    #     train_dataset['learningData'] = train_dataset['learningData'][:samples]
-    # timeseries requires groups
-    D3MSTATICDIR = os.getenv("D3MSTATICDIR", '/static')
-    for valid_index, pipeline in enumerate(pipelines):
-        pipeline_steps = {}
-        pipeline_steps['inputs.0'] = train_dataset
-        # try:
-        for step in pipeline.steps:
-
-            arguments = step.arguments
-            primitive = step.primitive
-            hyperparams_class = primitive.metadata.get_hyperparams()
-            current_hyperparams = step.hyperparams.copy()
-            volumes = {x['key']: os.path.join(D3MSTATICDIR, x['file_digest']) for x in
-                       primitive.metadata.to_json_structure()['installation'] if
-                       x['type'] in ['FILE', 'TGZ']}
-            if 'epochs' in hyperparams_class.defaults():
-                current_hyperparams['epochs'] = {'data': 1}  # speed things up a bit
-            if len(volumes) > 0:
-                primitive = primitive(
-                    hyperparams=hyperparams_class.defaults().replace(
-                        {k: v['data'] for k, v in current_hyperparams.items()}), volumes=volumes)
-            else:
-                primitive = primitive(
-                    hyperparams=hyperparams_class.defaults().replace(
-                        {k: v['data'] for k, v in current_hyperparams.items()}))
-            argspec = inspect.getfullargspec(primitive.set_training_data)
-            if 'inputs' in argspec.kwonlyargs:
-                primitive.set_training_data(
-                    **{k: pipeline_steps[v['data']] for k, v in arguments.items() if k in argspec.kwonlyargs})
-                primitive.fit()
-            argspec = inspect.getfullargspec(primitive.produce)
-            data_step = primitive.produce(
-                **{k: pipeline_steps[v['data']] for k, v in arguments.items() if k in argspec.kwonlyargs})
-            pipeline_steps[list(step.get_output_data_references())[0]] = data_step.value
-
-        valid_indexes.append(valid_index)
-        # except Exception as e:
-        #     logger.warning(f'pipeline failed: {e}')
-    for valid_index in valid_indexes:
-        valid_pipelines.append(pipelines[valid_index])
-
-    return valid_pipelines
-
-
 def create(
-        dataset_doc_path: str,
-        problem: dict,
-        prepend: Optional[Pipeline] = None,
-        resolver: Optional[Resolver] = None,
+    dataset_doc_path: str,
+    problem: dict,
+    prepend: Optional[Pipeline] = None,
+    resolver: Optional[Resolver] = None,
 ) -> Tuple[List[pipeline.Pipeline], container.Dataset, List[float]]:
     # allow for use of GPU optimized pipelines
     gpu = _use_gpu()
@@ -187,16 +115,13 @@ def create(
     pipelines: List[Pipeline] = []
     if pipeline_type == "table":
         pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple',
-                                    use_boost=False)
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=False)
         )
         pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon',
-                                    use_boost=False)
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=False)
         )
         pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple',
-                                    use_boost=True)
+            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=True)
         )
         pipelines.append(
             tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=True)
@@ -206,13 +131,13 @@ def create(
             graph_matching.create_pipeline(metric=metric, resolver=resolver)
         )
     elif pipeline_type == "timeseries_classification":
+        pipelines.append(
+            timeseries_kanine.create_pipeline(metric=metric, resolver=resolver)
+        )
         if gpu:
             pipelines.append(
                 timeseries_lstm_fcn.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
             )
-        pipelines.append(
-            timeseries_kanine.create_pipeline(metric=metric, resolver=resolver)
-        )
     elif pipeline_type == "question_answering":
         if gpu:
             pipelines.append(
@@ -334,8 +259,6 @@ def create(
         pipelines = pipelines_prepend
 
     # dummy rank pipelines for now. TODO replace this with hyperparameter tuning function
-
-    # pipelines = get_valid_pipelines(pipelines, train_dataset, problem)
     ranks: List[float] = []
     for i in range(len(pipelines)):
         ranks.append(i + 1)
@@ -344,10 +267,10 @@ def create(
 
 
 def fit(
-        pipeline: pipeline.Pipeline,
-        problem: problem.Problem,
-        input_dataset: container.Dataset,
-        is_standard_pipeline=True,
+    pipeline: pipeline.Pipeline,
+    problem: problem.Problem,
+    input_dataset: container.Dataset,
+    is_standard_pipeline=True,
 ) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
     hyperparams = None
     random_seed = 0
@@ -372,7 +295,7 @@ def fit(
 
 
 def produce(
-        fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset
+    fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset
 ) -> runtime.Result:
     _, result = runtime.produce(
         fitted_pipeline, [input_dataset], expose_produced_outputs=True
@@ -390,7 +313,7 @@ def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
 
 
 def _prepend_pipeline(
-        base: pipeline.Pipeline, prepend: pipeline.Pipeline
+    base: pipeline.Pipeline, prepend: pipeline.Pipeline
 ) -> pipeline.Pipeline:
     # find the placeholder node
     replace_index = -1
