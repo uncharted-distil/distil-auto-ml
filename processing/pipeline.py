@@ -131,13 +131,13 @@ def create(
             graph_matching.create_pipeline(metric=metric, resolver=resolver)
         )
     elif pipeline_type == "timeseries_classification":
+        pipelines.append(
+            timeseries_kanine.create_pipeline(metric=metric, resolver=resolver)
+        )
         if gpu:
             pipelines.append(
                 timeseries_lstm_fcn.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
             )
-        pipelines.append(
-            timeseries_kanine.create_pipeline(metric=metric, resolver=resolver)
-        )
     elif pipeline_type == "question_answering":
         if gpu:
             pipelines.append(
@@ -221,13 +221,14 @@ def create(
         # for now
         # pipeline = tabular.create_pipeline(metric)
         # the above was in the exline repo not sure what is the most up to date?
+
+        pipelines.append(
+            timeseries_var.create_pipeline(metric=metric, resolver=resolver)
+        )
         if gpu:
             pipelines.append(
                 timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
             )
-        pipelines.append(
-            timeseries_var.create_pipeline(metric=metric, resolver=resolver)
-        )
 
     elif pipeline_type == "semisupervised_tabular":
         exclude_column = problem['inputs'][0]['targets'][0]['column_index']

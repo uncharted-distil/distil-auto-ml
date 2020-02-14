@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/datadrivendiscovery/images/primitives:ubuntu-bionic-python36-v2020.1.9-20200125-073913
+FROM registry.gitlab.com/datadrivendiscovery/images/primitives:ubuntu-bionic-python36-v2020.1.9-20200212-063959
 
 ENV PYTHONPATH=$PYTHONPATH:/app
 ENV DEBIAN_FRONTEND=noninteractive
