@@ -45,17 +45,23 @@ do
     python -m d3m runtime \
         --volumes "${D3MSTATICDIR}" \
         -d ${DATASET} \
+        --context TESTING --random-seed 0 \
         fit-score \
+        --output ${D3MOUTPUTDIR}/predictions/$PIPELINE_ID.csv \
+        --scores ${D3MOUTPUTDIR}/score/$PIPELINE_ID.csv \
         -p ${D3MOUTPUTDIR}/pipelines_ranked/$PIPELINE_ID.json \
         -r ${D3MINPUTDIR}/$DATASET/${DATASET}_problem/problemDoc.json \
         -i ${D3MINPUTDIR}/$DATASET/TRAIN/dataset_TRAIN/datasetDoc.json \
         -t ${D3MINPUTDIR}/$DATASET/TEST/dataset_TEST/datasetDoc.json \
         -a ${D3MINPUTDIR}/$DATASET/SCORE/dataset_SCORE/datasetDoc.json
   else
-    python -m d3m runtime \
+    python -m d3m runtime  \
         --volumes "${D3MSTATICDIR}" \
         -d ${DATASET} \
+        --context TESTING --random-seed 0 \
         fit-score \
+        --output ${D3MOUTPUTDIR}/predictions/$PIPELINE_ID.csv \
+        --scores ${D3MOUTPUTDIR}/score/$PIPELINE_ID.csv \
         -p ${D3MOUTPUTDIR}/pipelines_ranked/$PIPELINE_ID.json \
         -r ${D3MINPUTDIR}/$DATASET/${DATASET}_problem/problemDoc.json \
         -i ${D3MINPUTDIR}/$DATASET/TRAIN/dataset_TRAIN/datasetDoc.json \
