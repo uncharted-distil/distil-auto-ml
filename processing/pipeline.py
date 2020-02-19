@@ -3,6 +3,7 @@ import logging
 from typing import Tuple, Optional, List, Dict, Optional
 import GPUtil
 import sys
+import copy
 
 from d3m.container import dataset
 from d3m import container, exceptions, runtime
@@ -77,6 +78,7 @@ def create(
     # extract metric from the problem
     protobuf_metric = problem["problem"]["performance_metrics"][0]["metric"]
     metric = metrics.translate_proto_metric(protobuf_metric)
+    logger.info(f'Optimizing on metric {metric}')
 
     # determine type of pipeline required for dataset
     pipeline_type, pipeline_info = router.get_routing_info(dataset_doc, problem, metric)
@@ -107,8 +109,6 @@ def create(
         if len(prepend_steps & semantic_modifiers) > 0:
             logger.info("Metadata present in prepend - skipping profiling")
             MIN_META = False
-
-    pipeline_info.update({"min_meta": MIN_META})
 
     pipeline_type = pipeline_type.lower()
 
