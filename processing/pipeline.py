@@ -116,18 +116,18 @@ def create(
     pipelines: List[Pipeline] = []
     if pipeline_type == "table":
         if MIN_META:
-        pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=False)
-        )
-        pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=False)
-        )
-        pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=True)
-        )
-        pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=True)
-        )
+            pipelines.append(
+                tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=False)
+            )
+            pipelines.append(
+                tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=False)
+            )
+            pipelines.append(
+                tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=True)
+            )
+            pipelines.append(
+                tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=True)
+            )
         else:
             pipelines.append(
                 tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='none', use_boost=True)
