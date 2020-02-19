@@ -105,6 +105,7 @@ def create(
             SimpleProfilerPrimitive,
         }
         if len(prepend_steps & semantic_modifiers) > 0:
+            logger.info("Metadata present in prepend - skipping profiling")
             MIN_META = False
 
     pipeline_info.update({"min_meta": MIN_META})
@@ -114,6 +115,7 @@ def create(
     pipeline: Pipeline = None
     pipelines: List[Pipeline] = []
     if pipeline_type == "table":
+        if MIN_META:
         pipelines.append(
             tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=False)
         )
@@ -126,6 +128,13 @@ def create(
         pipelines.append(
             tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=True)
         )
+        else:
+            pipelines.append(
+                tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='none', use_boost=True)
+            )
+            pipelines.append(
+                tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='none', use_boost=False)
+            )
     elif pipeline_type == "graph_matching":
         pipelines.append(
             graph_matching.create_pipeline(metric=metric, resolver=resolver)
@@ -315,6 +324,10 @@ def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
 def _prepend_pipeline(
     base: pipeline.Pipeline, prepend: pipeline.Pipeline
 ) -> pipeline.Pipeline:
+
+    # make a copy of the prepend
+    prepend = copy.deepcopy(prepend)
+
     # find the placeholder node
     replace_index = -1
     for i, prepend_step in enumerate(prepend.steps):
