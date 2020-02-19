@@ -3,6 +3,7 @@ import logging
 from typing import Tuple, Optional, List, Dict, Optional
 import GPUtil
 import sys
+import copy
 
 from d3m.container import dataset
 from d3m import container, exceptions, runtime
@@ -77,6 +78,7 @@ def create(
     # extract metric from the problem
     protobuf_metric = problem["problem"]["performance_metrics"][0]["metric"]
     metric = metrics.translate_proto_metric(protobuf_metric)
+    logger.info(f'Optimizing on metric {metric}')
 
     # determine type of pipeline required for dataset
     pipeline_type, pipeline_info = router.get_routing_info(dataset_doc, problem, metric)
@@ -105,27 +107,34 @@ def create(
             SimpleProfilerPrimitive,
         }
         if len(prepend_steps & semantic_modifiers) > 0:
+            logger.info("Metadata present in prepend - skipping profiling")
             MIN_META = False
-
-    pipeline_info.update({"min_meta": MIN_META})
 
     pipeline_type = pipeline_type.lower()
 
     pipeline: Pipeline = None
     pipelines: List[Pipeline] = []
     if pipeline_type == "table":
-        pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=False)
-        )
-        pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=False)
-        )
-        pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=True)
-        )
-        pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=True)
-        )
+        if MIN_META:
+            pipelines.append(
+                tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=False)
+            )
+            pipelines.append(
+                tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=False)
+            )
+            pipelines.append(
+                tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple', use_boost=True)
+            )
+            pipelines.append(
+                tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=True)
+            )
+        else:
+            pipelines.append(
+                tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='none', use_boost=True)
+            )
+            pipelines.append(
+                tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='none', use_boost=False)
+            )
     elif pipeline_type == "graph_matching":
         pipelines.append(
             graph_matching.create_pipeline(metric=metric, resolver=resolver)
@@ -315,6 +324,10 @@ def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
 def _prepend_pipeline(
     base: pipeline.Pipeline, prepend: pipeline.Pipeline
 ) -> pipeline.Pipeline:
+
+    # make a copy of the prepend
+    prepend = copy.deepcopy(prepend)
+
     # find the placeholder node
     replace_index = -1
     for i, prepend_step in enumerate(prepend.steps):
