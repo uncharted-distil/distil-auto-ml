@@ -19,6 +19,7 @@ from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
 def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
     previous_step = 0
+    tune_steps = []
     input_val = 'steps.{}.produce'
 
     # create the basic pipeline
@@ -85,5 +86,6 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     previous_step += 1
     # Adding output step to the pipeline
     var_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
+    tune_steps.append(previous_step)
 
-    return var_pipeline
+    return (var_pipeline, tune_steps)

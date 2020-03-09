@@ -3,21 +3,34 @@ import logging
 from typing import Tuple, Optional, List, Dict, Optional
 import GPUtil
 import sys
-
+import os
+import copy
+import numpy as np
+import traceback
 from d3m.container import dataset
 from d3m import container, exceptions, runtime
 from d3m.base import utils as base_utils
 from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
-from d3m.metadata.pipeline import Pipeline, PlaceholderStep, Resolver
-
+from d3m.metadata.base import ArgumentType
+from d3m.metadata.pipeline import (
+    Pipeline,
+    PlaceholderStep,
+    Resolver,
+    hyperparams,
+    PrimitiveStep,
+)
+import shutil
+import pandas as pd
+import pickle
+from collections import defaultdict
 from processing import metrics
+from d3m.metrics import class_map
 from distil.primitives import utils as distil_utils
 from distil.primitives.utils import CATEGORICALS
 from d3m import primitives
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
-
+import sherpa
 from processing import router
-
 import config
 
 from processing.pipelines import (
@@ -47,88 +60,14 @@ from processing.pipelines import (
 
 # data_augmentation_tabular)
 import utils
-import inspect
-import os
 
 logger = logging.getLogger(__name__)
 
-
-def get_valid_pipelines(pipelines, train_dataset, problem):
-    # load and first 100 lines of learning data to make sure everything runs.
-    valid_pipelines = []
-    valid_indexes = []
-    # TODO add timeout and group sampling
-
-
-    for target in problem['inputs'][0]['targets']:
-        target_index = target['column_index']
-        train_metadata = train_dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, target_index)).copy()
-        new_semantic_data = train_metadata['semantic_types'] + ("https://metadata.datadrivendiscovery.org/types/Target",
-                                                                "https://metadata.datadrivendiscovery.org/types/TrueTarget")
-        train_dataset.metadata = train_dataset.metadata.update(
-            ('learningData', metadata_base.ALL_ELEMENTS, target_index),
-            {'semantic_types': new_semantic_data})
-
-    # subset traindata
-    grouping_cols = [x['metadata']['name'] for x in train_dataset.metadata.to_json_structure() if
-                     'https://metadata.datadrivendiscovery.org/types/SuggestedGroupingKey' in x['metadata'].get(
-                         'semantic_types', {})]
-    if len(grouping_cols) > 0:
-        samples = train_dataset['learningData'].groupby(grouping_cols, as_index=False).nth(list(range(10))).index
-        train_dataset['learningData'] = train_dataset['learningData'].iloc[samples].reset_index(drop=True)
-    else:
-        samples = max(100, int(len(train_dataset['learningData']) * 0.1))
-        train_dataset['learningData'] = train_dataset['learningData'][:samples]
-
-    D3MSTATICDIR = os.getenv("D3MSTATICDIR", '/static')
-    for valid_index, pipeline in enumerate(pipelines):
-        pipeline_steps = {}
-        pipeline_steps['inputs.0'] = train_dataset
-        # try:
-        for step in pipeline.steps:
-
-            arguments = step.arguments
-            primitive = step.primitive
-            hyperparams_class = primitive.metadata.get_hyperparams()
-            current_hyperparams = step.hyperparams.copy()
-            volumes = {x['key']: os.path.join(D3MSTATICDIR, x['file_digest']) for x in
-                       primitive.metadata.to_json_structure()['installation'] if
-                       x['type'] in ['FILE', 'TGZ']}
-            if 'epochs' in hyperparams_class.defaults():
-                current_hyperparams['epochs'] = {'data': 1}  # speed things up a bit
-            if len(volumes) > 0:
-                primitive = primitive(
-                    hyperparams=hyperparams_class.defaults().replace(
-                        {k: v['data'] for k, v in current_hyperparams.items()}), volumes=volumes)
-            else:
-                primitive = primitive(
-                    hyperparams=hyperparams_class.defaults().replace(
-                        {k: v['data'] for k, v in current_hyperparams.items()}))
-            argspec = inspect.getfullargspec(primitive.set_training_data)
-            if 'inputs' in argspec.kwonlyargs:
-                primitive.set_training_data(
-                    **{k: pipeline_steps[v['data']] for k, v in arguments.items() if k in argspec.kwonlyargs})
-                primitive.fit()
-            argspec = inspect.getfullargspec(primitive.produce)
-            for output in step.get_output_data_references():
-                data_step = getattr(primitive, output.split('.')[-1])(
-                **{k: pipeline_steps[v['data']] for k, v in arguments.items() if k in argspec.kwonlyargs})
-                pipeline_steps[output] = data_step.value
-
-        valid_indexes.append(valid_index)
-        # except Exception as e:
-        #     logger.warning(f'pipeline failed: {e}')
-    for valid_index in valid_indexes:
-        valid_pipelines.append(pipelines[valid_index])
-
-    return valid_pipelines
-
-
 def create(
-        dataset_doc_path: str,
-        problem: dict,
-        prepend: Optional[Pipeline] = None,
-        resolver: Optional[Resolver] = None,
+    dataset_doc_path: str,
+    problem: dict,
+    prepend: Optional[Pipeline] = None,
+    resolver: Optional[Resolver] = None,
 ) -> Tuple[List[pipeline.Pipeline], container.Dataset, List[float]]:
     # allow for use of GPU optimized pipelines
     gpu = _use_gpu()
@@ -149,6 +88,7 @@ def create(
     # extract metric from the problem
     protobuf_metric = problem["problem"]["performance_metrics"][0]["metric"]
     metric = metrics.translate_proto_metric(protobuf_metric)
+    logger.info(f"Optimizing on metric {metric}")
 
     # determine type of pipeline required for dataset
     pipeline_type, pipeline_info = router.get_routing_info(dataset_doc, problem, metric)
@@ -177,42 +117,85 @@ def create(
             SimpleProfilerPrimitive,
         }
         if len(prepend_steps & semantic_modifiers) > 0:
+            logger.info("Metadata present in prepend - skipping profiling")
             MIN_META = False
-
-    pipeline_info.update({"min_meta": MIN_META})
 
     pipeline_type = pipeline_type.lower()
 
     pipeline: Pipeline = None
     pipelines: List[Pipeline] = []
     if pipeline_type == "table":
-        pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple',
-                                    use_boost=False)
-        )
-        pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon',
-                                    use_boost=False)
-        )
-        pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simple',
-                                    use_boost=True)
-        )
-        pipelines.append(
-            tabular.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, profiler='simon', use_boost=True)
-        )
+        if MIN_META:
+            pipelines.append(
+                tabular.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    **pipeline_info,
+                    profiler="simple",
+                    use_boost=True,
+                )
+            )
+            pipelines.append(
+                tabular.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    **pipeline_info,
+                    profiler="simple",
+                    use_boost=False,
+                )
+            )
+            pipelines.append(
+                tabular.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    **pipeline_info,
+                    profiler="simon",
+                    use_boost=False,
+                )
+            )
+
+            pipelines.append(
+                tabular.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    **pipeline_info,
+                    profiler="simon",
+                    use_boost=True,
+                )
+            )
+        else:
+            pipelines.append(
+                tabular.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    **pipeline_info,
+                    profiler="none",
+                    use_boost=True,
+                )
+            )
+            pipelines.append(
+                tabular.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    **pipeline_info,
+                    profiler="none",
+                    use_boost=False,
+                )
+            )
     elif pipeline_type == "graph_matching":
         pipelines.append(
             graph_matching.create_pipeline(metric=metric, resolver=resolver)
         )
     elif pipeline_type == "timeseries_classification":
-        if gpu:
-            pipelines.append(
-                timeseries_lstm_fcn.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
-            )
         pipelines.append(
             timeseries_kanine.create_pipeline(metric=metric, resolver=resolver)
         )
+        if gpu:
+            pipelines.append(
+                timeseries_lstm_fcn.create_pipeline(
+                    metric=metric, resolver=resolver, **pipeline_info
+                )
+            )
     elif pipeline_type == "question_answering":
         if gpu:
             pipelines.append(
@@ -224,24 +207,34 @@ def create(
             text.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
         )
         pipelines.append(
-            text_sent2vec.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
+            text_sent2vec.create_pipeline(
+                metric=metric, resolver=resolver, **pipeline_info
+            )
         )
     elif pipeline_type == "image":
         pipelines.append(
-            image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info, sample=True)
+            image.create_pipeline(
+                metric=metric, resolver=resolver, **pipeline_info, sample=True
+            )
         )
         pipelines.append(
             image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
         )
     elif pipeline_type == "object_detection":
         pipelines.append(
-            object_detection.create_pipeline(metric=metric, resolver=resolver, n_steps=50)
+            object_detection.create_pipeline(
+                metric=metric, resolver=resolver, n_steps=50
+            )
         )
         pipelines.append(
-            object_detection.create_pipeline(metric=metric, resolver=resolver, n_steps=250)
+            object_detection.create_pipeline(
+                metric=metric, resolver=resolver, n_steps=250
+            )
         )
         pipelines.append(
-            object_detection.create_pipeline(metric=metric, resolver=resolver, n_steps=1000)
+            object_detection.create_pipeline(
+                metric=metric, resolver=resolver, n_steps=1000
+            )
         )
         pipelines.append(
             object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
@@ -300,20 +293,28 @@ def create(
         pipelines.append(
             timeseries_var.create_pipeline(metric=metric, resolver=resolver)
         )
-        if gpu:
-            pipelines.append(
-                timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
-            )
+        # if gpu:
+        #     pipelines.append(
+        #         timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
+        #     )
 
     elif pipeline_type == "semisupervised_tabular":
-        exclude_column = problem['inputs'][0]['targets'][0]['column_index']
+        exclude_column = problem["inputs"][0]["targets"][0]["column_index"]
         pipelines.append(
-            semisupervised_tabular.create_pipeline(metric=metric, resolver=resolver,
-                                                   exclude_column=exclude_column, profiler='simon')
+            semisupervised_tabular.create_pipeline(
+                metric=metric,
+                resolver=resolver,
+                exclude_column=exclude_column,
+                profiler="simon",
+            )
         )
         pipelines.append(
-            semisupervised_tabular.create_pipeline(metric=metric, resolver=resolver,
-                                                   exclude_column=exclude_column, profiler='simple')
+            semisupervised_tabular.create_pipeline(
+                metric=metric,
+                resolver=resolver,
+                exclude_column=exclude_column,
+                profiler="simple",
+            )
         )
     elif pipeline_type == "data_augmentation_tabular":
         pipelines.append(
@@ -333,21 +334,24 @@ def create(
             pipelines_prepend.append(pipeline)
         pipelines = pipelines_prepend
 
-    # dummy rank pipelines for now. TODO replace this with hyperparameter tuning function
+    tuned_pipelines = []
+    for pipeline in pipelines:
+        pipeline = hyperparam_tune(pipeline, problem, train_dataset)
+        if pipeline is not None:
+            tuned_pipelines.append(pipeline)
 
-    pipelines = get_valid_pipelines(pipelines, train_dataset, problem)
     ranks: List[float] = []
-    for i in range(len(pipelines)):
+    for i in range(len(tuned_pipelines)):
         ranks.append(i + 1)
 
-    return pipelines, train_dataset, ranks
+    return tuned_pipelines, train_dataset, ranks
 
 
 def fit(
-        pipeline: pipeline.Pipeline,
-        problem: problem.Problem,
-        input_dataset: container.Dataset,
-        is_standard_pipeline=True,
+    pipeline: pipeline.Pipeline,
+    problem: problem.Problem,
+    input_dataset: container.Dataset,
+    is_standard_pipeline=True,
 ) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
     hyperparams = None
     random_seed = 0
@@ -372,7 +376,7 @@ def fit(
 
 
 def produce(
-        fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset
+    fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset
 ) -> runtime.Result:
     _, result = runtime.produce(
         fitted_pipeline, [input_dataset], expose_produced_outputs=True
@@ -380,6 +384,17 @@ def produce(
     if result.has_error():
         raise result.error
     return result
+
+
+def produce_pipeline(
+    fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset
+) -> runtime.Result:
+    output, result = runtime.produce(
+        fitted_pipeline, [input_dataset], expose_produced_outputs=True
+    )
+    if result.has_error():
+        raise result.error
+    return output, result
 
 
 def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
@@ -390,8 +405,11 @@ def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
 
 
 def _prepend_pipeline(
-        base: pipeline.Pipeline, prepend: pipeline.Pipeline
+    base: pipeline.Pipeline, prepend: pipeline.Pipeline
 ) -> pipeline.Pipeline:
+    # make a copy of the prepend
+    prepend = copy.deepcopy(prepend)
+
     # find the placeholder node
     replace_index = -1
     for i, prepend_step in enumerate(prepend.steps):
@@ -453,3 +471,188 @@ def _use_gpu() -> bool:
         use_gpu = False
     logger.info(f"GPU enabled pipelines {use_gpu}")
     return use_gpu
+
+
+from common_primitives.extract_columns_semantic_types import (
+    ExtractColumnsBySemanticTypesPrimitive,
+)
+from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
+
+
+def get_pipeline_hyperparams(pipeline, tune_steps):
+    parameters = []
+    defaults = {}
+    current_step = 0
+    black_list_primtives = [
+        ExtractColumnsBySemanticTypesPrimitive,
+        DatasetToDataFramePrimitive,
+    ]
+    for i, step in enumerate(pipeline.steps):
+        primitive = step.primitive
+        hyperparams_class = primitive.metadata.get_hyperparams()
+        if primitive not in black_list_primtives and i in tune_steps:
+            for name in list(hyperparams_class.configuration.keys()):
+                # don't touch fixed hyperparams #TODO is this right?
+
+                if name not in list(pipeline.steps[0].hyperparams.keys()):
+                    # base on structural type set pyshac types
+                    # if in Enumeration, Uniform, UniformInt, UniformBool, Union Set?
+                    if (
+                        type(hyperparams_class.configuration[name])
+                        == hyperparams.UniformInt
+                    ):
+                        # TODO fix max call
+                        upper = hyperparams_class.configuration[name].upper
+                        lower = hyperparams_class.configuration[name].lower
+                        parameters.append(
+                            sherpa.Discrete(
+                                f"step___{current_step}___{name}",
+                                [lower, min(10000 + lower, upper)],
+                            )
+                        )
+                        defaults.update({f"step___{current_step}___{name}":
+                                             hyperparams_class.configuration[name]._default})
+                    elif (
+                        type(hyperparams_class.configuration[name])
+                        == hyperparams.UniformBool
+                    ):
+                        parameters.append(
+                            sherpa.Choice(f"step___{current_step}___{name}", [True, False])
+                        )
+                        defaults.update({f"step___{current_step}___{name}":
+                                             hyperparams_class.configuration[name]._default})
+                    elif (
+                        type(hyperparams_class.configuration[name])
+                        == hyperparams.Enumeration
+                    ):
+                        parameters.append(
+                            sherpa.Choice(
+                                f"step___{current_step}___{name}",
+                                list(hyperparams_class.configuration[name].values),
+                            )
+                        )
+                        defaults.update({f"step___{current_step}___{name}":
+                                             hyperparams_class.configuration[name]._default})
+                    elif (
+                        type(hyperparams_class.configuration[name])
+                        == hyperparams.Uniform
+                    ):
+                        upper = hyperparams_class.configuration[name].upper
+                        lower = hyperparams_class.configuration[name].lower
+                        parameters.append(
+                            sherpa.Continuous(
+                                f"step___{current_step}___{name}", [lower, upper]
+                            )
+                        )
+                        defaults.update({f"step___{current_step}___{name}":
+                                             hyperparams_class.configuration[name]._default})
+                    elif (
+                        type(hyperparams_class.configuration[name])
+                        == hyperparams.Bounded
+                    ):
+                        upper = hyperparams_class.configuration[name].upper
+                        lower = hyperparams_class.configuration[name].lower
+                        if (
+                            hyperparams_class.configuration[name].structural_type
+                            == float
+                        ):
+                            parameters.append(
+                                sherpa.Continuous(
+                                    f"step___{current_step}___{name}", [lower, 10]
+                                )
+                            )  # todo need an upper limit on bounded
+                            defaults.update({f"step___{current_step}___{name}":
+                                                 hyperparams_class.configuration[name]._default})
+                        else:
+                            parameters.append(
+                                sherpa.Discrete(
+                                    f"step___{current_step}___{name}", [lower, 10]
+                                )
+                            )  # todo need an upper limit on bounded
+                            defaults.update({f"step___{current_step}___{name}":
+                                                 hyperparams_class.configuration[name]._default})
+                    elif type(hyperparams_class.configuration[name]) == hyperparams.Set:
+                        pass  # sets tend to be parse configurations
+                    elif (
+                        type(hyperparams_class.configuration[name]) == hyperparams.Union
+                    ):
+                        pass  # union is multiple hyperparams types?
+        current_step += 1
+    return parameters, [defaults]
+
+
+
+from multiprocessing import Process, Queue
+import queue
+
+def hyperparam_tune(pipeline, problem, dataset,timeout=20):
+    # train test split dataset
+    timeout = False
+    tune_steps = pipeline[1]
+    pipeline = pipeline[0]
+    with open('current_pipeline.pkl', 'wb') as f:
+        pickle.dump(pipeline, f)
+    with open('dataset.pkl', 'wb') as f:
+        pickle.dump(dataset, f)
+    with open('problem.pkl', 'wb') as f:
+        pickle.dump(problem, f)
+    params, defaults = get_pipeline_hyperparams(pipeline, tune_steps)
+    alg = sherpa.algorithms.GPyOpt(initial_data_points=defaults, max_num_trials=64)
+    scheduler = sherpa.schedulers.LocalScheduler()
+    stopping_rule = sherpa.algorithms.MedianStoppingRule(min_iterations=1, min_trials=5)
+    q = Queue()
+    def run_sherpa_optimize(fun, q, **kwargs):
+        q.put(fun(**kwargs))
+
+    p = Process(target=run_sherpa_optimize, args = (sherpa.optimize, q), kwargs={"parameters": params,
+                              "algorithm": alg,
+                              "stopping_rule": stopping_rule, # todo this isn't working
+                              "lower_is_better": True, #todo automate this.
+                              "command" :  "python ./processing/run_sherpa.py",
+                              "output_dir": f"./sherpa_temp/{pipeline.id}",
+                              "scheduler": scheduler,
+                              "max_concurrent": 16,
+                              "verbose": 2}, name="hyperparameter tune")
+    p.start()
+    try:
+        final_result = q.get(timeout=timeout)
+        p.join()
+        p.terminate()
+    except queue.Empty:
+        p.terminate()
+        timeout = True
+        print("timeout on {final_result}")
+
+        all_subdirs = [os.path.join("./sherpa_temp", d) for d in os.listdir('./sherpa_temp')]
+        output_dir = max(all_subdirs, key=os.path.getmtime)
+        if os.path.isfile(os.path.join(output_dir, "results.csv")): # there were result before timeout
+            results = pd.read_csv(os.path.join(output_dir, "results.csv"))
+            final_result = alg.get_best_result(parameters=None, results=results, lower_is_better=True)
+            # clean up
+
+        else:
+            final_result = {"Objective": None}
+            final_result.update(defaults[0])
+    # final_result = study.get_best_result()
+    if final_result["Objective"] == 9e5:
+        return None
+    # recreate final pipeline
+    final_pipeline = pipeline
+    step_params = defaultdict(dict)
+    for name, param in final_result.items():
+        if name.startswith("step"):
+            step = name.split("___")[1]
+            step_params[step].update({name.split("___")[2]: param})
+        for i, step in enumerate(final_pipeline.steps):
+            if step_params[str(i)] != {}:
+                step.hyperparams = {}
+                if i > 0 and i < len(final_pipeline.steps):
+                    for name, value in step_params[str(i)].items():
+                        if type(value) != str:
+                            value = value.item()  # pandas stores things in numpy types.
+                        step.add_hyperparameter(
+                            name=name, argument_type=ArgumentType.VALUE, data=value
+                        )
+    return final_pipeline
+
+

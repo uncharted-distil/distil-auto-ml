@@ -19,6 +19,7 @@ from distil.primitives.binary_encoder import BinaryEncoderPrimitive
 from distil.primitives.text_encoder import TextEncoderPrimitive
 from distil.primitives.enrich_dates import EnrichDatesPrimitive
 from distil.primitives.list_to_dataframe import ListEncoderPrimitive
+from distil.modeling.metrics import metrics, classification_metrics, regression_metrics
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
@@ -33,17 +34,17 @@ from common_primitives.xgboost_gbtree import XGBoostGBTreeClassifierPrimitive
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
 # in a naively implemented state for readability for now.
 def create_pipeline(metric: str,
-                    min_meta: bool = False,
                     semi: bool = False,
                     cat_mode: str = 'one_hot',
                     max_one_hot: int = 16,
                     scale: bool = False,
                     include_one_hot = True,
-                    profiler = 'simple',
+                    profiler = 'none',
                     multi: bool =False,
                     use_boost: bool = True,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
+    tune_steps = []
 
     if not include_one_hot:
         max_one_hot = 0
@@ -67,7 +68,7 @@ def create_pipeline(metric: str,
         step.add_output('produce')
         tabular_pipeline.add_step(step)
         previous_step += 1
-    else:
+    elif profiler =='simple':
         step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
                           data_reference=input_val.format(previous_step))
@@ -140,9 +141,12 @@ def create_pipeline(metric: str,
     step = PrimitiveStep(primitive_description=TextEncoderPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
+    if metric in regression_metrics:
+        step.add_hyperparameter('encoder_type', ArgumentType.VALUE, 'tfidf')
     step.add_output('produce')
     tabular_pipeline.add_step(step)
     previous_step += 1
+    tune_steps.append(previous_step)
 
 
     # Adds a one hot encoder for categoricals of low cardinality.
@@ -221,7 +225,7 @@ def create_pipeline(metric: str,
     # Generates a random forest ensemble model.
     # step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query(), resolver=resolver)
     if use_boost:
-        if metric == 'regression':
+        if metric in regression_metrics:
             step = PrimitiveStep(primitive_description=XGBoostGBTreeRegressorPrimitive.metadata.query(), resolver=resolver)
         else:
             step = PrimitiveStep(primitive_description=XGBoostGBTreeClassifierPrimitive.metadata.query(), resolver=resolver)
@@ -234,6 +238,8 @@ def create_pipeline(metric: str,
         step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     tabular_pipeline.add_step(step)
     previous_step += 1
+    tune_steps.append(previous_step)
+
 
     # # convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query(), resolver=resolver)
@@ -246,4 +252,4 @@ def create_pipeline(metric: str,
     # Adding output step to the pipeline
     tabular_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return tabular_pipeline
+    return (tabular_pipeline, tune_steps)
