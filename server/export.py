@@ -70,16 +70,7 @@ def export(solution_task, rank):
         pipeline_runs - a directory with pipeline run records in YAML format, multiple can be stored in the same file, named <pipeline run id>.yml
     """
     # WRITE TO pipelines_ranked
-    # ensure it is proper JSON by loading it first
-    if isinstance(solution_task.pipelines, str):
-        pipeline_json = json.loads(solution_task.pipelines)
-    else:
-        pipeline_json = solution_task.pipelines
-    # Set name
-    name = pipeline_json.get('name', False)
-    if not name:
-        name = solution_task.id
-    pipeline_json['name'] = name
+    pipeline_json = create_json(solution_task)
     # Confirm is valid
     #pipeline.PIPELINE_SCHEMA_VALIDATOR.validate(pipeline_json)
 
@@ -113,3 +104,26 @@ def export_run(solution_task):
     with open(run_file, 'w') as f:
         f.write(solution_task.pipeline_run)
 
+def save_pipeline(solution_task):
+    pipeline_json = create_json(solution_task)
+    filename = pathlib.Path(D3MOUTPUTDIR, 'pipelines', f'{solution_task.id}.json').resolve()
+    with open(filename, 'w') as f:
+        f.write(json.dumps(pipeline_json, sort_keys=True, indent=4))
+
+def save_fitted_pipeline(fitted_solution_id, runtime):
+    filename = pathlib.Path(D3MOUTPUTDIR, 'fitted_pipelines', f'{fitted_solution_id}.d3m').resolve()
+    pickle.dump(runtime, filename)
+
+def create_json(solution_task):
+    # ensure it is proper JSON by loading it first
+    if isinstance(solution_task.pipelines, str):
+        pipeline_json = json.loads(solution_task.pipelines)
+    else:
+        pipeline_json = solution_task.pipelines
+    # Set name
+    name = pipeline_json.get('name', False)
+    if not name:
+        name = solution_task.id
+    pipeline_json['name'] = name
+
+    return pipeline_json

@@ -146,6 +146,22 @@ class RequestValidator:
 
         return solution_id, rank
 
+    def validate_save_solution_request(self, request):
+        solution_id = self.msg.get_solution_id(request)
+
+        if not solution_id:
+            raise ValueError("Must pass a solution_id: {}".format(request))
+
+        return solution_id
+
+    def validate_save_fitted_solution_request(self, request):
+        fitted_solution_id = self.msg.get_fitted_solution_id(request)
+
+        if not fitted_solution_id:
+            raise ValueError("Must pass a fitted_solution_id: {}".format(request))
+
+        return fitted_solution_id
+
     def validate_get_fit_solution_results_request(self, request, session):
         return self._validate_request_exists(request, session)
 

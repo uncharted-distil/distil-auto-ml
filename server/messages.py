@@ -220,6 +220,18 @@ class Messaging:
         # SolutionExportResponse is always empty
         return core_pb2.SolutionExportResponse()
 
+    def make_save_fitted_solution_response(self, solution_task):
+        response_msg = core_pb2.SaveFittedSolutionResponse(
+                solution_id=solution_task
+        )
+        return response_msg
+
+    def make_save_solution_response(self, solution_task):
+        response_msg = core_pb2.SaveSolutionResponse(
+                solution_id=solution_task
+        )
+        return response_msg
+
     def get_rank(self, msg):
         return msg.rank
 

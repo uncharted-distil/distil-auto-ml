@@ -20,7 +20,7 @@ def _unary_unary_interceptor(servicer, method_name, context, request):
 
     As more exceptions are added that have specific meaning, they can be added below.
     """
-    manager = TaskManager()
+    manager = TaskManager(servicer)
     try:
         func = getattr(manager, method_name)
         result = func(request)
@@ -43,7 +43,7 @@ def _unary_stream_interceptor(servicer, method_name, context, request):
 
     As more exceptions are added that have specific meaning, they can be added below.
     """
-    manager = TaskManager()
+    manager = TaskManager(servicer)
     try:
         func = getattr(manager, method_name)
         for message in func(request):
@@ -68,6 +68,10 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
     """
 
     UNIMPLEMENTED_MSG = "Ah, ah, ah, you didn't say the magic word"
+
+    # fitted runtimes should be stored to disk, but that can't happen
+    # until we can guarantee that all primitives can be pickled.
+    fitted_runtimes: Dict[str, runtime.Runtime] = {}
 
     def __init__(self):
         self.logger = logging.getLogger('distil.server.ServerServicer')
@@ -136,6 +140,16 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
         _ = _unary_unary_interceptor(self, 'SolutionExport', context, request)
         return self.msg.make_solution_export_response()
 
+    def SaveSolution(self, request, context):
+        self.logger.debug("SaveSolution: {}".format(request))
+        solution_id = _unary_unary_interceptor(self, 'SaveSolution', context, request)
+        return self.msg.make_save_solution_response(solution_id)
+
+    def SaveFittedSolution(self, request, context):
+        self.logger.debug("SaveFittedSolution: {}".format(request))
+        solution_id = _unary_unary_interceptor(self, 'SaveFittedSolution', context, request)
+        return self.msg.make_save_fitted_solution_response(solution_id)
+
     def UpdateProblem(self, request, context):
         # WONTFIX
         context.abort(grpc.StatusCode.UNIMPLEMENTED, self.UNIMPLEMENTED_MSG)
@@ -147,8 +161,15 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
     def Hello(self, request, context):
         return self.msg.make_hello_response_message()
 
+    def add_fitted_runtime(self, solution_id, runtime):
+        self.fitted_runtimes[solution_id] = runtime
+
+    def get_fitted_runtime(self, solution_id):
+        return self.fitted_runtimes[solution_id]
+
 
 class Server():
+
     def __init__(self):
         self.logger = logging.getLogger('distil.server.Server')
         self.logger.info('Initializing distil gRPC server')
@@ -170,3 +191,9 @@ class Server():
     def start(self, port):
         self.server_thread.apply_async(self.create_server, (port,))
         self.logger.info('Started gRPC server, listening for requests')
+
+    def add_fitted_runtime(self, solution_id, runtime):
+        self.servicer.add_fitted_runtime(solution_id, runtime)
+
+    def get_fitted_runtime(self, solution_id):
+        return self.servicer.get_fitted_runtime(solution_id)

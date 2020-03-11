@@ -22,12 +22,13 @@ from api import utils as api_utils
 from d3m.metadata import pipeline
 
 class TaskManager():
-    def __init__(self):
+    def __init__(self, servicer):
         self.session = models.get_session(config.DB_LOCATION)
         self.logger = logging.getLogger('distil.TaskManager')
         self.logger.info('Initialized TaskManager')
         self.msg = Messaging()
         self.validator = RequestValidator()
+        self.servicer = servicer
 
     def close(self):
         self.session.close()
@@ -407,3 +408,29 @@ class TaskManager():
         export.export(pipeline, rank)
         # export.export_run(pipeline)
         # export.export_predictions(pipeline)
+
+    def SaveSolution(self, request):
+        """
+        Output pipeline JSON.
+        """
+        solution_id = self.validator.validate_save_solution_request(request)
+
+        _, pipeline = self.session.query(models.Solutions, models.Pipelines) \
+                                         .filter(models.Solutions.id==solution_id) \
+                                         .filter(models.Solutions.pipeline_id==models.Pipelines.id) \
+                                         .first()
+        export.save_pipeline(pipeline)
+
+        return solution_id
+
+    def SaveFittedSolution(self, request):
+        """
+        Output fitted pipeline.
+        """
+        fitted_solution_id = self.validator.validate_save_fitted_solution_request(request)
+
+        runtime = self.servicer.get_fitted_runtime(fitted_solution_id)
+
+        export.save_fitted_pipeline(fitted_solution_id, runtime)
+
+        return fitted_solution_id
