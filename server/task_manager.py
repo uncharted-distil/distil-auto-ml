@@ -243,9 +243,11 @@ class TaskManager():
 
         # add a fit task to the tasks table
         task_id = self._generate_id()
+        fit_solution_id = self._generate_id()
         task = models.Tasks(id=task_id,
                             type="FIT",
                             request_id=request_id,
+                            fit_solution_id=fit_solution_id,
                             solution_id=solution_id,
                             dataset_uri=dataset_uri,
                             pipeline=pipeline_json,
@@ -293,15 +295,14 @@ class TaskManager():
                     raise RuntimeError("FitSolution task didn't complete successfully")
 
                 # make a record of the fit itself
-                fit_solution_id = self._generate_id()
-                fit_solution = models.FitSolution(id=fit_solution_id,
+                fit_solution = models.FitSolution(id=task.fit_solution_id,
                                                   solution_id=task.solution_id,
                                                   task_id=task.id)
                 self.session.add(fit_solution)
                 self.session.commit()
 
                 progress_msg = self.msg.make_progress_msg("COMPLETED")
-                yield self.msg.make_get_fit_solution_results_response(fit_solution_id, progress_msg)
+                yield self.msg.make_get_fit_solution_results_response(task.fit_solution_id, progress_msg)
                 break
 
 
@@ -419,9 +420,9 @@ class TaskManager():
                                          .filter(models.Solutions.id==solution_id) \
                                          .filter(models.Solutions.pipeline_id==models.Pipelines.id) \
                                          .first()
-        export.save_pipeline(pipeline)
+        solution_uri = export.save_pipeline(pipeline)
 
-        return solution_id
+        return solution_uri
 
     def SaveFittedSolution(self, request):
         """
@@ -431,6 +432,6 @@ class TaskManager():
 
         runtime = self.servicer.get_fitted_runtime(fitted_solution_id)
 
-        export.save_fitted_pipeline(fitted_solution_id, runtime)
+        fitted_solution_uri = export.save_fitted_pipeline(fitted_solution_id, runtime)
 
-        return fitted_solution_id
+        return fitted_solution_uri

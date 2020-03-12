@@ -4,8 +4,11 @@ import logging
 
 from concurrent import futures
 from multiprocessing import pool
+from typing import Dict
 
 from api import core_pb2, core_pb2_grpc
+
+from d3m import runtime
 
 from server.messages import Messaging
 from server.task_manager import TaskManager
@@ -142,13 +145,13 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
 
     def SaveSolution(self, request, context):
         self.logger.debug("SaveSolution: {}".format(request))
-        solution_id = _unary_unary_interceptor(self, 'SaveSolution', context, request)
-        return self.msg.make_save_solution_response(solution_id)
+        solution_uri = _unary_unary_interceptor(self, 'SaveSolution', context, request)
+        return self.msg.make_save_solution_response(solution_uri)
 
     def SaveFittedSolution(self, request, context):
         self.logger.debug("SaveFittedSolution: {}".format(request))
-        solution_id = _unary_unary_interceptor(self, 'SaveFittedSolution', context, request)
-        return self.msg.make_save_fitted_solution_response(solution_id)
+        fitted_solution_uri = _unary_unary_interceptor(self, 'SaveFittedSolution', context, request)
+        return self.msg.make_save_fitted_solution_response(fitted_solution_uri)
 
     def UpdateProblem(self, request, context):
         # WONTFIX

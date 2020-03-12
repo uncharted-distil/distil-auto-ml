@@ -1,5 +1,6 @@
 import os
 import json
+import pickle
 import yaml
 import shutil
 import pathlib
@@ -106,13 +107,22 @@ def export_run(solution_task):
 
 def save_pipeline(solution_task):
     pipeline_json = create_json(solution_task)
-    filename = pathlib.Path(D3MOUTPUTDIR, 'pipelines', f'{solution_task.id}.json').resolve()
+    pipeline_dir = pathlib.Path(D3MOUTPUTDIR, 'pipelines')
+    pipeline_dir.mkdir(parents=True, exist_ok=True)
+    filename = pathlib.Path(pipeline_dir, f'{solution_task.id}.json').resolve()
     with open(filename, 'w') as f:
         f.write(json.dumps(pipeline_json, sort_keys=True, indent=4))
 
+    return pipeline_dir.as_uri()
+
 def save_fitted_pipeline(fitted_solution_id, runtime):
-    filename = pathlib.Path(D3MOUTPUTDIR, 'fitted_pipelines', f'{fitted_solution_id}.d3m').resolve()
-    pickle.dump(runtime, filename)
+    pipeline_dir = pathlib.Path(D3MOUTPUTDIR, 'fitted_pipelines')
+    pipeline_dir.mkdir(parents=True, exist_ok=True)
+    filename = pathlib.Path(pipeline_dir, f'{fitted_solution_id}.d3m').resolve()
+    with open(filename, 'wb') as pickle_file:
+        pickle.dump(runtime, pickle_file)
+
+    return pipeline_dir.as_uri()
 
 def create_json(solution_task):
     # ensure it is proper JSON by loading it first

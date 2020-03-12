@@ -20,9 +20,7 @@ from processing.scoring import Scorer
 from server import export
 import api.utils as api_utils
 from api import problem_pb2
-from typing import Dict
 
-from d3m import runtime
 from d3m.container import dataset
 from d3m.metadata import pipeline, problem, pipeline_run
 
@@ -37,7 +35,7 @@ def produce_task(logger, session, server, task):
         logger.info('Starting produce task ID {}'.format(task.id))
 
         # call produce on a fitted pipeline
-        fitted_runtime = server.get_fitted_runtime(task.solution_id)
+        fitted_runtime = server.get_fitted_runtime(task.fit_solution_id)
         test_dataset = dataset.Dataset.load(task.dataset_uri)
         results = ex_pipeline.produce(fitted_runtime, test_dataset)
 
@@ -123,6 +121,9 @@ def fit_task(logger, session, server, task):
 
         train_dataset = dataset.Dataset.load(task.dataset_uri)
         fitted_runtime, result = ex_pipeline.fit(pipeline_obj, problem_obj, train_dataset, is_standard_pipeline=run_as_standard)
+
+        # since score does not get the fitted solution id, need to allow for solution id lookup
+        server.add_fitted_runtime(task.fit_solution_id, fitted_runtime)
         server.add_fitted_runtime(task.solution_id, fitted_runtime)
 
         str_buf = io.StringIO()

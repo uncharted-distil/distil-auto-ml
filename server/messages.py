@@ -220,15 +220,15 @@ class Messaging:
         # SolutionExportResponse is always empty
         return core_pb2.SolutionExportResponse()
 
-    def make_save_fitted_solution_response(self, solution_task):
+    def make_save_fitted_solution_response(self, fitted_solution_uri):
         response_msg = core_pb2.SaveFittedSolutionResponse(
-                solution_id=solution_task
+                fitted_solution_uri=fitted_solution_uri
         )
         return response_msg
 
-    def make_save_solution_response(self, solution_task):
+    def make_save_solution_response(self, solution_uri):
         response_msg = core_pb2.SaveSolutionResponse(
-                solution_id=solution_task
+                solution_uri=solution_uri
         )
         return response_msg
 
