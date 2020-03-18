@@ -22,12 +22,13 @@ from api import utils as api_utils
 from d3m.metadata import pipeline
 
 class TaskManager():
-    def __init__(self):
+    def __init__(self, servicer):
         self.session = models.get_session(config.DB_LOCATION)
         self.logger = logging.getLogger('distil.TaskManager')
         self.logger.info('Initialized TaskManager')
         self.msg = Messaging()
         self.validator = RequestValidator()
+        self.servicer = servicer
 
     def close(self):
         self.session.close()
@@ -242,9 +243,11 @@ class TaskManager():
 
         # add a fit task to the tasks table
         task_id = self._generate_id()
+        fit_solution_id = self._generate_id()
         task = models.Tasks(id=task_id,
                             type="FIT",
                             request_id=request_id,
+                            fit_solution_id=fit_solution_id,
                             solution_id=solution_id,
                             dataset_uri=dataset_uri,
                             pipeline=pipeline_json,
@@ -292,15 +295,14 @@ class TaskManager():
                     raise RuntimeError("FitSolution task didn't complete successfully")
 
                 # make a record of the fit itself
-                fit_solution_id = self._generate_id()
-                fit_solution = models.FitSolution(id=fit_solution_id,
+                fit_solution = models.FitSolution(id=task.fit_solution_id,
                                                   solution_id=task.solution_id,
                                                   task_id=task.id)
                 self.session.add(fit_solution)
                 self.session.commit()
 
                 progress_msg = self.msg.make_progress_msg("COMPLETED")
-                yield self.msg.make_get_fit_solution_results_response(fit_solution_id, progress_msg)
+                yield self.msg.make_get_fit_solution_results_response(task.fit_solution_id, progress_msg)
                 break
 
 
@@ -407,3 +409,29 @@ class TaskManager():
         export.export(pipeline, rank)
         # export.export_run(pipeline)
         # export.export_predictions(pipeline)
+
+    def SaveSolution(self, request):
+        """
+        Output pipeline JSON.
+        """
+        solution_id = self.validator.validate_save_solution_request(request)
+
+        _, pipeline = self.session.query(models.Solutions, models.Pipelines) \
+                                         .filter(models.Solutions.id==solution_id) \
+                                         .filter(models.Solutions.pipeline_id==models.Pipelines.id) \
+                                         .first()
+        solution_uri = export.save_pipeline(pipeline)
+
+        return solution_uri
+
+    def SaveFittedSolution(self, request):
+        """
+        Output fitted pipeline.
+        """
+        fitted_solution_id = self.validator.validate_save_fitted_solution_request(request)
+
+        runtime = self.servicer.get_fitted_runtime(fitted_solution_id)
+
+        fitted_solution_uri = export.save_fitted_pipeline(fitted_solution_id, runtime)
+
+        return fitted_solution_uri

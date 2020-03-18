@@ -20,29 +20,22 @@ from processing.scoring import Scorer
 from server import export
 import api.utils as api_utils
 from api import problem_pb2
-from typing import Dict
 
-from d3m import runtime
 from d3m.container import dataset
 from d3m.metadata import pipeline, problem, pipeline_run
 
 import pickle
 import pandas as pd
 
-# TODO: ICK.  We can't pickle all fitted pipelines, so they currently need to be stored here for access
-# by the tasks, using the solution ID as the key.
-fitted_runtimes: Dict[str, runtime.Runtime] = {}
-
-
 # Configure output dir
 pathlib.Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
-def produce_task(logger, session, task):
+def produce_task(logger, session, server, task):
     try:
         logger.info('Starting produce task ID {}'.format(task.id))
 
         # call produce on a fitted pipeline
-        fitted_runtime = fitted_runtimes[task.solution_id]
+        fitted_runtime = server.get_fitted_runtime(task.fit_solution_id)
         test_dataset = dataset.Dataset.load(task.dataset_uri)
         results = ex_pipeline.produce(fitted_runtime, test_dataset)
 
@@ -64,7 +57,7 @@ def produce_task(logger, session, task):
         task.ended_at = datetime.datetime.utcnow()
         session.commit()
 
-def score_task(logger, session, task):
+def score_task(logger, session, server, task):
     try:
         logger.info('Starting score task ID {}'.format(task.id))
         task.started_at = datetime.datetime.utcnow()
@@ -88,7 +81,7 @@ def score_task(logger, session, task):
         else:
             raise TypeError("no problem definition available for scoring")
 
-        fitted_runtime = fitted_runtimes[task.solution_id]
+        fitted_runtime = server.get_fitted_runtime(task.solution_id)
 
         scorer = Scorer(logger, task, score_config, fitted_runtime, target_idx)
         score_values = scorer.run()
@@ -110,7 +103,7 @@ def score_task(logger, session, task):
         task.ended_at = datetime.datetime.utcnow()
         session.commit()
 
-def fit_task(logger, session, task):
+def fit_task(logger, session, server, task):
     try:
         logger.info('Starting distil task ID {}'.format(task.id))
         task.started_at = datetime.datetime.utcnow()
@@ -128,7 +121,10 @@ def fit_task(logger, session, task):
 
         train_dataset = dataset.Dataset.load(task.dataset_uri)
         fitted_runtime, result = ex_pipeline.fit(pipeline_obj, problem_obj, train_dataset, is_standard_pipeline=run_as_standard)
-        fitted_runtimes[task.solution_id] = fitted_runtime
+
+        # since score does not get the fitted solution id, need to allow for solution id lookup
+        server.add_fitted_runtime(task.fit_solution_id, fitted_runtime)
+        server.add_fitted_runtime(task.solution_id, fitted_runtime)
 
         str_buf = io.StringIO()
         try:
@@ -204,7 +200,7 @@ def search_task(logger, session, search):
         session.commit()
 
 
-def job_loop(logger, session):
+def job_loop(logger, session, server):
     task = False
     search = False
 
@@ -231,11 +227,11 @@ def job_loop(logger, session):
     # If there is work to be done...
     if task:
         if task.type == "FIT":
-            fit_task(logger, session, task)
+            fit_task(logger, session, server, task)
         elif task.type == "SCORE":
-            score_task(logger, session, task)
+            score_task(logger, session, server, task)
         elif task.type == "PRODUCE":
-            produce_task(logger, session, task)
+            produce_task(logger, session, server, task)
 
 def main(once=False):
     # override config vals D3M values
@@ -260,7 +256,7 @@ def main(once=False):
 
     # Main job loop
     while True:
-        job_loop(logger, session)
+        job_loop(logger, session, server)
         # Check for a new job every second
         time.sleep(1)
 
