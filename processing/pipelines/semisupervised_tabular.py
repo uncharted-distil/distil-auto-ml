@@ -12,6 +12,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None, exclude_co
     input_val = 'steps.{}.produce'
     pipeline_description = Pipeline()
     pipeline_description.add_input(name='inputs')
+    tune_steps = []
 
     # Step 0: Denormalize primitive -> put all resources in one dataframe
     step_0 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.data_transformation.denormalize.Common'))
@@ -74,6 +75,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None, exclude_co
     pipeline_description.add_step(step_4)
     previous_step += 1
     clustering_step = previous_step
+    tune_steps.append(previous_step)
 
     # Step 5: extract feature columns
     step_5 = PrimitiveStep(
@@ -105,6 +107,8 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None, exclude_co
     step_7.add_output('produce')
     pipeline_description.add_step(step_7)
     previous_step += 1
+    tune_steps.append(previous_step)
+
 
     # Step 8: construct predictions dataframe in proper format
     step_8 = PrimitiveStep(
@@ -119,4 +123,4 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None, exclude_co
 
     # Final Output
     pipeline_description.add_output(name='output predictions', data_reference=input_val.format(previous_step))
-    return pipeline_description
+    return (pipeline_description, tune_steps)

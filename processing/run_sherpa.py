@@ -9,6 +9,7 @@ from d3m.metrics import class_map
 import traceback
 import sys
 import os
+from d3m.metadata.problem import PerformanceMetricBase, PerformanceMetric
 
 def fit(
     pipeline: pipeline.Pipeline,
@@ -66,6 +67,27 @@ def main(client, trial):
             drop=True
         )
 
+        metric_map: typing.Dict[PerformanceMetricBase, bool] = {
+            PerformanceMetric.ACCURACY: -1,
+            PerformanceMetric.PRECISION: -1,
+            PerformanceMetric.RECALL: -1,
+            PerformanceMetric.F1: -1,
+            PerformanceMetric.F1_MICRO: -1,
+            PerformanceMetric.F1_MACRO: -1,
+            PerformanceMetric.MEAN_SQUARED_ERROR: 1,
+            PerformanceMetric.ROOT_MEAN_SQUARED_ERROR: 1,
+            PerformanceMetric.MEAN_ABSOLUTE_ERROR: 1,
+            PerformanceMetric.R_SQUARED: 1,
+            PerformanceMetric.NORMALIZED_MUTUAL_INFORMATION: -1,
+            PerformanceMetric.JACCARD_SIMILARITY_SCORE: -1,
+            PerformanceMetric.PRECISION_AT_TOP_K: -1,
+            PerformanceMetric.OBJECT_DETECTION_AVERAGE_PRECISION: -1,
+            PerformanceMetric.HAMMING_LOSS: 1,
+        }
+
+        performance_metric_ref = problem["problem"]["performance_metrics"][0]
+        lower_is_better_sign = metric_map[performance_metric_ref['metric']]
+
         trial_pipeline = pipeline
         step_params = defaultdict(dict)
         for name, param in trial.parameters.items():
@@ -101,7 +123,7 @@ def main(client, trial):
         print(f"Error on pipeline trail {trial} : {e}")
         print("-" * 60)
         traceback.print_exc(file=sys.stdout)
-        score = 9e5
+        score = 9e5 * lower_is_better_sign
 
 
     client.send_metrics(trial=trial, iteration=i+1,

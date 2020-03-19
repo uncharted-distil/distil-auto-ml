@@ -41,6 +41,7 @@ def create_pipeline(metric: str,
     input_val = 'steps.{}.produce'
     text_pipeline = Pipeline()
     text_pipeline.add_input(name='inputs')
+    tune_steps = []
 
     # step 0 - denormalize dataframe (injects semantic type information)
     step = PrimitiveStep(primitive_description=DenormalizePrimitive.metadata.query(), resolver=resolver)
@@ -131,4 +132,4 @@ def create_pipeline(metric: str,
     # Adding output step to the pipeline
     text_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return text_pipeline
+    return (text_pipeline, tune_steps)

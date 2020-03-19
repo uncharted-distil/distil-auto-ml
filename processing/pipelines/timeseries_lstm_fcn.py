@@ -18,6 +18,7 @@ def create_pipeline(metric: str, min_meta: bool = False, resolver: Optional[Reso
     pipeline_description = Pipeline()
     pipeline_description.add_input(name='inputs')
     input_val = 'steps.{}.produce'
+    tune_steps = []
     # Step 1: Ts formatter
     step_0 = PrimitiveStep(primitive_description=DistilTimeSeriesFormatter.metadata.query(),
         resolver=resolver)
@@ -54,6 +55,7 @@ def create_pipeline(metric: str, min_meta: bool = False, resolver: Optional[Reso
         pipeline_description.add_step(step)
         previous_step += 1
         parse_step = previous_step
+        tune_steps.append(previous_step)
 
         # # Extract attributes
         # step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query(),
@@ -77,6 +79,8 @@ def create_pipeline(metric: str, min_meta: bool = False, resolver: Optional[Reso
         pipeline_description.add_step(step)
         previous_step += 1
         ts_parse_step = previous_step
+        tune_steps.append(previous_step)
+
 
     # step 3: column parser on input DF
     step_3 = PrimitiveStep(ColumnParserPrimitive.metadata.query())
@@ -109,6 +113,7 @@ def create_pipeline(metric: str, min_meta: bool = False, resolver: Optional[Reso
     step_5.add_output('produce')
     pipeline_description.add_step(step_5)
     previous_step += 1
+    tune_steps.append(previous_step)
 
     # Step 7: construct predictions
     step_6 = PrimitiveStep(ConstructPredictionsPrimitive.metadata.query(),
@@ -122,4 +127,4 @@ def create_pipeline(metric: str, min_meta: bool = False, resolver: Optional[Reso
     # Final Output
     pipeline_description.add_output(name='output predictions', data_reference=input_val.format(previous_step))
 
-    return pipeline_description
+    return (pipeline_description, tune_steps)

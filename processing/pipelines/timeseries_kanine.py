@@ -18,6 +18,7 @@ from distil.primitives.time_series_formatter import TimeSeriesFormatterPrimitive
 
 def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
+    tune_steps = []
 
     # create the basic pipeline
     pipeline = Pipeline()
@@ -78,6 +79,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_output('produce')
     pipeline.add_step(step)
     previous_step += 1
+    tune_steps.append(previous_step)
 
     # Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)
@@ -107,6 +109,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_output('produce')
     pipeline.add_step(step)
     previous_step += 1
+    tune_steps.append(previous_step)
 
     # Step 7: construct predictions
     step_6 = PrimitiveStep(ConstructPredictionsPrimitive.metadata.query(),
@@ -121,4 +124,4 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     # Adding output step to the pipeline
     pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return pipeline
+    return (pipeline, tune_steps)

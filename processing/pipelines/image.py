@@ -43,7 +43,7 @@ def create_pipeline(metric: str,
     # create the basic pipeline
     image_pipeline = Pipeline(context=PipelineContext.TESTING)
     image_pipeline.add_input(name='inputs')
-
+    tune_steps = []
 
     # step 0 - denormalize dataframe (N.B.: injects semantic type information)
     step = PrimitiveStep(primitive_description=DenormalizePrimitive.metadata.query(), resolver=resolver)
@@ -125,6 +125,7 @@ def create_pipeline(metric: str,
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     image_pipeline.add_step(step)
     previous_step += 1
+    tune_steps.append(previous_step)
 
     # step 7 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query(), resolver=resolver)
@@ -139,4 +140,4 @@ def create_pipeline(metric: str,
     # Adding output step to the pipeline
     image_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return image_pipeline
+    return (image_pipeline, tune_steps)

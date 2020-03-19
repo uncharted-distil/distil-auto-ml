@@ -25,6 +25,7 @@ def create_pipeline(metric: str,
     # Creating pipeline
     pipeline_description = Pipeline()
     pipeline_description.add_input(name="inputs")
+    tune_steps = []
 
     # Step 0: Denormalize primitive
     step_0 = PrimitiveStep(
@@ -86,6 +87,7 @@ def create_pipeline(metric: str,
     step_4.add_output('produce')
     step_4.add_hyperparameter(name='return_result', argument_type=ArgumentType.VALUE, data='replace')
     pipeline_description.add_step(step_4)
+    tune_steps.append(4)
 
     # Step 5: construct output
     step_5 = PrimitiveStep(
@@ -98,4 +100,4 @@ def create_pipeline(metric: str,
     # Final Output
     pipeline_description.add_output(name='output predictions', data_reference='steps.5.produce')
 
-    return pipeline_description
+    return (pipeline_description, tune_steps)

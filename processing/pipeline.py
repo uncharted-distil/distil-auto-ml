@@ -5,12 +5,14 @@ import GPUtil
 import sys
 import os
 import copy
+import typing
 import numpy as np
 import traceback
 from d3m.container import dataset
 from d3m import container, exceptions, runtime
 from d3m.base import utils as base_utils
 from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
+from d3m.metadata.problem import PerformanceMetricBase, PerformanceMetric
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import (
     Pipeline,
@@ -221,21 +223,10 @@ def create(
             image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
         )
     elif pipeline_type == "object_detection":
-        pipelines.append(
-            object_detection.create_pipeline(
-                metric=metric, resolver=resolver, n_steps=50
-            )
-        )
-        pipelines.append(
-            object_detection.create_pipeline(
-                metric=metric, resolver=resolver, n_steps=250
-            )
-        )
-        pipelines.append(
-            object_detection.create_pipeline(
-                metric=metric, resolver=resolver, n_steps=1000
-            )
-        )
+        # pipelines.append(
+        #     object_detection.create_pipeline(
+        #         metric=metric, resolver=resolver
+        #     ))
         pipelines.append(
             object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
         )
@@ -293,10 +284,10 @@ def create(
         pipelines.append(
             timeseries_var.create_pipeline(metric=metric, resolver=resolver)
         )
-        # if gpu:
-        #     pipelines.append(
-        #         timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
-        #     )
+        if gpu:
+            pipelines.append(
+                timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
+            )
 
     elif pipeline_type == "semisupervised_tabular":
         exclude_column = problem["inputs"][0]["targets"][0]["column_index"]
@@ -336,9 +327,12 @@ def create(
 
     tuned_pipelines = []
     for pipeline in pipelines:
-        pipeline = hyperparam_tune(pipeline, problem, train_dataset)
-        if pipeline is not None:
-            tuned_pipelines.append(pipeline)
+        if len(pipeline[1]) > 0:
+            pipeline = hyperparam_tune(pipeline, problem, train_dataset)
+            if pipeline is not None:
+                tuned_pipelines.append(pipeline)
+        else:
+            tuned_pipelines.append(pipeline[0])
 
     ranks: List[float] = []
     for i in range(len(tuned_pipelines)):
@@ -503,7 +497,11 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
                     ):
                         # TODO fix max call
                         upper = hyperparams_class.configuration[name].upper
+                        if upper == None:
+                            upper = 100 # we don't have a good way to know a reasonable range if not given
                         lower = hyperparams_class.configuration[name].lower
+                        if lower == None:
+                            lower = 0 # we don't have a good way to know a reasonable range if not given
                         parameters.append(
                             sherpa.Discrete(
                                 f"step___{current_step}___{name}",
@@ -538,7 +536,11 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
                         == hyperparams.Uniform
                     ):
                         upper = hyperparams_class.configuration[name].upper
+                        if upper == None:
+                            upper = 100 # we don't have a good way to know a reasonable range if not given
                         lower = hyperparams_class.configuration[name].lower
+                        if lower == None:
+                            lower = 0 # we don't have a good way to know a reasonable range if not given
                         parameters.append(
                             sherpa.Continuous(
                                 f"step___{current_step}___{name}", [lower, upper]
@@ -551,14 +553,18 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
                         == hyperparams.Bounded
                     ):
                         upper = hyperparams_class.configuration[name].upper
+                        if upper == None:
+                            upper = 100 # we don't have a good way to know a reasonable range if not given
                         lower = hyperparams_class.configuration[name].lower
+                        if lower == None:
+                            lower = 0 # we don't have a good way to know a reasonable range if not given
                         if (
                             hyperparams_class.configuration[name].structural_type
                             == float
                         ):
                             parameters.append(
                                 sherpa.Continuous(
-                                    f"step___{current_step}___{name}", [lower, 10]
+                                    f"step___{current_step}___{name}", [lower, upper]
                                 )
                             )  # todo need an upper limit on bounded
                             defaults.update({f"step___{current_step}___{name}":
@@ -585,9 +591,8 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
 from multiprocessing import Process, Queue
 import queue
 
-def hyperparam_tune(pipeline, problem, dataset,timeout=20):
+def hyperparam_tune(pipeline, problem, dataset,timeout=600):
     # train test split dataset
-    timeout = False
     tune_steps = pipeline[1]
     pipeline = pipeline[0]
     with open('current_pipeline.pkl', 'wb') as f:
@@ -596,6 +601,26 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=20):
         pickle.dump(dataset, f)
     with open('problem.pkl', 'wb') as f:
         pickle.dump(problem, f)
+
+    metric_map: typing.Dict[PerformanceMetricBase, bool] = {
+    PerformanceMetric.ACCURACY: False,
+    PerformanceMetric.PRECISION: False,
+    PerformanceMetric.RECALL: False,
+    PerformanceMetric.F1: False,
+    PerformanceMetric.F1_MICRO: False,
+    PerformanceMetric.F1_MACRO: False,
+    PerformanceMetric.MEAN_SQUARED_ERROR: True,
+    PerformanceMetric.ROOT_MEAN_SQUARED_ERROR: True,
+    PerformanceMetric.MEAN_ABSOLUTE_ERROR: True,
+    PerformanceMetric.R_SQUARED: True,
+    PerformanceMetric.NORMALIZED_MUTUAL_INFORMATION: False,
+    PerformanceMetric.JACCARD_SIMILARITY_SCORE: False,
+    PerformanceMetric.PRECISION_AT_TOP_K: False,
+    PerformanceMetric.OBJECT_DETECTION_AVERAGE_PRECISION: False,
+    PerformanceMetric.HAMMING_LOSS: True,
+}
+    performance_metric_ref = problem["problem"]["performance_metrics"][0]
+    lower_is_better = metric_map[performance_metric_ref['metric']]
     params, defaults = get_pipeline_hyperparams(pipeline, tune_steps)
     alg = sherpa.algorithms.GPyOpt(initial_data_points=defaults, max_num_trials=64)
     scheduler = sherpa.schedulers.LocalScheduler()
@@ -604,37 +629,41 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=20):
     def run_sherpa_optimize(fun, q, **kwargs):
         q.put(fun(**kwargs))
 
-    p = Process(target=run_sherpa_optimize, args = (sherpa.optimize, q), kwargs={"parameters": params,
-                              "algorithm": alg,
-                              "stopping_rule": stopping_rule, # todo this isn't working
-                              "lower_is_better": True, #todo automate this.
-                              "command" :  "python ./processing/run_sherpa.py",
-                              "output_dir": f"./sherpa_temp/{pipeline.id}",
-                              "scheduler": scheduler,
-                              "max_concurrent": 16,
-                              "verbose": 2}, name="hyperparameter tune")
-    p.start()
     try:
+        p = Process(target=run_sherpa_optimize, args = (sherpa.optimize, q), kwargs={"parameters": params,
+                                  "algorithm": alg,
+                                  "stopping_rule": stopping_rule, # todo this isn't working
+                                  "lower_is_better": lower_is_better, # todo automate this.
+                                  "command" :  "python ./processing/run_sherpa.py",
+                                  "output_dir": f"./sherpa_temp/{pipeline.id}",
+                                  "scheduler": scheduler,
+                                  "max_concurrent": 16,
+                                  "verbose": 2}, name="hyperparameter tune")
+        p.start()
+
         final_result = q.get(timeout=timeout)
         p.join()
         p.terminate()
-    except queue.Empty:
+    except Exception as e:
         p.terminate()
         timeout = True
+        print(e)
         print("timeout on {final_result}")
 
         all_subdirs = [os.path.join("./sherpa_temp", d) for d in os.listdir('./sherpa_temp')]
         output_dir = max(all_subdirs, key=os.path.getmtime)
         if os.path.isfile(os.path.join(output_dir, "results.csv")): # there were result before timeout
             results = pd.read_csv(os.path.join(output_dir, "results.csv"))
-            final_result = alg.get_best_result(parameters=None, results=results, lower_is_better=True)
+            final_result = alg.get_best_result(parameters=None, results=results, lower_is_better=lower_is_better)
             # clean up
+
 
         else:
             final_result = {"Objective": None}
             final_result.update(defaults[0])
     # final_result = study.get_best_result()
-    if final_result["Objective"] == 9e5:
+
+    if final_result.get("Objective", 9e5) == 9e5:
         return None
     # recreate final pipeline
     final_pipeline = pipeline

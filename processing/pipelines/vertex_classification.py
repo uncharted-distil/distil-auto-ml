@@ -28,4 +28,4 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     # Adding output step to the pipeline
     vertex_classification_pipeline.add_output(name='output', data_reference='steps.1.produce')
 
-    return vertex_classification_pipeline
+    return (vertex_classification_pipeline, [])
