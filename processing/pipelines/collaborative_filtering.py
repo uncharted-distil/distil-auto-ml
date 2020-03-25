@@ -90,4 +90,4 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None, min_meta: 
     # Adding output step to the pipeline
     cf_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return cf_pipeline
+    return (cf_pipeline, [])

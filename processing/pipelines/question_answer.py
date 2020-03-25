@@ -92,4 +92,4 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     # Adding output step to the pipeline
     qa_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return (qa_pipeline, tune_steps)
+    return (qa_pipeline, [])

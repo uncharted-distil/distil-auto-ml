@@ -83,4 +83,4 @@ def create_pipeline(metric: str,
     # Adding output step to the pipeline
     audio_pipeline.add_output(name='output', data_reference='steps.5.produce')
 
-    return audio_pipeline
+    return (audio_pipeline, [])

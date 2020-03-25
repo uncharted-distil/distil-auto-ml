@@ -111,4 +111,4 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     # Adding output step to the pipeline
     deepar_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return (deepar_pipeline, tune_steps)
+    return (deepar_pipeline, [])

@@ -276,7 +276,7 @@ def create_pipeline(metric: str,
     # Adding output step to the pipeline
     tabular_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return tabular_pipeline
+    return (tabular_pipeline, [])
 
 def _query_datamart(keywords: List[Any], dataset: Optional[container.Dataset]) -> Tuple[datamart.DatamartSearchResult, int, int]:
      # Search NYU DataMart using dataset and keyword

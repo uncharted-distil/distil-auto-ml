@@ -47,4 +47,4 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     # Adding output step to the pipeline
     graph_matching_pipeline.add_output(name='output', data_reference='steps.1.produce')
 
-    return graph_matching_pipeline, []
+    return (graph_matching_pipeline, [])

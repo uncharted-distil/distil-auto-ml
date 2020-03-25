@@ -39,7 +39,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None, exclude_co
         pipeline_description.add_step(step)
         previous_step += 1
     else:
-        step = PrimitiveStep(primitive_description=Simon.metadata.query(), resolver=resolver)
+        step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
                           data_reference=input_val.format(previous_step))
         step.add_output('produce')
@@ -123,4 +123,4 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None, exclude_co
 
     # Final Output
     pipeline_description.add_output(name='output predictions', data_reference=input_val.format(previous_step))
-    return (pipeline_description, tune_steps)
+    return (pipeline_description, [])

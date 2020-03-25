@@ -45,4 +45,4 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None, is_edgelis
     # Adding output step to the pipeline
     vertex_nomination_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return vertex_nomination_pipeline
+    return (vertex_nomination_pipeline, [])

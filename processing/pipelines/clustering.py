@@ -163,4 +163,4 @@ def create_pipeline(metric: str,
     # Adding output step to the pipeline
     tabular_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return tabular_pipeline
+    return (tabular_pipeline, [])
