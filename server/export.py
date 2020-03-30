@@ -113,7 +113,7 @@ def save_pipeline(solution_task):
     with open(filename, 'w') as f:
         f.write(json.dumps(pipeline_json, sort_keys=True, indent=4))
 
-    return pipeline_dir.as_uri()
+    return filename.as_uri()
 
 def save_fitted_pipeline(fitted_solution_id, runtime):
     pipeline_dir = pathlib.Path(D3MOUTPUTDIR, 'fitted_pipelines')
@@ -122,7 +122,7 @@ def save_fitted_pipeline(fitted_solution_id, runtime):
     with open(filename, 'wb') as pickle_file:
         pickle.dump(runtime, pickle_file)
 
-    return pipeline_dir.as_uri()
+    return filename.as_uri()
 
 def create_json(solution_task):
     # ensure it is proper JSON by loading it first
