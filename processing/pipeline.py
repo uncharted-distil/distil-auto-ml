@@ -21,6 +21,7 @@ from d3m.metadata.pipeline import (
     hyperparams,
     PrimitiveStep,
 )
+import math
 import shutil
 import pandas as pd
 import pickle
@@ -34,6 +35,12 @@ from common_primitives.simple_profiler import SimpleProfilerPrimitive
 import sherpa
 from processing import router
 import config
+from common_primitives.column_parser import ColumnParserPrimitive
+from common_primitives.extract_columns_semantic_types import (
+    ExtractColumnsBySemanticTypesPrimitive,
+)
+from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
+
 
 from processing.pipelines import (
     clustering,
@@ -73,6 +80,10 @@ def create(
 ) -> Tuple[List[pipeline.Pipeline], container.Dataset, List[float]]:
     # allow for use of GPU optimized pipelines
     gpu = _use_gpu()
+
+    # how long to allow hyperparam tuning to run for
+    timeout = 600
+
 
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
@@ -123,7 +134,6 @@ def create(
             MIN_META = False
 
     pipeline_type = pipeline_type.lower()
-
     pipeline: Pipeline = None
     pipelines: List[Pipeline] = []
     if pipeline_type == "table":
@@ -219,9 +229,9 @@ def create(
                 metric=metric, resolver=resolver, **pipeline_info, sample=True
             )
         )
-        pipelines.append(
-            image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
-        )
+        # pipelines.append(
+        #     image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
+        # )
     elif pipeline_type == "object_detection":
         # pipelines.append(
         #     object_detection.create_pipeline(
@@ -284,10 +294,12 @@ def create(
         pipelines.append(
             timeseries_var.create_pipeline(metric=metric, resolver=resolver)
         )
-        if gpu:
-            pipelines.append(
-                timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
-            )
+        # if gpu:
+        #     pipelines.append(
+        #         timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
+        #     )
+        #     # avoid CUDA OOM by not using it.
+        #     os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
     elif pipeline_type == "semisupervised_tabular":
         exclude_column = problem["inputs"][0]["targets"][0]["column_index"]
@@ -326,13 +338,18 @@ def create(
         pipelines = pipelines_prepend
 
     tuned_pipelines = []
-    for pipeline in pipelines:
+    for i, pipeline in enumerate(pipelines):
         if len(pipeline[1]) > 0:
-            pipeline = hyperparam_tune(pipeline, problem, train_dataset)
+            pipeline = hyperparam_tune(pipeline, problem, train_dataset, timeout=timeout)
             if pipeline is not None:
                 tuned_pipelines.append(pipeline)
+            else:
+                # if timeout return base pipeline
+                tuned_pipelines.append(pipelines[i][0])
+
         else:
             tuned_pipelines.append(pipeline[0])
+    # tuned_pipelines = [pipeline[0] for pipeline in pipelines]
 
     ranks: List[float] = []
     for i in range(len(tuned_pipelines)):
@@ -467,10 +484,6 @@ def _use_gpu() -> bool:
     return use_gpu
 
 
-from common_primitives.extract_columns_semantic_types import (
-    ExtractColumnsBySemanticTypesPrimitive,
-)
-from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 
 
 def get_pipeline_hyperparams(pipeline, tune_steps):
@@ -487,6 +500,14 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
         if primitive not in black_list_primtives and i in tune_steps:
             for name in list(hyperparams_class.configuration.keys()):
                 # don't touch fixed hyperparams #TODO is this right?
+                if name in pipeline.steps[current_step].hyperparams:
+                    default_hyperparam = pipeline.steps[current_step].hyperparams[name]
+                else:
+                    default_hyperparam = hyperparams_class.configuration[name]._default
+                if type(default_hyperparam) == dict:
+                    default_hyperparam = default_hyperparam['data']
+                if type(default_hyperparam).__module__ == np.__name__:
+                    default_hyperparam = default_hyperparam.item()  # can't encode numpy types in mongo
 
                 if name not in list(pipeline.steps[0].hyperparams.keys()):
                     # base on structural type set pyshac types
@@ -509,7 +530,7 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
                             )
                         )
                         defaults.update({f"step___{current_step}___{name}":
-                                             hyperparams_class.configuration[name]._default})
+                                             default_hyperparam})
                     elif (
                         type(hyperparams_class.configuration[name])
                         == hyperparams.UniformBool
@@ -518,7 +539,7 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
                             sherpa.Choice(f"step___{current_step}___{name}", [True, False])
                         )
                         defaults.update({f"step___{current_step}___{name}":
-                                             hyperparams_class.configuration[name]._default})
+                                             default_hyperparam})
                     elif (
                         type(hyperparams_class.configuration[name])
                         == hyperparams.Enumeration
@@ -530,7 +551,7 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
                             )
                         )
                         defaults.update({f"step___{current_step}___{name}":
-                                             hyperparams_class.configuration[name]._default})
+                                             default_hyperparam})
                     elif (
                         type(hyperparams_class.configuration[name])
                         == hyperparams.Uniform
@@ -547,7 +568,7 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
                             )
                         )
                         defaults.update({f"step___{current_step}___{name}":
-                                             hyperparams_class.configuration[name]._default})
+                                             default_hyperparam})
                     elif (
                         type(hyperparams_class.configuration[name])
                         == hyperparams.Bounded
@@ -568,7 +589,7 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
                                 )
                             )  # todo need an upper limit on bounded
                             defaults.update({f"step___{current_step}___{name}":
-                                                 hyperparams_class.configuration[name]._default})
+                                                 default_hyperparam})
                         else:
                             parameters.append(
                                 sherpa.Discrete(
@@ -576,20 +597,38 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
                                 )
                             )  # todo need an upper limit on bounded
                             defaults.update({f"step___{current_step}___{name}":
-                                                 hyperparams_class.configuration[name]._default})
+                                                 default_hyperparam})
                     elif type(hyperparams_class.configuration[name]) == hyperparams.Set:
                         pass  # sets tend to be parse configurations
                     elif (
                         type(hyperparams_class.configuration[name]) == hyperparams.Union
                     ):
                         pass  # union is multiple hyperparams types?
+        else:
+            for name in list(hyperparams_class.configuration.keys()):
+                if name in pipeline.steps[current_step].hyperparams:
+                    default_hyperparam = pipeline.steps[current_step].hyperparams[name]
+                else:
+                    default_hyperparam = hyperparams_class.configuration[name]._default
+                if type(default_hyperparam).__module__ == np.__name__:
+                    default_hyperparam = default_hyperparam.item()  # can't encode numpy types in mongo
+                if type(default_hyperparam) == dict:
+                    default_hyperparam = default_hyperparam['data']
+                parameters.append(
+                sherpa.Choice(
+                    f"step___{current_step}___{name}",
+                    [default_hyperparam],
+                )
+                )
+                defaults.update({f"step___{current_step}___{name}":
+                                     default_hyperparam})
+
         current_step += 1
     return parameters, [defaults]
 
 
 
 from multiprocessing import Process, Queue
-import queue
 
 def hyperparam_tune(pipeline, problem, dataset,timeout=600):
     # train test split dataset
@@ -601,6 +640,37 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=600):
         pickle.dump(dataset, f)
     with open('problem.pkl', 'wb') as f:
         pickle.dump(problem, f)
+
+    # # if problem is timeseries use timeseries splitting primitive.
+    # from common_primitives import kfold_split_timeseries
+    # from distil.primitives.time_series_formatter import TimeSeriesFormatterPrimitive
+
+    # import pdb; pdb.set_trace()
+    # hyperparams_class_kfold = kfold_split_timeseries.KFoldTimeSeriesSplitPrimitive.metadata.get_hyperparams()
+    #
+    # folds = 2
+    # primitive_kfold = kfold_split_timeseries.KFoldTimeSeriesSplitPrimitive(hyperparams=hyperparams_class_kfold.defaults().replace({
+    #     'number_of_folds': folds,
+    #     'number_of_window_folds': 1,
+    # }))
+    #
+    #
+    # hyperparams_class_loader = TimeSeriesFormatterPrimitive.metadata.get_hyperparams()
+    # primitive_loader = TimeSeriesFormatterPrimitive(hyperparams=hyperparams_class_loader.defaults())
+    # formated_dataset = primitive_loader.produce(inputs=dataset)
+    #
+    # hyperparams_class_loader = DatasetToDataFramePrimitive.metadata.get_hyperparams()
+    # primitive_loader = DatasetToDataFramePrimitive(hyperparams=hyperparams_class_loader.defaults())
+    # formated_dataset = primitive_loader.produce(inputs=formated_dataset.value)
+    #
+    # hyperparams_class_loader = ColumnParserPrimitive.metadata.get_hyperparams()
+    # primitive_loader = ColumnParserPrimitive(hyperparams=hyperparams_class_loader.defaults())
+    # formated_dataset = primitive_loader.produce(inputs=formated_dataset.value)
+    #
+    # primitive_kfold.set_training_data(dataset=formated_dataset.value)
+    # primitive_kfold.fit()
+    #
+    # results = primitive_kfold.produce(inputs=container.List([0, 1], generate_metadata=True)).value
 
     metric_map: typing.Dict[PerformanceMetricBase, bool] = {
     PerformanceMetric.ACCURACY: False,
@@ -623,6 +693,8 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=600):
     lower_is_better = metric_map[performance_metric_ref['metric']]
     params, defaults = get_pipeline_hyperparams(pipeline, tune_steps)
     alg = sherpa.algorithms.GPyOpt(initial_data_points=defaults, max_num_trials=64)
+    # alg = sherpa.algorithms.LocalSearch(seed_configuration=defaults[0])
+    alg.next_trial = None
     scheduler = sherpa.schedulers.LocalScheduler()
     stopping_rule = sherpa.algorithms.MedianStoppingRule(min_iterations=1, min_trials=5)
     q = Queue()
@@ -633,7 +705,7 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=600):
         p = Process(target=run_sherpa_optimize, args = (sherpa.optimize, q), kwargs={"parameters": params,
                                   "algorithm": alg,
                                   "stopping_rule": stopping_rule, # todo this isn't working
-                                  "lower_is_better": lower_is_better, # todo automate this.
+                                  "lower_is_better": lower_is_better,
                                   "command" :  "python ./processing/run_sherpa.py",
                                   "output_dir": f"./sherpa_temp/{pipeline.id}",
                                   "scheduler": scheduler,
@@ -666,6 +738,7 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=600):
     if final_result.get("Objective", 9e5) == 9e5:
         return None
     # recreate final pipeline
+
     final_pipeline = pipeline
     step_params = defaultdict(dict)
     for name, param in final_result.items():
@@ -676,12 +749,33 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=600):
             if step_params[str(i)] != {}:
                 step.hyperparams = {}
                 if i > 0 and i < len(final_pipeline.steps):
-                    for name, value in step_params[str(i)].items():
-                        if type(value) != str:
-                            value = value.item()  # pandas stores things in numpy types.
-                        step.add_hyperparameter(
-                            name=name, argument_type=ArgumentType.VALUE, data=value
-                        )
+                    try:
+                        for name, value in step_params[str(i)].items():
+                            if type(value).__module__ == np.__name__:
+                                value = value.item()  # pandas stores things in numpy types.
+                            if value in ['()', '[]']:
+                                continue
+                            elif value == None:
+                                continue
+                            elif value == 'nan':
+                                value = None
+                            elif type(value) == float:
+                                if math.isnan(value):
+                                    continue
+                            elif type(value) == str:
+                                if value.startswith('(') and value.endswith(')'):
+                                    # tuple as string. todo figure out another way to parse strings
+                                    value = tuple(value.replace("'", '')[1:-1].split(','))
+                                    value = tuple(x.strip() for x in value)
+                                elif value.startswith('[') and value.endswith(']'):
+                                    # tuple as string. todo figure out another way to parse strings
+                                    value = tuple(value.replace("'", '')[1:-1].split(','))
+                                    # todo check what type it expects
+                                    value = list(int(x.strip()) for x in value if x.isdigit())
+                            step.add_hyperparameter(
+                                name=name, argument_type=ArgumentType.VALUE, data=value
+                            )
+                    except Exception as e:
+                        import pdb; pdb.set_trace()
+                        print(e)
     return final_pipeline
-
-

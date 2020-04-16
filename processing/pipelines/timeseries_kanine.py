@@ -16,7 +16,7 @@ from common_primitives.extract_columns_semantic_types import ExtractColumnsBySem
 from d3m.primitives.time_series_classification.k_neighbors import Kanine
 from distil.primitives.time_series_formatter import TimeSeriesFormatterPrimitive
 
-def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
+def create_pipeline(metric: str, datasplit: bool = False, resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
     tune_steps = []
 
@@ -45,6 +45,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_output('produce')
     pipeline.add_step(step)
     previous_step += 1
+    tune_steps.append(previous_step)
 
     # Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)

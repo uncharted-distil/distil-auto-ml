@@ -38,6 +38,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_output('produce')
     var_pipeline.add_step(step)
     previous_step += 1
+    # tune_steps.append(previous_step)
 
     # step 1 - Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)
@@ -88,4 +89,4 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     var_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
     tune_steps.append(previous_step)
 
-    return (var_pipeline, [])
+    return (var_pipeline, tune_steps)

@@ -34,9 +34,11 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
                       data_reference=input_val.format(previous_step))
+    step.add_hyperparameter('categorical_max_ratio_distinct_values', ArgumentType.VALUE, 0)
     step.add_output('produce')
     deepar_pipeline.add_step(step)
     previous_step += 1
+    # tune_steps.append(previous_step)
 
     # step 1 - Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)
@@ -111,4 +113,4 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     # Adding output step to the pipeline
     deepar_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return (deepar_pipeline, [])
+    return (deepar_pipeline, tune_steps)
