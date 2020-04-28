@@ -67,7 +67,7 @@ def main(client, trial):
         train_dataset = dataset.copy()
         test_dataset = dataset.copy()
         train_dataset['learningData'], test_dataset['learningData'] = train_test_split(train_dataset['learningData'],
-                                                                                       random_state=42)
+                                                                                       random_state=42, shuffle=False)
         train_dataset['learningData'] = train_dataset['learningData'].reset_index(drop=True)
         test_dataset['learningData'] = test_dataset['learningData'].reset_index(drop=True)
         # test_dataset = dataset.copy()

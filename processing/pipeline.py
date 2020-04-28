@@ -641,36 +641,6 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=600):
     with open('problem.pkl', 'wb') as f:
         pickle.dump(problem, f)
 
-    # # if problem is timeseries use timeseries splitting primitive.
-    # from common_primitives import kfold_split_timeseries
-    # from distil.primitives.time_series_formatter import TimeSeriesFormatterPrimitive
-
-    # import pdb; pdb.set_trace()
-    # hyperparams_class_kfold = kfold_split_timeseries.KFoldTimeSeriesSplitPrimitive.metadata.get_hyperparams()
-    #
-    # folds = 2
-    # primitive_kfold = kfold_split_timeseries.KFoldTimeSeriesSplitPrimitive(hyperparams=hyperparams_class_kfold.defaults().replace({
-    #     'number_of_folds': folds,
-    #     'number_of_window_folds': 1,
-    # }))
-    #
-    #
-    # hyperparams_class_loader = TimeSeriesFormatterPrimitive.metadata.get_hyperparams()
-    # primitive_loader = TimeSeriesFormatterPrimitive(hyperparams=hyperparams_class_loader.defaults())
-    # formated_dataset = primitive_loader.produce(inputs=dataset)
-    #
-    # hyperparams_class_loader = DatasetToDataFramePrimitive.metadata.get_hyperparams()
-    # primitive_loader = DatasetToDataFramePrimitive(hyperparams=hyperparams_class_loader.defaults())
-    # formated_dataset = primitive_loader.produce(inputs=formated_dataset.value)
-    #
-    # hyperparams_class_loader = ColumnParserPrimitive.metadata.get_hyperparams()
-    # primitive_loader = ColumnParserPrimitive(hyperparams=hyperparams_class_loader.defaults())
-    # formated_dataset = primitive_loader.produce(inputs=formated_dataset.value)
-    #
-    # primitive_kfold.set_training_data(dataset=formated_dataset.value)
-    # primitive_kfold.fit()
-    #
-    # results = primitive_kfold.produce(inputs=container.List([0, 1], generate_metadata=True)).value
 
     metric_map: typing.Dict[PerformanceMetricBase, bool] = {
     PerformanceMetric.ACCURACY: False,
@@ -692,8 +662,8 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=600):
     performance_metric_ref = problem["problem"]["performance_metrics"][0]
     lower_is_better = metric_map[performance_metric_ref['metric']]
     params, defaults = get_pipeline_hyperparams(pipeline, tune_steps)
-    alg = sherpa.algorithms.GPyOpt(initial_data_points=defaults, max_num_trials=64)
-    # alg = sherpa.algorithms.LocalSearch(seed_configuration=defaults[0])
+    # alg = sherpa.algorithms.GPyOpt(initial_data_points=defaults, max_num_trials=128)
+    alg = sherpa.algorithms.LocalSearch(seed_configuration=defaults[0])
     alg.next_trial = None
     scheduler = sherpa.schedulers.LocalScheduler()
     stopping_rule = sherpa.algorithms.MedianStoppingRule(min_iterations=1, min_trials=5)
@@ -718,7 +688,6 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=600):
         p.terminate()
     except Exception as e:
         p.terminate()
-        timeout = True
         print(e)
         print("timeout on {final_result}")
 
@@ -771,7 +740,7 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=600):
                                     # tuple as string. todo figure out another way to parse strings
                                     value = tuple(value.replace("'", '')[1:-1].split(','))
                                     # todo check what type it expects
-                                    value = list(int(x.strip()) for x in value if x.isdigit())
+                                    value = list(int(x.strip()) for x in value if x.strip().isdigit())
                             step.add_hyperparameter(
                                 name=name, argument_type=ArgumentType.VALUE, data=value
                             )
