@@ -34,6 +34,7 @@ def create_pipeline(metric: str,
     objdetect_pipeline.add_input(name='inputs')
     tune_steps = []
 
+
     # step 0 - denormalize dataframe (N.B.: injects semantic type information)
     step = PrimitiveStep(primitive_description=DenormalizePrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
@@ -74,7 +75,9 @@ def create_pipeline(metric: str,
     objdetect_pipeline.add_step(step)
     tune_steps.append(4)
 
+
     # Adding output step to the pipeline
     objdetect_pipeline.add_output(name='output', data_reference='steps.4.produce')
 
     return (objdetect_pipeline, [])
+

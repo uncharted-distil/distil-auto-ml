@@ -2,12 +2,10 @@ import json
 import logging
 from typing import Tuple, Optional, List, Dict, Optional
 import GPUtil
-import sys
 import os
-import copy
 import typing
 import numpy as np
-import traceback
+
 from d3m.container import dataset
 from d3m import container, exceptions, runtime
 from d3m.base import utils as base_utils
@@ -72,6 +70,7 @@ import utils
 
 logger = logging.getLogger(__name__)
 
+
 def create(
     dataset_doc_path: str,
     problem: dict,
@@ -102,6 +101,7 @@ def create(
     protobuf_metric = problem["problem"]["performance_metrics"][0]["metric"]
     metric = metrics.translate_proto_metric(protobuf_metric)
     logger.info(f"Optimizing on metric {metric}")
+
 
     # determine type of pipeline required for dataset
     pipeline_type, pipeline_info = router.get_routing_info(dataset_doc, problem, metric)
@@ -418,6 +418,7 @@ def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
 def _prepend_pipeline(
     base: pipeline.Pipeline, prepend: pipeline.Pipeline
 ) -> pipeline.Pipeline:
+
     # make a copy of the prepend
     prepend = copy.deepcopy(prepend)
 
@@ -748,3 +749,6 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=600):
                         import pdb; pdb.set_trace()
                         print(e)
     return final_pipeline
+=======
+    return use_gpu
+>>>>>>> master
