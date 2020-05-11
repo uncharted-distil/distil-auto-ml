@@ -12,7 +12,6 @@ from d3m.metadata import hyperparams
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.denormalize import DenormalizePrimitive
-from common_primitives.dataframe_image_reader import DataFrameImageReaderPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
@@ -62,10 +61,9 @@ def create_pipeline(metric: str,
     previous_step += 1
 
     # step 2 - read images
-    step = PrimitiveStep(primitive_description=DataFrameImageReaderPrimitive.metadata.query(), resolver=resolver)
+    step = PrimitiveStep(primitive_description=DataFrameSatelliteImageLoaderPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
-    step.add_hyperparameter('use_columns', ArgumentType.VALUE,[0,1])
     step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
     image_pipeline.add_step(step)
     previous_step += 1
