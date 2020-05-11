@@ -12,6 +12,7 @@ import config
 
 import models
 import utils
+import server
 from server import export
 from server.messages import Messaging
 from server.validation import RequestValidator
@@ -429,9 +430,44 @@ class TaskManager():
         Output fitted pipeline.
         """
         fitted_solution_id = self.validator.validate_save_fitted_solution_request(request)
-
         runtime = self.servicer.get_fitted_runtime(fitted_solution_id)
-
         fitted_solution_uri = export.save_fitted_pipeline(fitted_solution_id, runtime)
 
         return fitted_solution_uri
+
+
+    def LoadSolution(self, request):
+        """
+        Loads a previously saved untrained pipeline.
+        """
+        solution_uri = self.validator.validate_load_solution_request(request)
+
+        # load pipeline as json and convert to object model
+        pipeline_json = export.load_pipeline(request.solution_uri)
+        pipeline_objs = pipeline.Pipeline.from_json(pipeline_json, resolver=resolver)
+
+        # create a DB pipeline object from the pipeline object and write it into the database.
+        solution_pipeline = models.Pipelines(id=pipeline_objs.uuid,
+                                                 search_id=pipeline_objs.search_id,
+                                                 pipelines=pipeline_objs.pipelines,
+                                                 fully_specified=pipeline_objs.fully_specified,
+                                                 ended=True,
+                                                 error=False,
+                                                 rank=pipeline_objs.rank)
+        session.add(solution_pipeline)
+        session.commit()
+        return solution_pipeline.id
+
+
+
+    def LoadFittedSolution(self, request):
+        """
+        Loads a previously saved fitted pipeline.
+        """
+        fitted_solution_uri = self.validator.validate_load_fitted_solution_request(request)
+        fitted_runtime = export.load_fitted_pipeline(fitted_solution_uri)
+        fitted_solution_id = fitted_runtime.pipeline.id
+
+        # FittedSolutions don't get loaded into the DB because they are large binary files - they are instead
+        # limited to in-memory storage in hash map.
+        self.servicer.add_fitted_runtime(fitted_solution_id, fitted_runtime)
