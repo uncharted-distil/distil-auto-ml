@@ -171,7 +171,6 @@ class RequestValidator:
         return solution_uri
 
     def validate_load_fitted_solution_request(self, request):
-        import sys
         fitted_solution_uri = self.msg.get_fitted_solution_uri(request)
 
         if not fitted_solution_uri:
