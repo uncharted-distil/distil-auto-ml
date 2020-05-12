@@ -122,6 +122,9 @@ def fit_task(logger, session, server, task):
         train_dataset = dataset.Dataset.load(task.dataset_uri)
         fitted_runtime, result = ex_pipeline.fit(pipeline_obj, problem_obj, train_dataset, is_standard_pipeline=run_as_standard)
 
+        # fitted runtime needs to have the fitted pipeline ID we've generated
+        fitted_runtime.pipeline.id = task.fit_solution_id
+
         # since score does not get the fitted solution id, need to allow for solution id lookup
         server.add_fitted_runtime(task.fit_solution_id, fitted_runtime)
         server.add_fitted_runtime(task.solution_id, fitted_runtime)

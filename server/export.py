@@ -4,6 +4,7 @@ import pickle
 import yaml
 import shutil
 import pathlib
+import urllib
 
 from d3m.metadata import pipeline
 
@@ -123,6 +124,18 @@ def save_fitted_pipeline(fitted_solution_id, runtime):
         pickle.dump(runtime, pickle_file)
 
     return filename.as_uri()
+
+def load_pipeline(solution_uri):
+    with open(filename, 'r') as f:
+        json_data = json.load(f)
+    return json_data
+
+def load_fitted_pipeline(fitted_solution_uri):
+    p = urllib.parse.urlparse(fitted_solution_uri)
+    final_path = os.path.abspath(os.path.join(p.netloc, p.path))
+    with open(final_path, 'rb') as pickle_file:
+        runtime = pickle.load(pickle_file)
+    return runtime
 
 def create_json(solution_task):
     # ensure it is proper JSON by loading it first
