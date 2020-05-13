@@ -179,7 +179,7 @@ class Scorer:
         true_df = self.inputs['learningData']
         true_df = true_df.set_index(pd.to_numeric(true_df['d3mIndex']))
         # make sure the result and truth have the same d3mIndex
-        true_df = true_df.loc[result_df.index]
+        true_df = true_df.loc[result_df.index.unique()]
 
         true_series = true_df.iloc[:, self.target_idx]
         true_series = true_series.astype(result_series.dtype)

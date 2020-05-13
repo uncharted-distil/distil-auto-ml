@@ -18,6 +18,7 @@ from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
 
 from distil.primitives.satellite_image_loader import DataFrameSatelliteImageLoaderPrimitive
+from distil.primitives.prediction_expansion import PredictionExpansionPrimitive
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.image_transfer import ImageTransferPrimitive
 from d3m.primitives.data_preprocessing.dataset_sample import Common as DatasetSamplePrimitive
@@ -122,6 +123,14 @@ def create_pipeline(metric: str,
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(image_step))
+    step.add_output('produce')
+    step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
+    image_pipeline.add_step(step)
+    previous_step += 1
+
+    step = PrimitiveStep(primitive_description=PredictionExpansionPrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(image_step-1))
     step.add_output('produce')
     step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
     image_pipeline.add_step(step)
