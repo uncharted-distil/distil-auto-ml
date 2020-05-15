@@ -19,7 +19,7 @@ META_DIR = 'pipelines'
 # Map of default datasets to configure .meta files
 # and metric for pipeline config
 PIPE_TO_DATASET = {
-    'tabular': ('LL0_acled_reduced', 'f1Macro', {}, 'simple'),
+    'tabular': ('LL0_acled_reduced', 'f1Macro', 'simple', {}),
     'audio': ('31_urbansound', 'accuracy', '', {}),
     'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', '', {
         'num_clusters': 100,
