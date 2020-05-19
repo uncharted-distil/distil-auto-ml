@@ -19,30 +19,30 @@ META_DIR = 'pipelines'
 # Map of default datasets to configure .meta files
 # and metric for pipeline config
 PIPE_TO_DATASET = {
-    'tabular': ('LL0_acled_reduced', 'f1Macro', 'simple', {}),
-    'audio': ('31_urbansound', 'accuracy', '', {}),
-    'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', '', {
+    'tabular': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', 'simple', {}),
+    'audio': ('31_urbansound_MIN_METADATA', 'accuracy', '', {}),
+    'clustering': ('1491_one_hundred_plants_margin_clust_MIN_METADATA', 'normalizedMutualInformation', '', {
         'num_clusters': 100,
         'cluster_col_name': 'Class'
     }),
-    'collaborative_filtering': ('60_jester', 'meanAbsoluteError', '', {}),
-    'community_detection': ('6_70_com_amazon', 'normalizedMutualInformation', '', {}),
-    'graph_matching': ('49_facebook', 'accuracy', '', {}),
-    'image': ('22_handgeometry', 'meanSquaredError', '', {}),
-    'object_detection': ('LL1_penn_fudan_pedestrian', 'objectDetectionAP', '', {}),
-    'link_prediction': ('59_umls', 'accuracy', '', {}),
-    'question_answer': ('32_wikiqa', 'f1', '', {}),
-    'text': ('30_personae', 'f1', '', {}),
-    'timeseries_forecasting': ('56_sunspots_monthly', 'rootMeanSquaredError', '', {}),
-    'timeseries_classification': ('LL1_50words', 'f1Macro', '', {}),
-    'timeseries_kanine': ('LL1_50words', 'f1Macro', '', {}),
-    'timeseries_var': ('LL1_736_population_spawn_simpler', 'meanAbsoluteError', '', {}),
-    'timeseries_deepar': ('LL1_736_population_spawn', 'meanAbsoluteError', '', {}),
-    'vertex_nomination': ('LL1_net_nomination_seed', 'accuracy', '', {}),
-    'vertex_classification': ('LL1_VTXC_1369_synthetic', 'f1Macro', '', {}),
-    'semisupervised_tabular': ('SEMI_1040_sylva_prior', 'f1Macro', '', {}),
-    'timeseries_lstm_fcn': ('LL1_50words', 'f1Macro', '', {}),
-    'data_augmentation_tabular': ('DA_ny_taxi_demand', 'meanAbsoluteError', '', {})
+    'collaborative_filtering': ('60_jester_MIN_METADATA', 'meanAbsoluteError', '', {}),
+    'community_detection': ('6_70_com_amazon_MIN_METADATA', 'normalizedMutualInformation', '', {}),
+    'graph_matching': ('49_facebook_MIN_METADATA', 'accuracy', '', {}),
+    'image': ('22_handgeometry_MIN_METADATA', 'meanSquaredError', '', {}),
+    'object_detection': ('LL1_penn_fudan_pedestrian_MIN_METADATA', 'objectDetectionAP', '', {}),
+    'link_prediction': ('59_umls_MIN_METADATA', 'accuracy', '', {}),
+    'question_answer': ('32_wikiqa_MIN_METADATA', 'f1', '', {}),
+    'text': ('30_personae_MIN_METADATA', 'f1', '', {}),
+    'timeseries_forecasting': ('56_sunspots_monthly_MIN_METADATA', 'rootMeanSquaredError', '', {}),
+    'timeseries_classification': ('LL1_50words_MIN_METADATA', 'f1Macro', '', {}),
+    'timeseries_kanine': ('LL1_50words_MIN_METADATA', 'f1Macro', '', {}),
+    'timeseries_var': ('LL1_736_population_spawn_simpler_MIN_METADATA', 'meanAbsoluteError', '', {}),
+    'timeseries_deepar': ('LL1_736_population_spawn_MIN_METADATA', 'meanAbsoluteError', '', {}),
+    'vertex_nomination': ('LL1_net_nomination_seed_MIN_METADATA', 'accuracy', '', {}),
+    'vertex_classification': ('LL1_VTXC_1369_synthetic_MIN_METADATA', 'f1Macro', '', {}),
+    'semisupervised_tabular': ('SEMI_1040_sylva_prior_MIN_METADATA', 'f1Macro', '', {}),
+    'timeseries_lstm_fcn': ('LL1_50words_MIN_METADATA', 'f1Macro', '', {}),
+    'data_augmentation_tabular': ('DA_ny_taxi_demand_MIN_METADATA', 'meanAbsoluteError', '', {})
 }
 
 def generate_hash(pipe_json):
