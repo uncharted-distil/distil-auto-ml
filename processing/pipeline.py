@@ -9,16 +9,16 @@ import numpy as np
 from d3m.container import dataset
 from d3m import container, exceptions, runtime
 from d3m.base import utils as base_utils
-from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
+from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run, hyperparams
 from d3m.metadata.problem import PerformanceMetricBase, PerformanceMetric
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import (
     Pipeline,
     PlaceholderStep,
     Resolver,
-    hyperparams,
-    PrimitiveStep,
 )
+from multiprocessing import Process
+from queue import Queue
 import math
 import shutil
 import pandas as pd
@@ -37,6 +37,7 @@ from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.extract_columns_semantic_types import (
     ExtractColumnsBySemanticTypesPrimitive,
 )
+import time
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 
 
@@ -81,8 +82,7 @@ def create(
     gpu = _use_gpu()
 
     # how long to allow hyperparam tuning to run for
-    timeout = 600
-
+    timeout = 60 * 10
 
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
@@ -629,7 +629,7 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
 
 
 
-from multiprocessing import Process, Queue
+
 
 def hyperparam_tune(pipeline, problem, dataset,timeout=600):
     # train test split dataset
@@ -668,47 +668,84 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=600):
     alg.next_trial = None
     scheduler = sherpa.schedulers.LocalScheduler()
     stopping_rule = sherpa.algorithms.MedianStoppingRule(min_iterations=1, min_trials=5)
-    q = Queue()
-    def run_sherpa_optimize(fun, q, **kwargs):
-        q.put(fun(**kwargs))
+    def run_sherpa_optimize(fun, **kwargs):
+        fun(**kwargs)
 
-    try:
-        p = Process(target=run_sherpa_optimize, args = (sherpa.optimize, q), kwargs={"parameters": params,
-                                  "algorithm": alg,
-                                  "stopping_rule": stopping_rule, # todo this isn't working
-                                  "lower_is_better": lower_is_better,
-                                  "command" :  "python ./processing/run_sherpa.py",
-                                  "output_dir": f"./sherpa_temp/{pipeline.id}",
-                                  "scheduler": scheduler,
-                                  "max_concurrent": 16,
-                                  "verbose": 2}, name="hyperparameter tune")
-        p.start()
 
-        final_result = q.get(timeout=timeout)
-        p.join()
-        p.terminate()
-    except Exception as e:
-        p.terminate()
-        print(e)
+    p = Process(target=run_sherpa_optimize, args = (sherpa.optimize, ), kwargs={"parameters": params,
+                              "algorithm": alg,
+                              "stopping_rule": stopping_rule, # todo this isn't working
+                              "lower_is_better": lower_is_better,
+                              "command" :  "python ./processing/run_sherpa.py",
+                              "output_dir": f"./sherpa_temp/{pipeline.id}",
+                              "scheduler": scheduler,
+                              "max_concurrent": 16,
+                              "verbose": 2}, name="hyperparameter tune", )
+
+    p.start()
+    start = time.time()
+    while time.time() - start <= timeout:
+
+        if not p.is_alive():
+            print("All the processes are done, break now.")
+            p.join()
+            break
+
+        time.sleep(1)  # Just to avoid hogging the CPU
+
+    else:
+        # We only enter this if we didn't 'break' above.
+        print("timed out, killing all processes")
+        print(scheduler.jobs)
+        # import ipdb;
+        # ipdb.set_trace()
+        p.join(1)
+        if p.is_alive():
+            p.terminate()
+
+
         print("timeout on {final_result}")
 
-        all_subdirs = [os.path.join("./sherpa_temp", d) for d in os.listdir('./sherpa_temp')]
-        output_dir = max(all_subdirs, key=os.path.getmtime)
-        if os.path.isfile(os.path.join(output_dir, "results.csv")): # there were result before timeout
-            results = pd.read_csv(os.path.join(output_dir, "results.csv"))
-            final_result = alg.get_best_result(parameters=None, results=results, lower_is_better=lower_is_better)
-            # clean up
+    all_subdirs = [os.path.join("./sherpa_temp", d) for d in os.listdir('./sherpa_temp')]
+    output_dir = max(all_subdirs, key=os.path.getmtime)
+
+    if os.path.isfile(os.path.join(output_dir, "results.csv")):  # there were result before timeout
+        results = pd.read_csv(os.path.join(output_dir, "results.csv"))
+        final_result = alg.get_best_result(parameters=None, results=results, lower_is_better=lower_is_better)
+        # clean up
 
 
-        else:
-            final_result = {"Objective": None}
-            final_result.update(defaults[0])
-    # final_result = study.get_best_result()
+    else:
+        final_result = {"Objective": None}
+        final_result.update(defaults[0])
+
+        # final_result = q.get(timeout=timeout)
+        # p.join()
+        # p.terminate()
+        # p.join()
+        # q.task_done()
+    # except Exception as e:
+    #     p.terminate()
+    #     p.join()
+    #     q.task_done()
+    #     print(e)
+    #     print("timeout on {final_result}")
+    #
+    #     all_subdirs = [os.path.join("./sherpa_temp", d) for d in os.listdir('./sherpa_temp')]
+    #     output_dir = max(all_subdirs, key=os.path.getmtime)
+    #     if os.path.isfile(os.path.join(output_dir, "results.csv")): # there were result before timeout
+    #         results = pd.read_csv(os.path.join(output_dir, "results.csv"))
+    #         final_result = alg.get_best_result(parameters=None, results=results, lower_is_better=lower_is_better)
+    #         # clean up
+    #
+    #
+    #     else:
+    #         final_result = {"Objective": None}
+    #         final_result.update(defaults[0])
 
     if final_result.get("Objective", 9e5) == 9e5:
         return None
     # recreate final pipeline
-
     final_pipeline = pipeline
     step_params = defaultdict(dict)
     for name, param in final_result.items():
@@ -741,7 +778,7 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=600):
                                     # tuple as string. todo figure out another way to parse strings
                                     value = tuple(value.replace("'", '')[1:-1].split(','))
                                     # todo check what type it expects
-                                    value = list(int(x.strip()) for x in value if x.strip().isdigit())
+                                    value = list(int(x.strip()) if x.strip().isdigit() else x.strip() for x in value)
                             step.add_hyperparameter(
                                 name=name, argument_type=ArgumentType.VALUE, data=value
                             )
@@ -749,6 +786,3 @@ def hyperparam_tune(pipeline, problem, dataset,timeout=600):
                         import pdb; pdb.set_trace()
                         print(e)
     return final_pipeline
-=======
-    return use_gpu
->>>>>>> master
