@@ -1,28 +1,29 @@
-import sherpa
-from collections import defaultdict
-import pickle
-from d3m.metadata.base import ArgumentType
-from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
-from typing import Tuple, Optional, List, Dict, Optional
-from d3m import container, exceptions, runtime
-from d3m.metrics import class_map
-import traceback
-import sys
 import os
-from d3m.metadata.problem import PerformanceMetricBase, PerformanceMetric
+import pickle
+import sys
+import traceback
 import typing
+from collections import defaultdict
+from typing import Tuple, Optional
+
+import sherpa
+from d3m import container, runtime
+from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
+from d3m.metadata.base import ArgumentType
+from d3m.metadata.problem import PerformanceMetricBase, PerformanceMetric
+from d3m.metrics import class_map
 from sklearn.model_selection import train_test_split
 
 
 def fit(
-        pipeline: pipeline.Pipeline,
-        problem: problem.Problem,
-        input_dataset: container.Dataset,
-        is_standard_pipeline=True,
+    pipeline: pipeline.Pipeline,
+    problem: problem.Problem,
+    input_dataset: container.Dataset,
+    is_standard_pipeline=True,
 ) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
     hyperparams = None
     random_seed = 0
-    volumes_dir = os.getenv("D3MSTATICDIR", '/static')
+    volumes_dir = os.getenv("D3MSTATICDIR", "/static")
 
     fitted_runtime, _, result = runtime.fit(
         pipeline,
@@ -43,7 +44,7 @@ def fit(
 
 
 def produce_pipeline(
-        fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset
+    fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset
 ) -> runtime.Result:
     output, result = runtime.produce(
         fitted_pipeline, [input_dataset], expose_produced_outputs=True
@@ -56,20 +57,25 @@ def produce_pipeline(
 def main(client, trial):
     # Create new model.
     try:
-        with open('current_pipeline.pkl', 'rb') as f:
+        with open("current_pipeline.pkl", "rb") as f:
             pipeline = pickle.load(f)
-        with open('dataset.pkl', 'rb') as f:
+        with open("dataset.pkl", "rb") as f:
             dataset = pickle.load(f)
-        with open('problem.pkl', 'rb') as f:
+        with open("problem.pkl", "rb") as f:
             problem = pickle.load(f)
 
         # split = int(len(dataset["learningData"]) * 0.8)
         train_dataset = dataset.copy()
         test_dataset = dataset.copy()
-        train_dataset['learningData'], test_dataset['learningData'] = train_test_split(train_dataset['learningData'],
-                                                                                       random_state=42, shuffle=False)
-        train_dataset['learningData'] = train_dataset['learningData'].reset_index(drop=True)
-        test_dataset['learningData'] = test_dataset['learningData'].reset_index(drop=True)
+        train_dataset["learningData"], test_dataset["learningData"] = train_test_split(
+            train_dataset["learningData"], random_state=42, shuffle=False
+        )
+        train_dataset["learningData"] = train_dataset["learningData"].reset_index(
+            drop=True
+        )
+        test_dataset["learningData"] = test_dataset["learningData"].reset_index(
+            drop=True
+        )
         # test_dataset = dataset.copy()
         # train_dataset["learningData"] = train_dataset["learningData"][:split]
         # # train_dataset['0'] = train_dataset['0'][:split]
@@ -96,7 +102,7 @@ def main(client, trial):
         }
 
         performance_metric_ref = problem["problem"]["performance_metrics"][0]
-        lower_is_better_sign = metric_map[performance_metric_ref['metric']]
+        lower_is_better_sign = metric_map[performance_metric_ref["metric"]]
 
         trial_pipeline = pipeline
         step_params = defaultdict(dict)
@@ -140,11 +146,10 @@ def main(client, trial):
         traceback.print_exc(file=sys.stdout)
         score = 9e5 * lower_is_better_sign
 
-    client.send_metrics(trial=trial, iteration=i + 1,
-                        objective=score)
+    client.send_metrics(trial=trial, iteration=i + 1, objective=score)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     client = sherpa.Client()
     trial = client.get_trial()
     main(client, trial)

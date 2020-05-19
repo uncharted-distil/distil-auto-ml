@@ -153,9 +153,15 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
         fitted_solution_uri = _unary_unary_interceptor(self, 'SaveFittedSolution', context, request)
         return self.msg.make_save_fitted_solution_response(fitted_solution_uri)
 
-    def UpdateProblem(self, request, context):
-        # WONTFIX
-        context.abort(grpc.StatusCode.UNIMPLEMENTED, self.UNIMPLEMENTED_MSG)
+    def LoadSolution(self, request, context):
+        self.logger.debug("LoadSolution: {}".format(request))
+        solution_id = _unary_unary_interceptor(self, 'LoadSolution', context, request)
+        return self.msg.make_load_solution_response(solution_id)
+
+    def LoadFittedSolution(self, request, context):
+        self.logger.debug("LoadFittedSolution: {}".format(request))
+        fitted_solution_id = _unary_unary_interceptor(self, 'LoadFittedSolution', context, request)
+        return self.msg.make_load_fitted_solution_response(fitted_solution_id)
 
     def ListPrimitives(self, request, context):
         self.logger.debug("ListPrimitives: {}".format(request))
