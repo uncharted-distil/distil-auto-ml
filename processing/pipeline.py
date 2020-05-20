@@ -27,14 +27,14 @@ from processing.pipelines import (
     graph_matching,
     image,
     object_detection,
-    object_detection_yolo,
+    # object_detection_yolo,
     question_answer,
     tabular,
     text,
     text_sent2vec,
     link_prediction,
     link_prediction_jhu,
-    audio,
+    # audio,
     vertex_nomination,
     vertex_nomination_jhu,
     vertex_classification,
@@ -180,8 +180,8 @@ def create(
         pipelines.append(
             object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
         )
-    elif pipeline_type == "audio":
-        pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))
+    # elif pipeline_type == "audio":
+    #     pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))
     elif pipeline_type == "collaborative_filtering":
         if gpu:
             pipelines.append(
