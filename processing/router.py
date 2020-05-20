@@ -83,7 +83,15 @@ def is_audio(dataset_doc: dict) -> bool:
 def is_image(dataset_doc: dict, problem: dict) -> bool:
     classification = _problem.TaskKeyword.CLASSIFICATION in problem['problem']['task_keywords']
     regression = _problem.TaskKeyword.REGRESSION in problem['problem']['task_keywords']
-    return 'image' in get_resource_types(dataset_doc) and (classification or regression)
+    remote_sensing = _problem.TaskKeyword.REMOTE_SENSING in problem['problem']['task_keywords']
+    return 'image' in get_resource_types(dataset_doc) and (classification or regression) and not remote_sensing
+
+
+def is_remote_sensing(dataset_doc: dict, problem: dict) -> bool:
+    classification = _problem.TaskKeyword.CLASSIFICATION in problem['problem']['task_keywords']
+    regression = _problem.TaskKeyword.REGRESSION in problem['problem']['task_keywords']
+    remote_sensing = _problem.TaskKeyword.REMOTE_SENSING in problem['problem']['task_keywords']
+    return 'image' in get_resource_types(dataset_doc) and (classification or regression) and remote_sensing
 
 
 def is_object_detection(problem: dict) -> bool:
@@ -176,6 +184,9 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
 
     elif is_image(dataset_doc, problem):
         return 'image', {}
+
+    elif is_remote_sensing(dataset_doc, problem):
+        return 'remote_sensing', {}
 
     elif is_object_detection(problem):
         return 'object_detection', {}

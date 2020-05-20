@@ -162,6 +162,22 @@ class RequestValidator:
 
         return fitted_solution_id
 
+    def validate_load_solution_request(self, request):
+        solution_uri = self.msg.get_solution_uri(request)
+
+        if not solution_uri:
+            raise ValueError("Must pass a solution_uri: {}".format(request))
+
+        return solution_uri
+
+    def validate_load_fitted_solution_request(self, request):
+        fitted_solution_uri = self.msg.get_fitted_solution_uri(request)
+
+        if not fitted_solution_uri:
+            raise ValueError("Must pass a fitted_solution_uri: {}".format(request))
+
+        return fitted_solution_uri
+
     def validate_get_fit_solution_results_request(self, request, session):
         return self._validate_request_exists(request, session)
 

@@ -26,6 +26,7 @@ from processing.pipelines import (
     collaborative_filtering,
     graph_matching,
     image,
+    remote_sensing,
     object_detection,
     # object_detection_yolo,
     question_answer,
@@ -166,6 +167,10 @@ def create(
         )
         pipelines.append(
             image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
+        )
+    elif pipeline_type == "remote_sensing":
+        pipelines.append(
+            remote_sensing.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
         )
     elif pipeline_type == "object_detection":
         pipelines.append(

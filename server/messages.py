@@ -139,6 +139,12 @@ class Messaging:
     def get_fitted_solution_id(self, message):
         return message.fitted_solution_id
 
+    def get_solution_uri(self, message):
+        return message.solution_uri
+
+    def get_fitted_solution_uri(self, message):
+        return message.fitted_solution_uri
+
     def make_fit_solution_message(self, request_id):
         return core_pb2.FitSolutionResponse(request_id=request_id)
 
@@ -229,6 +235,18 @@ class Messaging:
     def make_save_solution_response(self, solution_uri):
         response_msg = core_pb2.SaveSolutionResponse(
                 solution_uri=solution_uri
+        )
+        return response_msg
+
+    def make_load_fitted_solution_response(self, fitted_solution_id):
+        response_msg = core_pb2.LoadFittedSolutionResponse(
+                fitted_solution_id=fitted_solution_id
+        )
+        return response_msg
+
+    def make_load_solution_response(self, solution_id):
+        response_msg = core_pb2.LoadSolutionResponse(
+                solution_id=solution_id
         )
         return response_msg
 
