@@ -36,6 +36,7 @@ from urllib import parse as url_parse
 import frozendict
 import pandas
 from google.protobuf import timestamp_pb2
+from google.protobuf.json_format import MessageToDict
 
 from d3m import container, exceptions, utils as d3m_utils
 from d3m.container import dataset as dataset_module
@@ -445,7 +446,7 @@ def decode_problem_description(problem_description, *, strict_digest=False, prob
         'name': problem_description.name,
         'schema': problem_module.PROBLEM_SCHEMA_VERSION,
         'problem': {
-            'task_keywords': [problem_module.TaskKeyword(task_keyword) for task_keyword in problem_description.problem.task_keywords],
+            'task_keywords': MessageToDict(problem_description)['problem']['taskKeywords'],
         },
     }
 
