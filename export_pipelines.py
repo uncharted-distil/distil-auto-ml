@@ -21,7 +21,7 @@ META_DIR = 'pipelines'
 PIPE_TO_DATASET = {
     'tabular': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', {'profiler': 'simon', 'use_boost': False}),
     'audio': ('31_urbansound_MIN_METADATA', 'accuracy', {}),
-    'clustering': ('1491_one_hundred_plants_margin_clust_MIN_METADATA', 'normalizedMutualInformation', {
+    'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', {
         'num_clusters': 100,
         'cluster_col_name': 'Class'
     }),
@@ -119,12 +119,16 @@ if __name__ == '__main__':
                     f.write(json.dumps(pipe_json, indent=4))
                     f.write('\n')
 
+            # account for the d3m datasets being organized such that clustering is off in its own directory
+            dataset_prob_dir = dataset_to_use
+            if p == 'clustering': dataset_to_use = f'../seed_datasets_unsupervised/{dataset_to_use}'
+
             # Generate a convenience run file
             runtime_args = f'-v $D3MSTATICDIR -d $D3MINPUTDIR'
-            problem_arg = f'-r $D3MINPUTDIR/{dataset_to_use}/{dataset_to_use}_problem/problemDoc.json'
+            problem_arg = f'-r $D3MINPUTDIR/{dataset_to_use}/{dataset_prob_dir}_problem/problemDoc.json'
             train_arg = f'\t-i $D3MINPUTDIR/{dataset_to_use}/TRAIN/dataset_TRAIN/datasetDoc.json'
             test_arg = f'-t $D3MINPUTDIR/{dataset_to_use}/TEST/dataset_TEST/datasetDoc.json'
-            if (os.path.isfile('$D3MINPUTDIR/' + dataset_to_use + '/SCORE/dataset_TEST/datasetDoc.json')):
+            if (os.path.isfile(os.path.expandvars('$D3MINPUTDIR/' + dataset_to_use + '/SCORE/dataset_TEST/datasetDoc.json'))):
                 score_arg = f'-a $D3MINPUTDIR/{dataset_to_use}/SCORE/dataset_TEST/datasetDoc.json'
             else:
                 score_arg = f'-a $D3MINPUTDIR/{dataset_to_use}/SCORE/dataset_SCORE/datasetDoc.json'
