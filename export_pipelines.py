@@ -25,7 +25,7 @@ PIPE_TO_DATASET = {
         'num_clusters': 100,
         'cluster_col_name': 'Class'
     }),
-    'collaborative_filtering': ('60_jester_MIN_METADATA', 'meanAbsoluteError', {}),
+    'collaborative_filtering': ('60_jester_MIN_METADATA', 'meanAbsoluteError', {'min_meta': True}),
     'community_detection': ('6_70_com_amazon_MIN_METADATA', 'normalizedMutualInformation', {}),
     'graph_matching': ('49_facebook_MIN_METADATA', 'accuracy', {}),
     'image': ('22_handgeometry_MIN_METADATA', 'meanSquaredError', {}),
