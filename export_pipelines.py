@@ -23,7 +23,8 @@ PIPE_TO_DATASET = {
     'audio': ('31_urbansound_MIN_METADATA', 'accuracy', {}),
     'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', {
         'num_clusters': 100,
-        'cluster_col_name': 'Class'
+        'cluster_col_name': 'Class',
+        'profiler': 'simon'
     }),
     'collaborative_filtering': ('60_jester_MIN_METADATA', 'meanAbsoluteError', {'min_meta': True}),
     'community_detection': ('6_70_com_amazon_MIN_METADATA', 'normalizedMutualInformation', {}),

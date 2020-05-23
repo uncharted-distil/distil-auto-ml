@@ -17,11 +17,14 @@ from distil.primitives.text_encoder import TextEncoderPrimitive
 from distil.primitives.enrich_dates import EnrichDatesPrimitive
 from distil.primitives.k_means import KMeansPrimitive
 
+from d3m.primitives.data_cleaning.column_type_profiler import Simon
+
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.remove_columns import RemoveColumnsPrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
+from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
 from sklearn_wrap import SKMissingIndicator
 from sklearn_wrap import SKImputer
@@ -35,7 +38,8 @@ def create_pipeline(metric: str,
                     scale: bool = False,
                     num_clusters: int = 100,
                     cluster_col_name = None,
-                    resolver: Optional[Resolver] = None) -> Pipeline:
+                    resolver: Optional[Resolver] = None,
+                    profiler: str = '') -> Pipeline:
     previous_step = 0
     input_val = 'steps.{}.produce'
 
@@ -49,6 +53,23 @@ def create_pipeline(metric: str,
     step.add_output('produce')
     tabular_pipeline.add_step(step)
     previous_step = 0
+
+    if profiler == 'simon':
+        step = PrimitiveStep(primitive_description=Simon.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
+                          data_reference=input_val.format(previous_step))
+        step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
+        step.add_output('produce')
+        tabular_pipeline.add_step(step)
+        previous_step += 1
+    elif profiler =='simple':
+        step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
+                          data_reference=input_val.format(previous_step))
+        step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
+        step.add_output('produce')
+        tabular_pipeline.add_step(step)
+        previous_step += 1
 
     # Parse columns.
     step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)
