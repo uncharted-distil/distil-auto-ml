@@ -70,7 +70,6 @@ SUBMISSION_SUBSET = set([
     'question_answer',
     'text',
     'vertex_nomination',
-    'vertex_classification',
     'semisupervised_tabular'
 ])
 
