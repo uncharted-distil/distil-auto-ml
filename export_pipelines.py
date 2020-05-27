@@ -103,7 +103,10 @@ def strip_digests(pipeline_json):
         del step['primitive']['digest']
 
 if __name__ == '__main__':
-    submission_only = (sys.argv[1] == '--submission')
+    submission_only = False
+    if len(sys.argv) > 1:
+        submission_only = sys.argv[1] == '--submission'
+
     print(f'Submission only: {submission_only}')
 
     # create a hash of the existing invariant pipeline file contents, and a map
