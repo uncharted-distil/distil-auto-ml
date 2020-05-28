@@ -47,7 +47,7 @@ PIPE_TO_DATASET = {
     'timeseries_forecasting': ('56_sunspots_monthly_MIN_METADATA', 'rootMeanSquaredError', {}),
     'timeseries_classification': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
     'timeseries_kanine': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
-    'timeseries_var': ('LL1_736_population_spawn_simpler_MN_METADATA', 'meanAbsoluteError', {}),
+    'timeseries_var': ('LL1_736_population_spawn_simpler_MIN_METADATA', 'meanAbsoluteError', {}),
     'timeseries_deepar': ('LL1_736_population_spawn_MIN_METADATA', 'meanAbsoluteError', {}),
     'vertex_nomination': ('LL1_net_nomination_seed_MIN_METADATA', 'accuracy', {}),
     'vertex_classification': ('LL1_VTXC_1369_synthetic_MIN_METADATA', 'f1Macro', {}),
