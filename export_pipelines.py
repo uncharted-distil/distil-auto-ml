@@ -29,7 +29,7 @@ META_DIR = 'pipelines'
 # Map of default datasets to configure .meta files
 # and metric for pipeline config.  This is intended to cover the full set of pipelines.
 PIPE_TO_DATASET = {
-    'tabular': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', {'profiler': 'simon', 'use_boost': False}),
+    'tabular': ('185_baseball_MIN_METADATA', 'f1Macro', {'profiler': 'simon', 'use_boost': False}),
     'audio': ('31_urbansound_MIN_METADATA', 'accuracy', {}),
     'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', {
         'num_clusters': 100,
@@ -103,7 +103,10 @@ def strip_digests(pipeline_json):
         del step['primitive']['digest']
 
 if __name__ == '__main__':
-    submission_only = (sys.argv[1] == '--submission')
+    submission_only = False
+    if len(sys.argv) > 1:
+        submission_only = sys.argv[1] == '--submission'
+
     print(f'Submission only: {submission_only}')
 
     # create a hash of the existing invariant pipeline file contents, and a map

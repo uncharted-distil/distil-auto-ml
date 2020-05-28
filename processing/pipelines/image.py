@@ -24,18 +24,7 @@ from d3m.primitives.data_preprocessing.dataset_sample import Common as DatasetSa
 
 PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
 
-# CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
-# in a naively implemented state for readability for now.
-#
-# Overall implementation relies on passing the entire dataset through the pipeline, with the primitives
-# identifying columns to operate on based on type.  Alternative implementation (that better lines up with
-# D3M approach, but generates more complex pipelines) would be to extract sub-sets by semantic type using
-# a common primitive, apply the type-specific primitive to the sub-set, and then merge the changes
-# (replace or join) back into the original data.
 def create_pipeline(metric: str,
-                    cat_mode: str = 'one_hot',
-                    max_one_hot: int = 16,
-                    scale: bool = False,
                     min_meta: bool = False,
                     sample: bool = False,
                     resolver: Optional[Resolver] = None) -> Pipeline:
