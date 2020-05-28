@@ -29,7 +29,7 @@ META_DIR = 'pipelines'
 # Map of default datasets to configure .meta files
 # and metric for pipeline config.  This is intended to cover the full set of pipelines.
 PIPE_TO_DATASET = {
-    'tabular': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', {'profiler': 'simon', 'use_boost': False}),
+    'tabular': ('185_baseball_MIN_METADATA', 'f1Macro', {'profiler': 'simon', 'use_boost': False}),
     'audio': ('31_urbansound_MIN_METADATA', 'accuracy', {}),
     'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', {
         'num_clusters': 100,
@@ -47,7 +47,7 @@ PIPE_TO_DATASET = {
     'timeseries_forecasting': ('56_sunspots_monthly_MIN_METADATA', 'rootMeanSquaredError', {}),
     'timeseries_classification': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
     'timeseries_kanine': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
-    'timeseries_var': ('LL1_736_population_spawn_simpler_MIN_METADATA', 'meanAbsoluteError', {}),
+    'timeseries_var': ('LL1_736_population_spawn_simpler_MN_METADATA', 'meanAbsoluteError', {}),
     'timeseries_deepar': ('LL1_736_population_spawn_MIN_METADATA', 'meanAbsoluteError', {}),
     'vertex_nomination': ('LL1_net_nomination_seed_MIN_METADATA', 'accuracy', {}),
     'vertex_classification': ('LL1_VTXC_1369_synthetic_MIN_METADATA', 'f1Macro', {}),
