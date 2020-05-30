@@ -4,7 +4,7 @@ from d3m.metadata.base import ArgumentType
 
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.denormalize import DenormalizePrimitive
-from d3m.primitives.object_detection import retinanet as RetinanetPrimitive
+from d3m.primitives.object_detection.retina_net import ObjectDetectionRN
 
 
 def create_pipeline(metric: str,
@@ -34,7 +34,7 @@ def create_pipeline(metric: str,
     objdetect_pipeline.add_step(step)
 
     # step 4 - extract objects
-    step = PrimitiveStep(primitive_description=RetinanetPrimitive.metadata.query(), resolver=resolver)
+    step = PrimitiveStep(primitive_description=ObjectDetectionRN.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
     step.add_hyperparameter('n_epochs', ArgumentType.VALUE, 30)
