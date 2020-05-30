@@ -439,13 +439,17 @@ def decode_problem_description(problem_description, *, strict_digest=False, prob
     if problem_class is None:
         problem_class = problem_module.Problem
 
+    # CDB: current ta3ta2 API still treats task keywords as enums, but runtime has been updated to expect
+    # strings.  For temporary compat, we fetch the name of the GRPC enum value and pass that to the runtime.
+    grpc_task_names = [problem_pb2.TaskKeyword.Name(task_keyword) for task_keyword in problem_description.problem.task_keywords]
+
     description = {
         'id': problem_description.id,
         'version': problem_description.version,
         'name': problem_description.name,
         'schema': problem_module.PROBLEM_SCHEMA_VERSION,
         'problem': {
-            'task_keywords': [problem_module.TaskKeyword(task_keyword) for task_keyword in problem_description.problem.task_keywords],
+            'task_keywords': [problem_module.TaskKeyword(grpc_task_keyword) for grpc_task_keyword in grpc_task_names],
         },
     }
 
@@ -549,7 +553,6 @@ def decode_problem_description(problem_description, *, strict_digest=False, prob
                         'new_problem_digest': description['digest'],
                     },
                 )
-
     return problem_class(description)
 
 
@@ -953,7 +956,8 @@ def decode_performance_metric(metric):
     try:
         metric_value = problem_module.PerformanceMetric(metric.metric)
     except ValueError:
-        metric_value = problem_pb2.PerformanceMetric.Name(metric.metric)
+        metric_enum_name = problem_pb2.PerformanceMetric.Name(metric.metric)
+        metric_value = problem_module.PerformanceMetric(metric_enum_name)
 
     decoded_metric = {
         'metric': metric_value,
