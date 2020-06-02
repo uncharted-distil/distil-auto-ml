@@ -48,12 +48,13 @@ PIPE_TO_DATASET = {
     'timeseries_classification': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
     'timeseries_kanine': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
     'timeseries_var': ('LL1_736_population_spawn_simpler_MIN_METADATA', 'meanAbsoluteError', {}),
-    'timeseries_deepar': ('LL1_736_population_spawn_MIN_METADATA', 'meanAbsoluteError', {}),
+    'timeseries_deepar': ('56_sunspots_MIN_METADATA', 'meanAbsoluteError', {}),
     'vertex_nomination': ('LL1_net_nomination_seed_MIN_METADATA', 'accuracy', {}),
     'vertex_classification': ('LL1_VTXC_1369_synthetic_MIN_METADATA', 'f1Macro', {}),
     'semisupervised_tabular': ('SEMI_1040_sylva_prior_MIN_METADATA', 'f1Macro', {}),
     'timeseries_lstm_fcn': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
-    'data_augmentation_tabular': ('DA_ny_taxi_demand_MIN_METADATA', 'meanAbsoluteError', {})
+    'data_augmentation_tabular': ('DA_ny_taxi_demand_MIN_METADATA', 'meanAbsoluteError', {}),
+    'remote_sensing': ('big-earth-sample', 'f1Macro', {})
 }
 
 # Subset of pipelines that are aimed at coverage of only the primitives that we intend to
