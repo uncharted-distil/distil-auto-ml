@@ -40,6 +40,7 @@ def create_pipeline(metric: str,
                     scale: bool = False,
                     min_meta: bool = False,
                     sample: bool = False,
+                    grid_search: bool = False,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
     # create the basic pipeline
@@ -96,6 +97,7 @@ def create_pipeline(metric: str,
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
     step.add_output('produce')
     image_pipeline.add_step(step)
+    step.add_hyperparameter('batch_size', ArgumentType.VALUE, 128)
     previous_step += 1
     input_step = previous_step
 
@@ -116,6 +118,7 @@ def create_pipeline(metric: str,
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
+    step.add_hyperparameter('grid_search', ArgumentType.VALUE, grid_search)
     image_pipeline.add_step(step)
     previous_step += 1
 
