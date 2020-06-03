@@ -44,7 +44,7 @@ PIPE_TO_DATASET = {
     'link_prediction': ('59_umls_MIN_METADATA', 'accuracy', {}),
     'question_answer': ('32_wikiqa_MIN_METADATA', 'f1', {}),
     'text': ('30_personae_MIN_METADATA', 'f1', {}),
-    'text_sent2vec': ('30_personae_MIN_METADATA', 'f1', {}),
+    'text_sent2vec': ('LL1_TXT_CLS_3746_newsgroup_MIN_METADATA', 'accuracy', {}),
     'timeseries_forecasting': ('56_sunspots_monthly_MIN_METADATA', 'rootMeanSquaredError', {}),
     'timeseries_classification': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
     'timeseries_kanine': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
