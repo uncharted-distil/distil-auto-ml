@@ -37,7 +37,7 @@ from processing.pipelines import (
     # link_prediction_jhu,
     audio,
     vertex_nomination,
-    vertex_nomination_jhu,
+    # vertex_nomination_jhu,
     # vertex_classification,
     community_detection,
     timeseries_kanine,
