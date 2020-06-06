@@ -170,9 +170,9 @@ class Scorer:
             self.logger.warning("Pipleine produced > 1 outputs. Scoring first output only.")
         result_df = results.values['outputs.0']
         # d3m predictions format columns are [d3mIndex, prediction, weight (optional)]
-        result_series = result_df.iloc[:, 1]
         result_df = result_df.set_index(result_df['d3mIndex'])
         result_df.index = result_df.index.map(int)
+        result_df.sort_index(inplace=True)
 
         # put the ground truth predictions into a single col dataframe with the d3mIndex
         # as the index
@@ -180,6 +180,7 @@ class Scorer:
         true_df = true_df.set_index(pd.to_numeric(true_df['d3mIndex']))
         # make sure the result and truth have the same d3mIndex
         true_df = true_df.loc[result_df.index.unique()]
+        true_df.sort_index(inplace=True)
 
         true_series = true_df.iloc[:, self.target_idx]
         true_series = true_series.astype(result_series.dtype)
