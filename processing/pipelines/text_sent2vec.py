@@ -3,10 +3,18 @@ from d3m.metadata.pipeline import Resolver
 from d3m import index
 from d3m.metadata.base import ArgumentType, Context
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep
+from d3m.primitives.feature_extraction.nk_sent2vec import Sent2Vec
+from d3m.primitives.data_cleaning.column_type_profiler import Simon
+from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
+from common_primitives.construct_predictions import ConstructPredictionsPrimitive
+from common_primitives.denormalize import DenormalizePrimitive
+from common_primitives.text_reader import TextReaderPrimitive
+from common_primitives.column_parser import ColumnParserPrimitive
+from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
+from distil.primitives.ensemble_forest import EnsembleForestPrimitive
+
 import logging
-
 logging.basicConfig(level=logging.DEBUG)
-
 
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
 # in a naively implemented state for readability for now.
@@ -22,80 +30,104 @@ def create_pipeline(metric: str,
                     scale: bool = False,
                     min_meta: bool = False,
                     resolver: Optional[Resolver] = None) -> Pipeline:
-    # Creating pipeline
-    pipeline_description = Pipeline()
-    pipeline_description.add_input(name="inputs")
 
-    # Step 0: Denormalize primitive
-    step_0 = PrimitiveStep(
-        primitive=index.get_primitive(
-            "d3m.primitives.data_transformation.denormalize.Common"
-        )
-    )
-    step_0.add_argument(
-        name="inputs", argument_type=ArgumentType.CONTAINER, data_reference="inputs.0"
-    )
-    step_0.add_output("produce")
-    pipeline_description.add_step(step_0)
+    # create the basic pipeline
+    input_val = 'steps.{}.produce'
+    text_pipeline = Pipeline()
+    text_pipeline.add_input(name='inputs')
 
-    # Step 1: dataset_to_dataframe
-    step_1 = PrimitiveStep(
-        primitive=index.get_primitive(
-            "d3m.primitives.data_transformation.dataset_to_dataframe.Common"
-        )
-    )
-    step_1.add_argument(
-        name="inputs",
-        argument_type=ArgumentType.CONTAINER,
-        data_reference="steps.0.produce",
-    )
-    step_1.add_hyperparameter(
-        name="dataframe_resource", argument_type=ArgumentType.VALUE, data="learningData"
-    )
-    step_1.add_output("produce")
-    pipeline_description.add_step(step_1)
+    # step 0 - denormalize dataframe (injects semantic type information)
+    step = PrimitiveStep(primitive_description=DenormalizePrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='inputs.0')
+    step.add_output('produce')
+    text_pipeline.add_step(step)
+    previous_step = 0
 
-    # Step 2: sent2vec_wrapper primitive
-    step_2 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.feature_extraction.nk_sent2vec.Sent2Vec'))
-    step_2.add_argument(
-        name="inputs",
-        argument_type=ArgumentType.CONTAINER,
-        data_reference="steps.1.produce",
-    )
-    step_2.add_output("produce")
-    pipeline_description.add_step(step_2)
+    # step 1 - extract dataframe from dataset
+    step = PrimitiveStep(primitive_description=DatasetToDataFramePrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    text_pipeline.add_step(step)
+    previous_step += 1
 
-    # Step 3: column_parser
-    step_3 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.data_transformation.column_parser.Common'))
-    step_3.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.2.produce')
-    step_3.add_output('produce')
-    pipeline_description.add_step(step_3)
 
-    # # Step 4: imputer
-    # step_3 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.data_cleaning.imputer.SKlearn'))
-    # step_3.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.2.produce')
-    # step_3.add_output('produce')
-    # step_3.add_hyperparameter(name='return_result', argument_type=ArgumentType.VALUE,data='replace')
-    # step_3.add_hyperparameter(name='use_semantic_types', argument_type=ArgumentType.VALUE,data=True)
-    # pipeline_description.add_step(step_3)
+    # step 2 - read text
+    step = PrimitiveStep(primitive_description=TextReaderPrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    step.add_hyperparameter('use_columns', ArgumentType.VALUE,[0,1])
+    step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
+    text_pipeline.add_step(step)
+    previous_step += 1
 
-    # Step 4: Gradient boosting classifier
-    step_4 = PrimitiveStep(primitive=index.get_primitive('d3m.primitives.classification.xgboost_gbtree.Common'))
-    step_4.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
-    step_4.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.3.produce')
-    step_4.add_output('produce')
-    step_4.add_hyperparameter(name='return_result', argument_type=ArgumentType.VALUE, data='replace')
-    pipeline_description.add_step(step_4)
+    if min_meta:
+        step = PrimitiveStep(primitive_description=Simon.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+        step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
+        step.add_output('produce')
+        text_pipeline.add_step(step)
+        previous_step += 1
 
-    # Step 5: construct output
-    step_5 = PrimitiveStep(
-        primitive=index.get_primitive('d3m.primitives.data_transformation.construct_predictions.Common'))
-    step_5.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.4.produce')
-    step_5.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
-    step_5.add_output('produce')
-    pipeline_description.add_step(step_5)
 
-    # Final Output
-    pipeline_description.add_output(name='output predictions', data_reference='steps.5.produce')
+    # step 3 - Parse columns.
+    step = PrimitiveStep(primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    semantic_types = ('http://schema.org/Boolean', 'http://schema.org/Integer', 'http://schema.org/Float',
+                      'https://metadata.datadrivendiscovery.org/types/FloatVector')
+    step.add_hyperparameter('parse_semantic_types', ArgumentType.VALUE, semantic_types)
+    text_pipeline.add_step(step)
+    previous_step += 1
+    parse_step = previous_step
 
-    return pipeline_description
+
+    # step 4 - Extract attributes
+    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
+    step.add_output('produce')
+    step.add_hyperparameter('semantic_types', ArgumentType.VALUE, ('https://metadata.datadrivendiscovery.org/types/Attribute',))
+    text_pipeline.add_step(step)
+    previous_step += 1
+    attibute_step = previous_step
+
+    # step 5 - Extract targets
+    step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
+    step.add_output('produce')
+    target_types = ('https://metadata.datadrivendiscovery.org/types/Target', 'https://metadata.datadrivendiscovery.org/types/TrueTarget')
+    step.add_hyperparameter('semantic_types', ArgumentType.VALUE, target_types)
+    text_pipeline.add_step(step)
+    previous_step += 1
+    target_step = previous_step
+
+    # step 6 - Generate feature vectors
+    step = PrimitiveStep(primitive_description=Sent2Vec.metadata.query(), resolver=resolver)
+    step.add_argument(name="inputs", argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(attibute_step))
+    step.add_output("produce")
+    text_pipeline.add_step(step)
+    previous_step += 1
+
+    # step 6 - generates an RF model.
+    step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
+    step.add_output('produce')
+    step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
+    step.add_hyperparameter('grid_search', ArgumentType.VALUE, True)
+    text_pipeline.add_step(step)
+    previous_step += 1
+
+    # step 7 - convert predictions to expected format
+    step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
+    step.add_output('produce')
+    step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
+    text_pipeline.add_step(step)
+    previous_step += 1
+
+
+    # Adding output step to the pipeline
+    text_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
+
+    return text_pipeline

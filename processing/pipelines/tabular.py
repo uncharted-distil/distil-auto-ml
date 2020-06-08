@@ -42,6 +42,7 @@ def create_pipeline(metric: str,
                     profiler = 'none',
                     multi: bool =False,
                     use_boost: bool = True,
+                    grid_search = False,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
 
@@ -63,7 +64,8 @@ def create_pipeline(metric: str,
         step = PrimitiveStep(primitive_description=Simon.metadata.query(), resolver=resolver)
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
                           data_reference=input_val.format(previous_step))
-        # step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
+        step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
+        step.add_hyperparameter(name='multi_label_classification', argument_type=ArgumentType.VALUE, data=False)
         step.add_output('produce')
         tabular_pipeline.add_step(step)
         previous_step += 1
@@ -71,7 +73,6 @@ def create_pipeline(metric: str,
         step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
                           data_reference=input_val.format(previous_step))
-        # step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
         step.add_output('produce')
         tabular_pipeline.add_step(step)
         previous_step += 1
@@ -234,6 +235,7 @@ def create_pipeline(metric: str,
     step.add_output('produce')
     if not use_boost:
         step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
+    step.add_hyperparameter('grid_search', ArgumentType.VALUE, grid_search)
     tabular_pipeline.add_step(step)
     previous_step += 1
 

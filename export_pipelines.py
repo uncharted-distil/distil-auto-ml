@@ -29,7 +29,7 @@ META_DIR = 'pipelines'
 # Map of default datasets to configure .meta files
 # and metric for pipeline config.  This is intended to cover the full set of pipelines.
 PIPE_TO_DATASET = {
-    'tabular': ('185_baseball_MIN_METADATA', 'f1Macro', {'profiler': 'simon', 'use_boost': False}),
+    'tabular': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', {'profiler': 'simple', 'use_boost': False, 'grid_search': True}),
     'audio': ('31_urbansound_MIN_METADATA', 'accuracy', {}),
     'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', {
         'num_clusters': 100,
@@ -44,6 +44,7 @@ PIPE_TO_DATASET = {
     'link_prediction': ('59_umls_MIN_METADATA', 'accuracy', {}),
     'question_answer': ('32_wikiqa_MIN_METADATA', 'f1', {}),
     'text': ('30_personae_MIN_METADATA', 'f1', {}),
+    'text_sent2vec': ('LL1_TXT_CLS_3746_newsgroup_MIN_METADATA', 'accuracy', {}),
     'timeseries_forecasting': ('56_sunspots_monthly_MIN_METADATA', 'rootMeanSquaredError', {}),
     'timeseries_classification': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
     'timeseries_kanine': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),

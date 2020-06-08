@@ -37,7 +37,7 @@ from processing.pipelines import (
     # link_prediction_jhu,
     audio,
     vertex_nomination,
-    vertex_nomination_jhu,
+    # vertex_nomination_jhu,
     # vertex_classification,
     community_detection,
     timeseries_kanine,
@@ -170,7 +170,7 @@ def create(
         )
     elif pipeline_type == "remote_sensing":
         pipelines.append(
-            remote_sensing.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
+            remote_sensing.create_pipeline(metric=metric, resolver=resolver, grid_search=True, **pipeline_info)
         )
     elif pipeline_type == "object_detection":
         pipelines.append(
