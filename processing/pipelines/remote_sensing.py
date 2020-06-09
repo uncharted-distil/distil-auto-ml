@@ -18,7 +18,6 @@ from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
 
 from distil.primitives.satellite_image_loader import DataFrameSatelliteImageLoaderPrimitive
-from distil.primitives.prediction_expansion import PredictionExpansionPrimitive
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.image_transfer import ImageTransferPrimitive
 from d3m.primitives.data_preprocessing.dataset_sample import Common as DatasetSamplePrimitive
