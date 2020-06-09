@@ -30,6 +30,7 @@ def create_pipeline(
     # create the basic pipeline
     audio_pipeline = Pipeline()
     audio_pipeline.add_input(name="inputs")
+    tune_steps = []
 
     # step 0
     step = PrimitiveStep(
@@ -111,6 +112,7 @@ def create_pipeline(
     step.add_output("produce")
     step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
     audio_pipeline.add_step(step)
+    tune_steps.append(4)
 
     # step 5 - convert predictions to expected format
     step = PrimitiveStep(
@@ -133,4 +135,4 @@ def create_pipeline(
     # Adding output step to the pipeline
     audio_pipeline.add_output(name="output", data_reference="steps.5.produce")
 
-    return (audio_pipeline, [])
+    return (audio_pipeline, tune_steps)

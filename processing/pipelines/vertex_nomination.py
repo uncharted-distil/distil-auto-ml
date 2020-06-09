@@ -13,6 +13,7 @@ def create_pipeline(
     # create the basic pipeline
     vertex_nomination_pipeline = Pipeline()
     vertex_nomination_pipeline.add_input(name="inputs")
+    tune_steps = []
 
     # step 0 - extract the graphs
     if is_edgelist:
@@ -60,10 +61,11 @@ def create_pipeline(
     step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
     step.add_output("produce")
     vertex_nomination_pipeline.add_step(step)
+    tune_steps.append(1)
 
     # Adding output step to the pipeline
     vertex_nomination_pipeline.add_output(
         name="output", data_reference="steps.1.produce"
     )
 
-    return (vertex_nomination_pipeline, [])
+    return (vertex_nomination_pipeline, tune_steps)

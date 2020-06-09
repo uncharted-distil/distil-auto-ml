@@ -114,7 +114,7 @@ problem_thresholds = {'LL1_Haptics_MIN_METADATA': 0.41,  # F1_MACRO
                       "LL1_TXT_CLS_airline_opinion_MIN_METADATA": 0.62,  # Accuracy,
                       "LL1_TXT_CLS_apple_products_sentiment_MIN_METADATA": 0.55,  # Accuracy
                       "LL1_VTXC_1343_cora_MIN_METADATA": 0.06,  # F1_MACRO
-                      "LL1_VTXC_1369_synthetic_MIN_METADATA": 0.21,  # F1_MACRO
+                      "LL1_VTXC_1369_synthetic_MIN_METADATA": 0.20,  # F1_MACRO
                       "loan_status_MIN_METADATA": 0.35,  # F1_MACRO
                       "political_instability_MIN_METADATA": 0.83,  # F1
                       "SEMI_1040_sylva_prior_MIN_METADATA": 0.932,  # F1
@@ -238,8 +238,8 @@ def _run_seed_dataset(problem):
 
 def test_fn():
     problems = os.listdir(SEEDATASETS)
-    # for problem in problems:
-    for problem in ["32_wikiqa_MIN_METADATA"]:
+    for problem in problems:
+    # for problem in ["31_urbansound_MIN_METADATA "]:
         yield _run_seed_dataset, problem
 
     # server_process.terminate()

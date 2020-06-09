@@ -45,3 +45,6 @@ services:
       - "distil"
     volumes:
       - ./seed_datasets_current:/seed_datasets_current
+  mongodb:
+    image: 'bitnami/mongodb:latest'
+

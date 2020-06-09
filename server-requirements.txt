@@ -22,3 +22,6 @@ dill==0.2.7.1
 
 # GPU detection
 gputil==1.3.0
+
+# Hyperparameter tuning
+parameter-sherpa==1.0.6
