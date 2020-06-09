@@ -5,7 +5,7 @@ import json
 import shutil
 import sys
 
-require_pipeline_and_run = (sys.argv[1] != '-norun')
+require_pipeline_and_run = (len(sys.argv) > 1) and (sys.argv[1] != '-norun')
 print(f'Requiring pipeline and run: {require_pipeline_and_run}')
 
 def clean_pipelines(folder_path):

@@ -1,19 +1,5 @@
 from typing import Optional
 
-from d3m.metadata.pipeline import Resolver
-from d3m.metadata.base import ArgumentType
-from d3m.metadata.pipeline import Pipeline, PrimitiveStep
-from d3m.primitives.data_preprocessing.data_cleaning import DistilTimeSeriesFormatter
-from common_primitives.column_parser import ColumnParserPrimitive
-from common_primitives.extract_columns_semantic_types import (
-    ExtractColumnsBySemanticTypesPrimitive,
-)
-from d3m.primitives.time_series_classification.convolutional_neural_net import LSTM_FCN
-from common_primitives.construct_predictions import ConstructPredictionsPrimitive
-from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
-from common_primitives.simple_profiler import SimpleProfilerPrimitive
-from typing import Optional
-
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
