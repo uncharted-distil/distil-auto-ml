@@ -18,11 +18,11 @@ class Messaging:
 
     def get_problem_type(self, msg):
         _type = msg.problem.problem.task_keywords
-        if len(_type) == 0 or problem_pb2.TASK_KEYWORD_UNDEFINED in _type:
+        if len(_type) == 0:
             return False
 
         # this seems to only be used for validation, not used in router.
-        _type_str = problem_pb2.TaskKeyword.Name(_type[0]).upper()
+        _type_str = _type # everything is a string now
         return _type_str
 
     def get_search_id(self, msg):
@@ -37,11 +37,11 @@ class Messaging:
         if solution_id is not None:
            scores = [core_pb2.SolutionSearchScore(
                 scoring_configuration=core_pb2.ScoringConfiguration(
-                    method=core_pb2.RANKING
+                    method='RANK'
                 ),
                 scores=[core_pb2.Score(
                     metric=problem_pb2.ProblemPerformanceMetric(
-                        metric=problem_pb2.RANK,
+                        metric='RANK'
                     ),
                     value=value_pb2.Value(
                         raw=value_pb2.ValueRaw(
@@ -125,9 +125,9 @@ class Messaging:
         resp = core_pb2.HelloResponse(
             user_agent=config.SERVER_USER_AGENT,
             version=core_pb2.DESCRIPTOR.GetOptions().Extensions[core_pb2.protocol_version])
-        resp.allowed_value_types.append(value_pb2.RAW)
-        resp.allowed_value_types.append(value_pb2.DATASET_URI)
-        resp.allowed_value_types.append(value_pb2.CSV_URI)
+        # resp.allowed_value_types.append(value_pb2.RAW)
+        # resp.allowed_value_types.append(value_pb2.DATASET_URI)
+        # resp.allowed_value_types.append(value_pb2.CSV_URI)
         return resp
 
     def get_solution_id(self, message):

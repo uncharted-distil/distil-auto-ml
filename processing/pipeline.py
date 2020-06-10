@@ -54,7 +54,7 @@ from processing.pipelines import (
     audio,
     vertex_nomination,
     # vertex_nomination_jhu,
-    # vertex_classification,
+    vertex_classification,
     community_detection,
     timeseries_kanine,
     timeseries_var,
@@ -254,9 +254,9 @@ def create(
         pipelines.append(
             vertex_nomination.create_pipeline(metric, resolver, **pipeline_info)
         )
-        pipelines.append(
-            vertex_nomination_jhu.create_pipeline(metric, resolver, **pipeline_info)
-        )
+        # pipelines.append(
+        #     vertex_nomination_jhu.create_pipeline(metric, resolver, **pipeline_info)
+        # )
     elif pipeline_type == "vertex_classification":
         # force using vertex classification
         # TODO - should determine the graph data format
@@ -267,9 +267,9 @@ def create(
         pipelines.append(
             link_prediction.create_pipeline(metric=metric, resolver=resolver)
         )
-        pipelines.append(
-            link_prediction_jhu.create_pipeline(metric=metric, resolver=resolver)
-        )
+        # pipelines.append(
+        #     link_prediction_jhu.create_pipeline(metric=metric, resolver=resolver)
+        # )
     elif pipeline_type == "community_detection":
         pipelines.append(
             community_detection.create_pipeline(metric=metric, resolver=resolver)
@@ -336,7 +336,7 @@ def create(
             pipeline = _prepend_pipeline(pipeline, prepend)
             pipelines_prepend.append(pipeline)
         pipelines = pipelines_prepend
-    #
+
     tuned_pipelines = []
     for i, pipeline in enumerate(pipelines):
         if len(pipeline[1]) > 0:

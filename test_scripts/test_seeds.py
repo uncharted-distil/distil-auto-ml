@@ -239,7 +239,7 @@ def _run_seed_dataset(problem):
 def test_fn():
     problems = os.listdir(SEEDATASETS)
     for problem in problems:
-    # for problem in ["31_urbansound_MIN_METADATA "]:
+    # for problem in ["185_baseball_MIN_METADATA"]:
         yield _run_seed_dataset, problem
 
     # server_process.terminate()

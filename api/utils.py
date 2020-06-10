@@ -36,7 +36,6 @@ from urllib import parse as url_parse
 import frozendict
 import pandas
 from google.protobuf import timestamp_pb2
-from google.protobuf.json_format import MessageToDict
 
 from d3m import container, exceptions, utils as d3m_utils
 from d3m.container import dataset as dataset_module
@@ -66,17 +65,17 @@ class ValueType(d3m_utils.Enum):
     """
     Enumeration of possible value types.
 
-    Values are kept in sync with TA2-TA3 API's ``ValueType`` enumeration.
+    Values are kept in sync with standard TA2-TA3 API's value types.
     """
 
-    RAW = 1
-    DATASET_URI = 2
-    CSV_URI = 3
-    PICKLE_URI = 4
-    PICKLE_BLOB = 5
-    PLASMA_ID = 6
-    LARGE_RAW = 7
-    LARGE_PICKLE_BLOB = 8
+    RAW = 'RAW'
+    DATASET_URI = 'DATASET_URI'
+    CSV_URI = 'CSV_URI'
+    PICKLE_URI = 'PICKLE_URI'
+    PICKLE_BLOB = 'PICKLE_BLOB'
+    PLASMA_ID = 'PLASMA_ID'
+    LARGE_RAW = 'LARGE_RAW'
+    LARGE_PICKLE_BLOB = 'LARGE_PICKLE_BLOB'
 
 
 def _can_encode_raw(value):
@@ -236,7 +235,11 @@ def validate_uri(uri, data_directories=None):
     normalized_path = os.path.normpath(parsed_uri.path)
 
     if data_directories is not None:
-        if not any(os.path.commonpath([normalized_path, data_directory]) == data_directory for data_directory in data_directories):
+        for data_directory in data_directories:
+            data_directory = os.path.normpath(data_directory)
+            if os.path.commonpath([normalized_path, data_directory]) == data_directory:
+                break
+        else:
             raise exceptions.InvalidArgumentValueError(
                 "URI '{uri}' (path '{normalized_path}') outside data directories: {data_directories}".format(
                     uri=uri,
@@ -440,17 +443,13 @@ def decode_problem_description(problem_description, *, strict_digest=False, prob
     if problem_class is None:
         problem_class = problem_module.Problem
 
-    # CDB: current ta3ta2 API still treats task keywords as enums, but runtime has been updated to expect
-    # strings.  For temporary compat, we fetch the name of the GRPC enum value and pass that to the runtime.
-    grpc_task_names = [problem_pb2.TaskKeyword.Name(task_keyword) for task_keyword in problem_description.problem.task_keywords]
-
     description = {
         'id': problem_description.id,
         'version': problem_description.version,
         'name': problem_description.name,
         'schema': problem_module.PROBLEM_SCHEMA_VERSION,
         'problem': {
-            'task_keywords': [problem_module.TaskKeyword(grpc_task_keyword) for grpc_task_keyword in grpc_task_names],
+            'task_keywords': [problem_module.TaskKeyword(task_keyword) for task_keyword in problem_description.problem.task_keywords],
         },
     }
 
@@ -554,6 +553,7 @@ def decode_problem_description(problem_description, *, strict_digest=False, prob
                         'new_problem_digest': description['digest'],
                     },
                 )
+
     return problem_class(description)
 
 
@@ -957,8 +957,7 @@ def decode_performance_metric(metric):
     try:
         metric_value = problem_module.PerformanceMetric(metric.metric)
     except ValueError:
-        metric_enum_name = problem_pb2.PerformanceMetric.Name(metric.metric)
-        metric_value = problem_module.PerformanceMetric(metric_enum_name)
+        metric_value = metric.metric
 
     decoded_metric = {
         'metric': metric_value,
