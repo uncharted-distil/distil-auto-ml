@@ -345,6 +345,8 @@ def create_pipeline(metric: str,
     step.add_output("produce")
     if not use_boost:
         step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
+        step.add_hyperparameter('grid_search', ArgumentType.VALUE, grid_search)
+
     tabular_pipeline.add_step(step)
     previous_step += 1
     tune_steps.append(previous_step)

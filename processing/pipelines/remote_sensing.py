@@ -8,12 +8,15 @@ from common_primitives.extract_columns_semantic_types import (
     ExtractColumnsBySemanticTypesPrimitive,
 )
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
+
 from d3m import utils
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.primitives.remote_sensing.remote_sensing_pretrained import (
     RemoteSensingPretrained,
 )
+
+from distil.primitives.satellite_image_loader import DataFrameSatelliteImageLoaderPrimitive
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.prediction_expansion import PredictionExpansionPrimitive
 from distil.primitives.satellite_image_loader import (
@@ -95,7 +98,6 @@ def create_pipeline(metric: str,
     previous_step += 1
     input_step = previous_step
 
-
     # step 5 - extract targets
     step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
@@ -124,15 +126,6 @@ def create_pipeline(metric: str,
     step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
     image_pipeline.add_step(step)
     previous_step += 1
-
-    step = PrimitiveStep(primitive_description=PredictionExpansionPrimitive.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(image_step-1))
-    step.add_output('produce')
-    step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
-    image_pipeline.add_step(step)
-    previous_step += 1
-
 
     # Adding output step to the pipeline
     image_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
