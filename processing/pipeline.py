@@ -333,28 +333,34 @@ def create(
     if prepend is not None:
         pipelines_prepend = []
         for pipeline in pipelines:
-            pipeline = _prepend_pipeline(pipeline, prepend)
+            pipeline = _prepend_pipeline(pipeline[0], prepend)
             pipelines_prepend.append(pipeline)
-        pipelines = pipelines_prepend
+        pipelines = [(pipelines_prepend[i], pipeline[i][1]) for i in range(len(pipelines))]
 
     tuned_pipelines = []
+    scores = []
     for i, pipeline in enumerate(pipelines):
         if len(pipeline[1]) > 0:
             pipeline = hyperparam_tune(
                 pipeline, problem, train_dataset, timeout=timeout
             )
             if pipeline is not None:
-                tuned_pipelines.append(pipeline)
+                tuned_pipelines.append(pipeline[0])
+                if pipeline[1] is None:
+                    scores.append(np.nan)
+                else:
+                    scores.append(pipeline[1])
             else:
                 # if timeout return base pipeline
                 tuned_pipelines.append(pipelines[i][0])
+                scores.append(np.nan)
 
         else:
             tuned_pipelines.append(pipeline[0])
     # tuned_pipelines = [pipeline[0] for pipeline in pipelines]
 
     ranks: List[float] = []
-    for i in range(len(tuned_pipelines)):
+    for i in np.argsort(scores):
         ranks.append(i + 1)
 
     return tuned_pipelines, train_dataset, ranks
@@ -815,4 +821,4 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
 
                         pdb.set_trace()
                         print(e)
-    return final_pipeline
+    return final_pipeline, final_result.get("Objective")*{True:1, False:-1}[lower_is_better]

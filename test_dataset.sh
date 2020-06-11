@@ -3,7 +3,7 @@ export NUMROWS=${2:-1000}
 #  some datasets are big, it can be nice to test a subset.
 #mv ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv2
 #head -n $NUMROWS ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv
-python -m dummy_ta3.dummy_ta3 -p ./seed_datasets_current/$DATASET/TRAIN/problem_TRAIN/problemDoc.json -d ./seed_datasets_current -e 0.0.0.0 -t 45042
+python -m dummy_ta3.dummy_ta3 -p ./seed_datasets_current/$DATASET/TRAIN/problem_TRAIN/problemDoc.json -d ./seed_datasets_current -e 0.0.0.0 -t 45043
 
 echo "Ran search successfully!"
 #mv seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv2 seed_datase#
