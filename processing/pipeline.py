@@ -78,7 +78,7 @@ def create(
     gpu = _use_gpu()
 
     # how long to allow hyperparam tuning to run for
-    timeout = 60*10
+    timeout = 60 * 10
 
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
@@ -362,7 +362,7 @@ def create(
 
     ranks: List[float] = []
     for i in np.argsort(scores):
-        ranks.append(i + 1)
+        ranks.append(int(i + 1))
 
     return tuned_pipelines, train_dataset, ranks
 
@@ -696,7 +696,7 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
             "command": "python ./processing/run_sherpa.py",
             "output_dir": f"./sherpa_temp/{pipeline.id}",
             "scheduler": scheduler,
-            "max_concurrent": 16,
+            "max_concurrent": 8,
             "verbose": 2,
         },
         name="hyperparameter tune",
