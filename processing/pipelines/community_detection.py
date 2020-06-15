@@ -32,7 +32,6 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step = PrimitiveStep(primitive_description=DistilCommunityDetectionPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce')
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.0.produce_target')
-    step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     step.add_output('produce')
     vertex_nomination_pipeline.add_step(step)
 
