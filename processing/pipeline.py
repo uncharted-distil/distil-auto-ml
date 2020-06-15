@@ -60,6 +60,7 @@ from processing.pipelines import (
     timeseries_var,
     timeseries_lstm_fcn,
     semisupervised_tabular,
+    timeseries_deepar
 )
 
 # data_augmentation_tabular)
@@ -77,7 +78,7 @@ def create(
     gpu = _use_gpu()
 
     # how long to allow hyperparam tuning to run for
-    timeout = 60 * 10
+    timeout = 60*10
 
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
@@ -294,12 +295,12 @@ def create(
         pipelines.append(
             timeseries_var.create_pipeline(metric=metric, resolver=resolver)
         )
-        # if gpu:
-        #     pipelines.append(
-        #         timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
-        #     )
-        #     # avoid CUDA OOM by not using it.
-        #     os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+        if gpu:
+            pipelines.append(
+                timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
+            )
+            # avoid CUDA OOM by not using it.
+            os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
     elif pipeline_type == "semisupervised_tabular":
         exclude_column = problem["inputs"][0]["targets"][0]["column_index"]
@@ -821,4 +822,6 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
 
                         pdb.set_trace()
                         print(e)
-    return final_pipeline, final_result.get("Objective")*{True:1, False:-1}[lower_is_better]
+    if final_result.get("Objective") is None:
+        return None
+    return final_pipeline, final_result.get("Objective", 0)*{True:1, False:-1}[lower_is_better]
