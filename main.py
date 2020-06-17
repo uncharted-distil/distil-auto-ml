@@ -180,13 +180,16 @@ def search_task(logger, session, search):
             pipeline_json = pipeline_obj.to_json(nest_subpipelines=True)
 
             # save the pipeline to the DB
+            rank = 0
+            if i < len(ranks):
+                rank = ranks[i]
             solution_pipeline = models.Pipelines(id=str(uuid.uuid4()),
                                                  search_id=search.id,
                                                  pipelines=pipeline_json,
                                                  fully_specified=fully_specified,
                                                  ended=True,
                                                  error=False,
-                                                 rank=ranks[i])
+                                                 rank=rank)
             session.add(solution_pipeline)
         session.commit()
 
