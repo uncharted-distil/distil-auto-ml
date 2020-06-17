@@ -71,6 +71,7 @@ logger = logging.getLogger(__name__)
 def create(
     dataset_doc_path: str,
     problem: dict,
+    time_limit: int,
     prepend: Optional[Pipeline] = None,
     resolver: Optional[Resolver] = None,
 ) -> Tuple[List[pipeline.Pipeline], container.Dataset, List[float]]:
@@ -78,7 +79,6 @@ def create(
     gpu = _use_gpu()
 
     # how long to allow hyperparam tuning to run for
-    timeout = 60 * 10
 
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
@@ -300,7 +300,7 @@ def create(
                 timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
             )
             # avoid CUDA OOM by not using it.
-            os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+            # os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
     elif pipeline_type == "semisupervised_tabular":
         exclude_column = problem["inputs"][0]["targets"][0]["column_index"]
@@ -343,7 +343,7 @@ def create(
     for i, pipeline in enumerate(pipelines):
         if len(pipeline[1]) > 0:
             pipeline = hyperparam_tune(
-                pipeline, problem, train_dataset, timeout=timeout
+                pipeline, problem, train_dataset, timeout=time_limit/len(pipelines)
             )
             if pipeline is not None:
                 tuned_pipelines.append(pipeline[0])
