@@ -28,6 +28,7 @@ services:
     build: .
     ports:
       - 45042:45042
+      - 8880:8880
     environment:
       - D3MSTATICDIR=/static
     volumes:

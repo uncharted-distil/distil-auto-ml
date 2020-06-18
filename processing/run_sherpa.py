@@ -6,14 +6,14 @@ import typing
 from collections import defaultdict
 from typing import Tuple, Optional
 
-import sherpa
+from sherpa import Client
 from d3m import container, runtime
 from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.problem import PerformanceMetricBase, PerformanceMetric
 from d3m.metrics import class_map
 from sklearn.model_selection import train_test_split
-
+import numpy as np
 
 def fit(
     pipeline: pipeline.Pipeline,
@@ -119,6 +119,7 @@ def main(client, trial):
                             name=name, argument_type=ArgumentType.VALUE, data=value
                         )
 
+
         fitted_pipeline, predictions = fit(trial_pipeline, problem, train_dataset)
         performance_metric_ref = problem["problem"]["performance_metrics"][0]
         if "params" in performance_metric_ref:
@@ -150,6 +151,6 @@ def main(client, trial):
 
 
 if __name__ == "__main__":
-    client = sherpa.Client()
+    client = Client(port=27017, host='localhost')
     trial = client.get_trial()
     main(client, trial)

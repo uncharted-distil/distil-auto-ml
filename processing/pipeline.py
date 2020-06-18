@@ -349,7 +349,7 @@ def create(
     for i, pipeline in enumerate(pipelines):
         if len(pipeline[1]) > 0:
             pipeline = hyperparam_tune(
-                pipeline, problem, train_dataset, timeout=time_limit / len(pipelines)
+                pipeline, problem, train_dataset, timeout=(time_limit / (len(pipelines)+1))
             )
             if pipeline is not None:
                 tuned_pipelines.append(pipeline[0])
