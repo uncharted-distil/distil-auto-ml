@@ -60,8 +60,10 @@ from processing.pipelines import (
     timeseries_var,
     timeseries_lstm_fcn,
     semisupervised_tabular,
-    timeseries_deepar
+    timeseries_deepar,
 )
+import psutil
+import signal
 
 # data_augmentation_tabular)
 
@@ -230,7 +232,9 @@ def create(
 
     elif pipeline_type == "remote_sensing":
         pipelines.append(
-            remote_sensing.create_pipeline(metric=metric, resolver=resolver, grid_search=True, **pipeline_info)
+            remote_sensing.create_pipeline(
+                metric=metric, resolver=resolver, grid_search=True, **pipeline_info
+            )
         )
 
     elif pipeline_type == "object_detection":
@@ -336,14 +340,16 @@ def create(
         for pipeline in pipelines:
             pipeline = _prepend_pipeline(pipeline[0], prepend)
             pipelines_prepend.append(pipeline)
-        pipelines = [(pipelines_prepend[i], pipeline[i][1]) for i in range(len(pipelines))]
+        pipelines = [
+            (pipelines_prepend[i], pipeline[i][1]) for i in range(len(pipelines))
+        ]
 
     tuned_pipelines = []
     scores = []
     for i, pipeline in enumerate(pipelines):
         if len(pipeline[1]) > 0:
             pipeline = hyperparam_tune(
-                pipeline, problem, train_dataset, timeout=time_limit/len(pipelines)
+                pipeline, problem, train_dataset, timeout=time_limit / len(pipelines)
             )
             if pipeline is not None:
                 tuned_pipelines.append(pipeline[0])
@@ -693,11 +699,13 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
             "algorithm": alg,
             "stopping_rule": stopping_rule,  # todo this isn't working
             "lower_is_better": lower_is_better,
-            "command": "python ./processing/run_sherpa.py",
+            "command": "python3 ./processing/run_sherpa.py",
+            # "filename": "./processing/run_sherpa.py",
             "output_dir": f"./sherpa_temp/{pipeline.id}",
             "scheduler": scheduler,
             "max_concurrent": 8,
             "verbose": 2,
+            "db_port": 27017,
         },
         name="hyperparameter tune",
     )
@@ -717,11 +725,10 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
         # We only enter this if we didn't 'break' above.
         print("timed out, killing all processes")
         print(scheduler.jobs)
-        # import ipdb;
-        # ipdb.set_trace()
         p.join(1)
         if p.is_alive():
             p.terminate()
+            p.join()
 
         print("timeout on {final_result}")
 
@@ -743,29 +750,11 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
         final_result = {"Objective": None}
         final_result.update(defaults[0])
 
-        # final_result = q.get(timeout=timeout)
-        # p.join()
-        # p.terminate()
-        # p.join()
-        # q.task_done()
-    # except Exception as e:
-    #     p.terminate()
-    #     p.join()
-    #     q.task_done()
-    #     print(e)
-    #     print("timeout on {final_result}")
-    #
-    #     all_subdirs = [os.path.join("./sherpa_temp", d) for d in os.listdir('./sherpa_temp')]
-    #     output_dir = max(all_subdirs, key=os.path.getmtime)
-    #     if os.path.isfile(os.path.join(output_dir, "results.csv")): # there were result before timeout
-    #         results = pd.read_csv(os.path.join(output_dir, "results.csv"))
-    #         final_result = alg.get_best_result(parameters=None, results=results, lower_is_better=lower_is_better)
-    #         # clean up
-    #
-    #
-    #     else:
-    #         final_result = {"Objective": None}
-    #         final_result.update(defaults[0])
+    # make sure mongo is closed
+    for p in psutil.process_iter(attrs=["pid", "name"]):
+        if "mongod" in p.info["name"]:
+            os.kill(p.info["pid"], signal.SIGKILL)
+            time.sleep(2)
 
     if final_result.get("Objective", 9e5) == 9e5:
         return None
@@ -824,4 +813,7 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
                         print(e)
     if final_result.get("Objective") is None:
         return None
-    return final_pipeline, final_result.get("Objective", 0)*{True:1, False:-1}[lower_is_better]
+    return (
+        final_pipeline,
+        final_result.get("Objective", 0) * {True: 1, False: -1}[lower_is_better],
+    )
