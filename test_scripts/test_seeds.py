@@ -8,6 +8,7 @@ import typing
 import pandas as pd
 import signal
 
+#test
 SEEDATASETS = os.getenv("D3MINPUTDIR", "seed_datasets_current")
 D3MOUTPUTDIR = "output"
 D3MINPUTDIR = SEEDATASETS
