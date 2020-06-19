@@ -60,7 +60,10 @@ class TaskManager():
             search_template_obj = api_utils.decode_pipeline_description(message.template, pipeline.Resolver(load_all_primitives=False))
             search_template_json = search_template_obj.to_json()
 
-        time_limit = int(message.time_bound_search*60)
+        if message.time_bound_search is None:
+            time_limit = config.TIME_LIMIT
+        else:
+            time_limit = int(message.time_bound_search*60)
 
         # Create search row in DB
         search = models.Searches(id=search_id, problem=problem_json, time_limit=time_limit, dataset_uri=dataset_uri,
