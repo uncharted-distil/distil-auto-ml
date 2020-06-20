@@ -1,8 +1,10 @@
 import numpy as np
 from sklearn import metrics as sklearn_metrics
-
+from d3m.metrics import HitsAtKMetric, MeanReciprocalRankMetric
 # from external import objectDetectionAP
 
+hits_at_k = HitsAtKMetric(5) # todo how does this get set?
+mean_recriprocal_rank = MeanReciprocalRankMetric()
 metrics = {
     # classification
     "f1Macro": lambda act, pred: sklearn_metrics.f1_score(act, pred, average="macro"),
@@ -23,7 +25,8 @@ metrics = {
     "normalizedMutualInformation": sklearn_metrics.normalized_mutual_info_score,
     # object detection
     "objectDetectionAP": lambda act, pred: 0.0,
-    "meanReciprocalRank": lambda act, pred: sklearn_metrics.label_ranking_average_precision_score(act, pred)
+    "meanReciprocalRank": lambda act, pred: mean_recriprocal_rank.score(act, pred)
+    "hitsAtK": lambda act, pred: hits_at_k.score(act, pred)
 }
 
 classification_metrics = set(["f1Macro", "f1Micro", "f1", "accuracy"])
@@ -54,7 +57,8 @@ def translate_d3m_metric(metric):
         "meanAbsoluteError": "mean_absolute_error",
         "normalizedMutualInformation": "normalized_mutual_information",
         "objectDetectionAP": "object_detection_average_precision",
-        "meanReciprocalRank": "mean_reciprocal_rank"
+        "meanReciprocalRank": "mean_reciprocal_rank",
+        "hitsAtK": "hits_at_k"
     }
     assert metric in lookup, "%s not in lookup" % metric
     return lookup[metric]
@@ -73,7 +77,8 @@ def translate_proto_metric(proto_metric):
         "MEAN_ABSOLUTE_ERROR": "meanAbsoluteError",
         "NORMALIZED_MUTUAL_INFORMATION": "normalizedMutualInformation",
         "OBJECT_DETECTION_AVERAGE_PRECISION": "objectDetectionAP",
-        "MEAN_RECIPROCAL_RANK": "accuracy" # todo add this to primitives (hack for now since things are frozen)
+        "MEAN_RECIPROCAL_RANK": "meanReciprocalRank", # todo add this to primitives metrics
+        "HITS_AT_K": "hitsAtK"
     }
     assert proto_metric in lookup, "%s not in lookup" % proto_metric
     return lookup[proto_metric]
