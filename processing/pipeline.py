@@ -62,9 +62,9 @@ from processing.pipelines import (
     semisupervised_tabular,
     timeseries_deepar,
 )
-import psutil
+import pymongo
 import signal
-
+import psutil
 # data_augmentation_tabular)
 
 logger = logging.getLogger(__name__)
@@ -348,23 +348,31 @@ def create(
     scores = []
     for i, pipeline in enumerate(pipelines):
         if len(pipeline[1]) > 0:
-            pipeline = hyperparam_tune(
-                pipeline, problem, train_dataset, timeout=(time_limit / (len(pipelines)+1))
-            )
-            if pipeline is not None:
-                tuned_pipelines.append(pipeline[0])
-                if pipeline[1] is None:
-                    scores.append(np.nan)
+            try:
+                pipeline = hyperparam_tune(
+                    pipeline, problem, train_dataset, timeout=min((time_limit / (len(pipelines)+1)), 600)
+                )
+                if pipeline is not None:
+                    tuned_pipelines.append(pipeline[0])
+                    if pipeline[1] is None:
+                        scores.append(np.nan)
+                    else:
+                        scores.append(pipeline[1])
                 else:
-                    scores.append(pipeline[1])
-            else:
-                # if timeout return base pipeline
-                tuned_pipelines.append(pipelines[i][0])
+                    # if timeout return base pipeline
+                    tuned_pipelines.append(pipelines[i][0])
+                    scores.append(np.nan)
+            except Exception as e:
+                # if anything happens just return base pipeline
+                tuned_pipelines.append(pipeline[0])
                 scores.append(np.nan)
 
         else:
             tuned_pipelines.append(pipeline[0])
+            scores.append(np.nan)
+
     # tuned_pipelines = [pipeline[0] for pipeline in pipelines]
+    # scores = np.arange(len(tuned_pipelines))
 
     ranks: List[float] = []
     for i in np.argsort(scores):
@@ -678,6 +686,7 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
         PerformanceMetric.PRECISION_AT_TOP_K: False,
         PerformanceMetric.OBJECT_DETECTION_AVERAGE_PRECISION: False,
         PerformanceMetric.HAMMING_LOSS: True,
+        PerformanceMetric.MEAN_RECIPROCAL_RANK: False
     }
     performance_metric_ref = problem["problem"]["performance_metrics"][0]
     lower_is_better = metric_map[performance_metric_ref["metric"]]
@@ -715,7 +724,7 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
     while time.time() - start <= timeout:
 
         if not p.is_alive():
-            print("All the processes are done, break now.")
+            logger.info("All the processes are done, break now.")
             p.join()
             break
 
@@ -723,14 +732,34 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
 
     else:
         # We only enter this if we didn't 'break' above.
-        print("timed out, killing all processes")
-        print(scheduler.jobs)
-        p.join(1)
-        if p.is_alive():
-            p.terminate()
-            p.join()
+        logger.info("timed out, killing all processes")
+        logger.info(scheduler.jobs)
+        # p.join(1)
+        # if p.is_alive():
+        p.terminate()
+        p.join()
 
-        print("timeout on {final_result}")
+        logger.info("timeout on {final_result}")
+        # make sure mongo is shut down
+
+        client = pymongo.MongoClient(port=27017)
+        db = client.sherpa
+        # try:
+        #     logger.info("trying to close mongo from db eval")
+        #     db.eval("db.getSiblingDB('admin').shutdownServer({ 'force' : true })")
+        #     time.sleep(2)
+        # except pymongo.errors.ServerSelectionTimeoutError:
+            # try closing mongo using os
+        logger.info("closing mongo from os")
+        for p in psutil.process_iter(attrs=["pid", "name"]):
+            if "mongod" in p.info["name"]:
+                print(p.info)
+                os.kill(p.info["pid"], signal.SIGKILL)
+                time.sleep(5)
+
+
+
+
 
     all_subdirs = [
         os.path.join("./sherpa_temp", d) for d in os.listdir("./sherpa_temp")
@@ -750,11 +779,10 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
         final_result = {"Objective": None}
         final_result.update(defaults[0])
 
-    # make sure mongo is closed
-    for p in psutil.process_iter(attrs=["pid", "name"]):
-        if "mongod" in p.info["name"]:
-            os.kill(p.info["pid"], signal.SIGKILL)
-            time.sleep(2)
+
+
+
+
 
     if final_result.get("Objective", 9e5) == 9e5:
         return None

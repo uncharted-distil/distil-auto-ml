@@ -11,6 +11,15 @@ from d3m.metadata import pipeline
 import utils
 
 import config
+import logging
+import utils
+
+logging_level = logging.DEBUG if config.DEBUG else logging.INFO
+system_version = utils.get_worker_version()
+logger = utils.setup_logging(logging_level,
+                             log_file=config.LOG_FILENAME,
+                             system_version=system_version)
+
 
 # eval mode, oneof {search, test, ta2ta3}
 D3MRUN = os.getenv("D3MRUN", "invalid")
@@ -78,7 +87,30 @@ def export(solution_task, rank):
 
     # Write out pipelines_ranked
     # first the pipeline
+    pipeline_ranked_dir = pathlib.Path(D3MOUTPUTDIR + '/supporting_files/pipelines_ranked')
+    logger.info(f"ranked_dir: {pipeline_ranked_dir}")
+    pipeline_ranked_dir.mkdir(parents=True, exist_ok=True)
+    pipeline_file = pathlib.Path(pipeline_ranked_dir, '{}.json'.format(solution_task.id))
+    with open(pipeline_file, 'w') as f:
+        f.write(json.dumps(pipeline_json, sort_keys=True, indent=4))
+    # next the associated rank
+    pipeline_file = pathlib.Path(pipeline_ranked_dir, '{}.rank'.format(solution_task.id))
+    with open(pipeline_file, 'w') as f:
+        f.write(str(rank))
+
+    # WRITE TO pipelines_scored
+    # Write
+    pipeline_scored_dir = pathlib.Path(D3MOUTPUTDIR + '/supporting_files/pipelines_scored')
+    pipeline_scored_dir.mkdir(parents=True, exist_ok=True)
+    scored_file = pathlib.Path(pipeline_scored_dir, '{}.json'.format(solution_task.id))
+    with open(scored_file, 'w') as f:
+        f.write(json.dumps(pipeline_json, sort_keys=True, indent=4))
+
+
+    # not sure where pipelines are suppose to be written, seemto be under supporting files and logs
+    # but that doesn't make sense, so writing to both in case d3m_runner changes
     pipeline_ranked_dir = pathlib.Path(D3MOUTPUTDIR + '/pipelines_ranked')
+    logger.info(f"ranked_dir: {pipeline_ranked_dir}")
     pipeline_ranked_dir.mkdir(parents=True, exist_ok=True)
     pipeline_file = pathlib.Path(pipeline_ranked_dir, '{}.json'.format(solution_task.id))
     with open(pipeline_file, 'w') as f:

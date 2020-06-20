@@ -8,9 +8,9 @@ WORKDIR /app
 COPY server-requirements.txt .
 COPY api api
 RUN pip3 install -r server-requirements.txt
-# mongodb is dumb, but is required for hyperparam tuning
-RUN wget -qO - https://www.mongodb.org/static/pgp/server-4.2.asc | sudo apt-key add -
-RUN echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu bionic/mongodb-org/4.2 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-4.2.list
+# mongodb is dumb, but is required for hyperparam tuning also base image is bionic not xenial (does this really matter?)
+RUN wget -qO - https://www.mongodb.org/static/pgp/server-3.6.asc | sudo apt-key add -
+RUN echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.6 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.6.list
 RUN apt-get update
 RUN apt-get install -y mongodb-org
 RUN mkdir ./sherpa_temp

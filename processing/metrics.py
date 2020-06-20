@@ -23,6 +23,7 @@ metrics = {
     "normalizedMutualInformation": sklearn_metrics.normalized_mutual_info_score,
     # object detection
     "objectDetectionAP": lambda act, pred: 0.0,
+    "meanReciprocalRank": lambda act, pred: sklearn_metrics.label_ranking_average_precision_score(act, pred)
 }
 
 classification_metrics = set(["f1Macro", "f1Micro", "f1", "accuracy"])
@@ -53,6 +54,7 @@ def translate_d3m_metric(metric):
         "meanAbsoluteError": "mean_absolute_error",
         "normalizedMutualInformation": "normalized_mutual_information",
         "objectDetectionAP": "object_detection_average_precision",
+        "meanReciprocalRank": "mean_reciprocal_rank"
     }
     assert metric in lookup, "%s not in lookup" % metric
     return lookup[metric]
@@ -71,6 +73,7 @@ def translate_proto_metric(proto_metric):
         "MEAN_ABSOLUTE_ERROR": "meanAbsoluteError",
         "NORMALIZED_MUTUAL_INFORMATION": "normalizedMutualInformation",
         "OBJECT_DETECTION_AVERAGE_PRECISION": "objectDetectionAP",
+        "MEAN_RECIPROCAL_RANK": "accuracy" # todo add this to primitives (hack for now since things are frozen)
     }
     assert proto_metric in lookup, "%s not in lookup" % proto_metric
     return lookup[proto_metric]
