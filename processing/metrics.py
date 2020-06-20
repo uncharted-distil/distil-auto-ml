@@ -25,7 +25,7 @@ metrics = {
     "normalizedMutualInformation": sklearn_metrics.normalized_mutual_info_score,
     # object detection
     "objectDetectionAP": lambda act, pred: 0.0,
-    "meanReciprocalRank": lambda act, pred: mean_recriprocal_rank.score(act, pred)
+    "meanReciprocalRank": lambda act, pred: mean_recriprocal_rank.score(act, pred),
     "hitsAtK": lambda act, pred: hits_at_k.score(act, pred)
 }
 
