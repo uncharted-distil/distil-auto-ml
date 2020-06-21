@@ -56,7 +56,7 @@ def override_config():
 
 def export_predictions(solution_task):
     # copy predictions from original scoring output path to the expected D3M location
-    solution_results_dir = pathlib.Path(D3MOUTPUTDIR, 'predictions', str(solution_task.id))
+    solution_results_dir = pathlib.Path(D3MOUTPUTDIR + '/' + solution_task.search_id + '/predictions/' + str(solution_task.id))
     solution_results_dir.mkdir(parents=True, exist_ok=True)
     # TODO solution_task.output_keys is none, but make_preds_filename requires it.
     original_preds_path = utils.make_preds_filename(solution_task.id)
@@ -87,7 +87,7 @@ def export(solution_task, rank):
 
     # Write out pipelines_ranked
     # first the pipeline
-    pipeline_ranked_dir = pathlib.Path(D3MOUTPUTDIR + '/supporting_files/pipelines_ranked')
+    pipeline_ranked_dir = pathlib.Path(D3MOUTPUTDIR + '/' + str(solution_task.search_id) + '/pipelines_ranked')
     logger.info(f"ranked_dir: {pipeline_ranked_dir}")
     pipeline_ranked_dir.mkdir(parents=True, exist_ok=True)
     pipeline_file = pathlib.Path(pipeline_ranked_dir, '{}.json'.format(solution_task.id))
@@ -100,29 +100,7 @@ def export(solution_task, rank):
 
     # WRITE TO pipelines_scored
     # Write
-    pipeline_scored_dir = pathlib.Path(D3MOUTPUTDIR + '/supporting_files/pipelines_scored')
-    pipeline_scored_dir.mkdir(parents=True, exist_ok=True)
-    scored_file = pathlib.Path(pipeline_scored_dir, '{}.json'.format(solution_task.id))
-    with open(scored_file, 'w') as f:
-        f.write(json.dumps(pipeline_json, sort_keys=True, indent=4))
-
-
-    # not sure where pipelines are suppose to be written, seemto be under supporting files and logs
-    # but that doesn't make sense, so writing to both in case d3m_runner changes
-    pipeline_ranked_dir = pathlib.Path(D3MOUTPUTDIR + '/pipelines_ranked')
-    logger.info(f"ranked_dir: {pipeline_ranked_dir}")
-    pipeline_ranked_dir.mkdir(parents=True, exist_ok=True)
-    pipeline_file = pathlib.Path(pipeline_ranked_dir, '{}.json'.format(solution_task.id))
-    with open(pipeline_file, 'w') as f:
-        f.write(json.dumps(pipeline_json, sort_keys=True, indent=4))
-    # next the associated rank
-    pipeline_file = pathlib.Path(pipeline_ranked_dir, '{}.rank'.format(solution_task.id))
-    with open(pipeline_file, 'w') as f:
-        f.write(str(rank))
-
-    # WRITE TO pipelines_scored
-    # Write
-    pipeline_scored_dir = pathlib.Path(D3MOUTPUTDIR + '/pipelines_scored')
+    pipeline_scored_dir = pathlib.Path(D3MOUTPUTDIR + '/' + str(solution_task.search_id) + '/pipelines_scored')
     pipeline_scored_dir.mkdir(parents=True, exist_ok=True)
     scored_file = pathlib.Path(pipeline_scored_dir, '{}.json'.format(solution_task.id))
     with open(scored_file, 'w') as f:
@@ -132,7 +110,7 @@ def export(solution_task, rank):
 def export_run(solution_task):
     # WRITE TO pipeline_runs
     # Write
-    pipeline_runs_dir = pathlib.Path(D3MOUTPUTDIR + '/pipeline_runs')
+    pipeline_runs_dir = pathlib.Path(D3MOUTPUTDIR + '/' + str(solution_task.search_id) + '/pipeline_runs')
     pipeline_runs_dir.mkdir(parents=True, exist_ok=True)
     run_file = pathlib.Path(pipeline_runs_dir, '{}.yml'.format(solution_task.id))
     with open(run_file, 'w') as f:
@@ -140,7 +118,7 @@ def export_run(solution_task):
 
 def save_pipeline(solution_task):
     pipeline_json = create_json(solution_task)
-    pipeline_dir = pathlib.Path(D3MOUTPUTDIR, 'pipelines')
+    pipeline_dir = pathlib.Path(D3MOUTPUTDIR + '/' + str(solution_task.search_id) + '/pipelines')
     pipeline_dir.mkdir(parents=True, exist_ok=True)
     filename = pathlib.Path(pipeline_dir, f'{solution_task.id}.json').resolve()
     with open(filename, 'w') as f:
