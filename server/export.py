@@ -39,11 +39,11 @@ D3MRAM = os.getenv("D3MRAM", None)
 D3MTIMEOUT = os.getenv("D3MTIMEOUT", None)
 
 def override_config():
-    supporting_files_dir = pathlib.Path(D3MOUTPUTDIR, "supporting_files")
+    supporting_files_dir = pathlib.Path(D3MOUTPUTDIR, "temp", "supporting_files")
     supporting_files_dir.mkdir(parents=True, exist_ok=True)
 
     # override log filename so it is saved properly and preserved between runs
-    log_dir = pathlib.Path(D3MOUTPUTDIR, 'logs').resolve()
+    log_dir = pathlib.Path(D3MOUTPUTDIR, "temp", 'logs').resolve()
     log_dir.mkdir(parents=True, exist_ok=True)
     config.LOG_FILENAME = str(pathlib.Path(log_dir, 'distil_auto_ml.log').resolve())
 
