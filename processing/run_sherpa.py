@@ -99,7 +99,8 @@ def main(client, trial):
             PerformanceMetric.PRECISION_AT_TOP_K: -1,
             PerformanceMetric.OBJECT_DETECTION_AVERAGE_PRECISION: -1,
             PerformanceMetric.HAMMING_LOSS: 1,
-            PerformanceMetric.MEAN_RECIPROCAL_RANK: -1
+            PerformanceMetric.MEAN_RECIPROCAL_RANK: -1,
+            PerformanceMetric.HITS_AT_K: -1
         }
 
         performance_metric_ref = problem["problem"]["performance_metrics"][0]

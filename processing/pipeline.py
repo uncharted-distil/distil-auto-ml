@@ -236,6 +236,9 @@ def create(
                 metric=metric, resolver=resolver, grid_search=True, **pipeline_info
             )
         )
+        pipelines.append(
+            image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
+        )
 
     elif pipeline_type == "object_detection":
         # pipelines.append(
@@ -686,7 +689,8 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
         PerformanceMetric.PRECISION_AT_TOP_K: False,
         PerformanceMetric.OBJECT_DETECTION_AVERAGE_PRECISION: False,
         PerformanceMetric.HAMMING_LOSS: True,
-        PerformanceMetric.MEAN_RECIPROCAL_RANK: False
+        PerformanceMetric.MEAN_RECIPROCAL_RANK: False,
+        PerformanceMetric.HITS_AT_K: False
     }
     performance_metric_ref = problem["problem"]["performance_metrics"][0]
     lower_is_better = metric_map[performance_metric_ref["metric"]]
