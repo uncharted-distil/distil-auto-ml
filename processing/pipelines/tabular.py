@@ -22,6 +22,7 @@ from distil.primitives.replace_singletons import ReplaceSingletonsPrimitive
 from distil.primitives.text_encoder import TextEncoderPrimitive
 from sklearn_wrap import SKMissingIndicator, SKImputer
 from sklearn_wrap import SKStandardScaler
+from dsbox.datapreprocessing.cleaner.iterative_regression import IterativeRegressionImputation
 
 
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
@@ -253,14 +254,14 @@ def create_pipeline(metric: str,
     #
     #
     # Adds SK learn simple imputer
-    step = PrimitiveStep(primitive_description=SKImputer.SKImputer.metadata.query())
+    # step = PrimitiveStep(primitive_description=SKImputer.SKImputer.metadata.query())
     # use dsbox imputer since sklearn has issues with mismatch datasets
-    # step = PrimitiveStep(primitive_description=IterativeRegressionImputation.metadata.query(),resolver=resolver)
+    step = PrimitiveStep(primitive_description=IterativeRegressionImputation.metadata.query(),resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
-    step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
-    step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
-    step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
+    # step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
+    # step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
+    # step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
     tabular_pipeline.add_step(step)
     previous_step += 1
 
