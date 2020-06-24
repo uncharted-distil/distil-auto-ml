@@ -45,12 +45,13 @@ from processing.pipelines import (
     image,
     remote_sensing,
     object_detection,
+    object_detection_yolo,
     question_answer,
     tabular,
     text,
     text_sent2vec,
     link_prediction,
-    # link_prediction_jhu,
+    link_prediction_jhu,
     audio,
     vertex_nomination,
     # vertex_nomination_jhu,
@@ -65,6 +66,7 @@ from processing.pipelines import (
 import pymongo
 import signal
 import psutil
+
 # data_augmentation_tabular)
 
 logger = logging.getLogger(__name__)
@@ -275,9 +277,9 @@ def create(
         pipelines.append(
             link_prediction.create_pipeline(metric=metric, resolver=resolver)
         )
-        # pipelines.append(
-        #     link_prediction_jhu.create_pipeline(metric=metric, resolver=resolver)
-        # )
+        pipelines.append(
+            link_prediction_jhu.create_pipeline(metric=metric, resolver=resolver)
+        )
     elif pipeline_type == "community_detection":
         pipelines.append(
             community_detection.create_pipeline(metric=metric, resolver=resolver)
@@ -353,7 +355,10 @@ def create(
         if len(pipeline[1]) > 0:
             try:
                 pipeline = hyperparam_tune(
-                    pipeline, problem, train_dataset, timeout=min((time_limit / (len(pipelines)+1)), 600)
+                    pipeline,
+                    problem,
+                    train_dataset,
+                    timeout=min((time_limit / (len(pipelines) + 1)), 600),
                 )
                 if pipeline is not None:
                     tuned_pipelines.append(pipeline[0])
@@ -690,7 +695,7 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
         PerformanceMetric.OBJECT_DETECTION_AVERAGE_PRECISION: False,
         PerformanceMetric.HAMMING_LOSS: True,
         PerformanceMetric.MEAN_RECIPROCAL_RANK: False,
-        PerformanceMetric.HITS_AT_K: False
+        PerformanceMetric.HITS_AT_K: False,
     }
     performance_metric_ref = problem["problem"]["performance_metrics"][0]
     lower_is_better = metric_map[performance_metric_ref["metric"]]
@@ -753,17 +758,13 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
         #     db.eval("db.getSiblingDB('admin').shutdownServer({ 'force' : true })")
         #     time.sleep(2)
         # except pymongo.errors.ServerSelectionTimeoutError:
-            # try closing mongo using os
+        # try closing mongo using os
         logger.info("closing mongo from os")
         for p in psutil.process_iter(attrs=["pid", "name"]):
             if "mongod" in p.info["name"]:
                 print(p.info)
                 os.kill(p.info["pid"], signal.SIGKILL)
                 time.sleep(5)
-
-
-
-
 
     all_subdirs = [
         os.path.join("./sherpa_temp", d) for d in os.listdir("./sherpa_temp")
@@ -782,11 +783,6 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
     else:
         final_result = {"Objective": None}
         final_result.update(defaults[0])
-
-
-
-
-
 
     if final_result.get("Objective", 9e5) == 9e5:
         return None
