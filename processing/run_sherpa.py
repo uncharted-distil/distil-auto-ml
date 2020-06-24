@@ -133,7 +133,7 @@ def main(client, trial):
         predictions, _ = produce_pipeline(fitted_pipeline, test_dataset)
         predictions["d3mIndex"] = predictions["d3mIndex"].astype(int)
         print(predictions)
-        true_data = test_dataset["learningData"][predictions.columns]
+        true_data = test_dataset["learningData"][[x for x in predictions.columns if x != 'confidence']]
         true_data["d3mIndex"] = true_data["d3mIndex"].astype(int)
         true_data = true_data[
             true_data["d3mIndex"].isin(predictions["d3mIndex"])
