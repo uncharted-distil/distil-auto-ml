@@ -185,8 +185,8 @@ def create(
         pipelines.append(
             object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
         )
-    # elif pipeline_type == "audio":
-    #     pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))
+    elif pipeline_type == "audio":
+        pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))
     elif pipeline_type == "collaborative_filtering":
         if gpu:
             pipelines.append(
