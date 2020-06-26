@@ -118,7 +118,7 @@ def create_pipeline(metric: str,
 
     # append list encoder. Take list and expand them across columns
     step = PrimitiveStep(primitive_description=ListEncoderPrimitive.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(attributes_step))
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     tabular_pipeline.add_step(step)
     previous_step += 1
