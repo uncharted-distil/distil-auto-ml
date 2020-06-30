@@ -239,10 +239,9 @@ def create(
         pipelines.append(
             timeseries_var.create_pipeline(metric=metric, resolver=resolver)
         )
-        if gpu:
-            pipelines.append(
-                timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
-            )
+        pipelines.append(
+            timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
+        )
 
     elif pipeline_type == "semisupervised_tabular":
         exclude_column = problem['inputs'][0]['targets'][0]['column_index']
