@@ -174,6 +174,7 @@ class Scorer:
         # into index sorted order
         result_df.sort_values(by=['d3mIndex'], inplace=True)
         result_series = result_df.iloc[:, 1]
+        result_series.fillna(value=0, inplace=True)
 
         # put the ground truth into a single col dataframe with the d3mIndex
         # as the index - it won't be typed so we forst it to the type used in the
