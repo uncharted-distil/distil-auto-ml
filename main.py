@@ -81,6 +81,9 @@ def score_task(logger, session, server, task):
         else:
             raise TypeError("no problem definition available for scoring")
 
+        if task.ended is False:
+            fit_task(logger, session, server, task)
+
         fitted_runtime = server.get_fitted_runtime(task.solution_id)
 
         scorer = Scorer(logger, task, score_config, fitted_runtime, target_idx)
