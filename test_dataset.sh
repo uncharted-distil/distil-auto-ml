@@ -3,7 +3,7 @@ export NUMROWS=${2:-1000}
 #  some datasets are big, it can be nice to test a subset.
 #mv ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv2
 #head -n $NUMROWS ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv2 > ./seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv
-python -m dummy_ta3.dummy_ta3 -p ./seed_datasets_current/$DATASET/TRAIN/problem_TRAIN/problemDoc.json -d ./seed_datasets_current -e 0.0.0.0 -t 45042
+python -m dummy_ta3.dummy_ta3 -p ./seed_datasets_current/$DATASET/TRAIN/problem_TRAIN/problemDoc.json -d ./seed_datasets_current -e 0.0.0.0 -t 45042 --time-bound-search 60
 
 echo "Ran search successfully!"
 #mv seed_datasets_current/$DATASET/${DATASET}_dataset/tables/learningData.csv2 seed_datase#
@@ -47,8 +47,6 @@ do
         -d ${DATASET} \
         --context TESTING --random-seed 0 \
         fit-score \
-        --output ${D3MOUTPUTDIR}/predictions/$PIPELINE_ID.csv \
-        --scores ${D3MOUTPUTDIR}/score/$PIPELINE_ID.csv \
         -p ${D3MOUTPUTDIR}/pipelines_ranked/$PIPELINE_ID.json \
         -r ${D3MINPUTDIR}/$DATASET/${DATASET}_problem/problemDoc.json \
         -i ${D3MINPUTDIR}/$DATASET/TRAIN/dataset_TRAIN/datasetDoc.json \
@@ -60,8 +58,6 @@ do
         -d ${DATASET} \
         --context TESTING --random-seed 0 \
         fit-score \
-        --output ${D3MOUTPUTDIR}/predictions/$PIPELINE_ID.csv \
-        --scores ${D3MOUTPUTDIR}/score/$PIPELINE_ID.csv \
         -p ${D3MOUTPUTDIR}/pipelines_ranked/$PIPELINE_ID.json \
         -r ${D3MINPUTDIR}/$DATASET/${DATASET}_problem/problemDoc.json \
         -i ${D3MINPUTDIR}/$DATASET/TRAIN/dataset_TRAIN/datasetDoc.json \
@@ -79,3 +75,6 @@ done
 ##
 #
 #ts_current/$DATASET/${DATASET}_dataset/tables/learningData.csv
+#        --output ${D3MOUTPUTDIR}/predictions/$PIPELINE_ID.csv \
+
+#        --scores ${D3MOUTPUTDIR}/score/$PIPELINE_ID.csv \

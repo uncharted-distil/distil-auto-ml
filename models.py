@@ -57,6 +57,7 @@ class Searches(Base):
     problem = Column(String)
     dataset_uri = Column(String)
     search_template = Column(String)
+    time_limit = Column(Integer)
 
 class Requests(Base):
     __tablename__ = 'requests'

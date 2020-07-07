@@ -11,6 +11,7 @@ DEBUG = os.getenv("DEBUG", False)
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output")
 
 # Port to make worker service available on
+# PORT = os.getenv("PORT", "45042")
 PORT = os.getenv("PORT", "45042")
 
 # Configurable filename for output logs
@@ -33,3 +34,6 @@ AUG_MAX_COLS = int(os.getenv("AUG_MAX_COLS", 50))
 
 # maximum number of augment rows to support
 AUG_MAX_ROWS = int(os.getenv("AUG_MAX_ROWS", 50000))
+
+# maximum amount of time for hyperparam tuning
+TIME_LIMIT = int(os.getenv("TIME_LIMIT", 600))

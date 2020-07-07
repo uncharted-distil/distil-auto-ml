@@ -1,33 +1,31 @@
-import sys
-from typing import List, Dict, Any, Tuple, Set, Optional
-import logging
-import numpy as np
-import pandas as pd
+from typing import Optional
 
-from d3m import container, utils
-from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
-from d3m.metadata.base import ArgumentType
-from d3m.metadata import hyperparams
-
-from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
-from common_primitives.construct_predictions import ConstructPredictionsPrimitive
-from common_primitives.denormalize import DenormalizePrimitive
-from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
+from common_primitives.construct_predictions import ConstructPredictionsPrimitive
+from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
+from common_primitives.denormalize import DenormalizePrimitive
+from common_primitives.extract_columns_semantic_types import (
+    ExtractColumnsBySemanticTypesPrimitive,
+)
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
 
+from d3m import utils
+from d3m.metadata.base import ArgumentType
+from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
+from d3m.primitives.remote_sensing.remote_sensing_pretrained import (
+    RemoteSensingPretrained,
+)
 
 from distil.primitives.satellite_image_loader import DataFrameSatelliteImageLoaderPrimitive
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
-from distil.primitives.image_transfer import ImageTransferPrimitive
-from d3m.primitives.data_preprocessing.dataset_sample import Common as DatasetSamplePrimitive
-from d3m.primitives.remote_sensing.remote_sensing_pretrained import RemoteSensingPretrained
+from distil.primitives.prediction_expansion import PredictionExpansionPrimitive
+from distil.primitives.satellite_image_loader import (
+    DataFrameSatelliteImageLoaderPrimitive,
+)
 
-PipelineContext = utils.Enum(value='PipelineContext', names=['TESTING'], start=1)
-
-# CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
-# in a naively implemented state for readability for now.
+PipelineContext = utils.Enum(value="PipelineContext", names=["TESTING"], start=1)
 #
+
 # Overall implementation relies on passing the entire dataset through the pipeline, with the primitives
 # identifying columns to operate on based on type.  Alternative implementation (that better lines up with
 # D3M approach, but generates more complex pipelines) would be to extract sub-sets by semantic type using
@@ -45,7 +43,7 @@ def create_pipeline(metric: str,
     # create the basic pipeline
     image_pipeline = Pipeline(context=PipelineContext.TESTING)
     image_pipeline.add_input(name='inputs')
-
+    tune_steps = []
 
     # step 0 - denormalize dataframe (N.B.: injects semantic type information)
     step = PrimitiveStep(primitive_description=DenormalizePrimitive.metadata.query(), resolver=resolver)
@@ -119,6 +117,7 @@ def create_pipeline(metric: str,
     step.add_hyperparameter('grid_search', ArgumentType.VALUE, grid_search)
     image_pipeline.add_step(step)
     previous_step += 1
+    tune_steps.append(previous_step)
 
     # step 7 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query(), resolver=resolver)
@@ -132,4 +131,4 @@ def create_pipeline(metric: str,
     # Adding output step to the pipeline
     image_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return image_pipeline
+    return image_pipeline, tune_steps

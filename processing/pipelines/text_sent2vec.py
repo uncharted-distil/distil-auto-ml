@@ -1,19 +1,19 @@
+import logging
 from typing import Optional
-from d3m.metadata.pipeline import Resolver
-from d3m import index
-from d3m.metadata.base import ArgumentType, Context
-from d3m.metadata.pipeline import Pipeline, PrimitiveStep
-from d3m.primitives.feature_extraction.nk_sent2vec import Sent2Vec
-from d3m.primitives.data_cleaning.column_type_profiler import Simon
-from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
-from common_primitives.construct_predictions import ConstructPredictionsPrimitive
-from common_primitives.denormalize import DenormalizePrimitive
-from common_primitives.text_reader import TextReaderPrimitive
+
 from common_primitives.column_parser import ColumnParserPrimitive
+from common_primitives.construct_predictions import ConstructPredictionsPrimitive
+from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
+from common_primitives.denormalize import DenormalizePrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
+from common_primitives.text_reader import TextReaderPrimitive
+from d3m.metadata.base import ArgumentType
+from d3m.metadata.pipeline import Pipeline, PrimitiveStep
+from d3m.metadata.pipeline import Resolver
+from d3m.primitives.data_cleaning.column_type_profiler import Simon
+from d3m.primitives.feature_extraction.nk_sent2vec import Sent2Vec
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 
-import logging
 logging.basicConfig(level=logging.DEBUG)
 
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
@@ -32,6 +32,7 @@ def create_pipeline(metric: str,
                     resolver: Optional[Resolver] = None) -> Pipeline:
 
     # create the basic pipeline
+    tune_steps = []
     input_val = 'steps.{}.produce'
     text_pipeline = Pipeline()
     text_pipeline.add_input(name='inputs')
@@ -116,6 +117,7 @@ def create_pipeline(metric: str,
     step.add_hyperparameter('grid_search', ArgumentType.VALUE, True)
     text_pipeline.add_step(step)
     previous_step += 1
+    tune_steps.append(previous_step)
 
     # step 7 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query(), resolver=resolver)
@@ -130,4 +132,5 @@ def create_pipeline(metric: str,
     # Adding output step to the pipeline
     text_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return text_pipeline
+    return (text_pipeline, tune_steps)
+

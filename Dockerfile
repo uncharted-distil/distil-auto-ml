@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/datadrivendiscovery/images/primitives:ubuntu-bionic-python36-v2020.5.18-20200610-205149
+FROM registry.gitlab.com/datadrivendiscovery/images/primitives:ubuntu-bionic-python36-v2020.5.18-20200612-000030
 
 ENV PYTHONPATH=$PYTHONPATH:/app
 ENV DEBIAN_FRONTEND=noninteractive
@@ -8,6 +8,12 @@ WORKDIR /app
 COPY server-requirements.txt .
 COPY api api
 RUN pip3 install -r server-requirements.txt
+# mongodb is dumb, but is required for hyperparam tuning also base image is bionic not xenial (does this really matter?)
+RUN wget -qO - https://www.mongodb.org/static/pgp/server-3.6.asc | sudo apt-key add -
+RUN echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.6 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.6.list
+RUN apt-get update
+RUN apt-get install -y mongodb-org
+RUN mkdir ./sherpa_temp
 
 
 ARG CACHEBUSTER=0

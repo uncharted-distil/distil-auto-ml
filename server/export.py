@@ -11,6 +11,15 @@ from d3m.metadata import pipeline
 import utils
 
 import config
+import logging
+import utils
+
+logging_level = logging.DEBUG if config.DEBUG else logging.INFO
+system_version = utils.get_worker_version()
+logger = utils.setup_logging(logging_level,
+                             log_file=config.LOG_FILENAME,
+                             system_version=system_version)
+
 
 # eval mode, oneof {search, test, ta2ta3}
 D3MRUN = os.getenv("D3MRUN", "invalid")
@@ -30,11 +39,11 @@ D3MRAM = os.getenv("D3MRAM", None)
 D3MTIMEOUT = os.getenv("D3MTIMEOUT", None)
 
 def override_config():
-    supporting_files_dir = pathlib.Path(D3MOUTPUTDIR, "supporting_files")
+    supporting_files_dir = pathlib.Path(D3MOUTPUTDIR, "temp", "supporting_files")
     supporting_files_dir.mkdir(parents=True, exist_ok=True)
 
     # override log filename so it is saved properly and preserved between runs
-    log_dir = pathlib.Path(D3MOUTPUTDIR, 'logs').resolve()
+    log_dir = pathlib.Path(D3MOUTPUTDIR, "temp", 'logs').resolve()
     log_dir.mkdir(parents=True, exist_ok=True)
     config.LOG_FILENAME = str(pathlib.Path(log_dir, 'distil_auto_ml.log').resolve())
 
@@ -47,7 +56,7 @@ def override_config():
 
 def export_predictions(solution_task):
     # copy predictions from original scoring output path to the expected D3M location
-    solution_results_dir = pathlib.Path(D3MOUTPUTDIR, 'predictions', str(solution_task.id))
+    solution_results_dir = pathlib.Path(D3MOUTPUTDIR + '/' + solution_task.search_id + '/predictions/' + str(solution_task.id))
     solution_results_dir.mkdir(parents=True, exist_ok=True)
     # TODO solution_task.output_keys is none, but make_preds_filename requires it.
     original_preds_path = utils.make_preds_filename(solution_task.id)
@@ -78,7 +87,8 @@ def export(solution_task, rank):
 
     # Write out pipelines_ranked
     # first the pipeline
-    pipeline_ranked_dir = pathlib.Path(D3MOUTPUTDIR + '/pipelines_ranked')
+    pipeline_ranked_dir = pathlib.Path(D3MOUTPUTDIR + '/' + str(solution_task.search_id) + '/pipelines_ranked')
+    logger.info(f"ranked_dir: {pipeline_ranked_dir}")
     pipeline_ranked_dir.mkdir(parents=True, exist_ok=True)
     pipeline_file = pathlib.Path(pipeline_ranked_dir, '{}.json'.format(solution_task.id))
     with open(pipeline_file, 'w') as f:
@@ -90,7 +100,7 @@ def export(solution_task, rank):
 
     # WRITE TO pipelines_scored
     # Write
-    pipeline_scored_dir = pathlib.Path(D3MOUTPUTDIR + '/pipelines_scored')
+    pipeline_scored_dir = pathlib.Path(D3MOUTPUTDIR + '/' + str(solution_task.search_id) + '/pipelines_scored')
     pipeline_scored_dir.mkdir(parents=True, exist_ok=True)
     scored_file = pathlib.Path(pipeline_scored_dir, '{}.json'.format(solution_task.id))
     with open(scored_file, 'w') as f:
@@ -100,7 +110,7 @@ def export(solution_task, rank):
 def export_run(solution_task):
     # WRITE TO pipeline_runs
     # Write
-    pipeline_runs_dir = pathlib.Path(D3MOUTPUTDIR + '/pipeline_runs')
+    pipeline_runs_dir = pathlib.Path(D3MOUTPUTDIR + '/' + str(solution_task.search_id) + '/pipeline_runs')
     pipeline_runs_dir.mkdir(parents=True, exist_ok=True)
     run_file = pathlib.Path(pipeline_runs_dir, '{}.yml'.format(solution_task.id))
     with open(run_file, 'w') as f:
@@ -108,7 +118,7 @@ def export_run(solution_task):
 
 def save_pipeline(solution_task):
     pipeline_json = create_json(solution_task)
-    pipeline_dir = pathlib.Path(D3MOUTPUTDIR, 'pipelines')
+    pipeline_dir = pathlib.Path(D3MOUTPUTDIR + '/' + str(solution_task.search_id) + '/pipelines')
     pipeline_dir.mkdir(parents=True, exist_ok=True)
     filename = pathlib.Path(pipeline_dir, f'{solution_task.id}.json').resolve()
     with open(filename, 'w') as f:

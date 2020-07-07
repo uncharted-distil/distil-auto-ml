@@ -1,23 +1,12 @@
-import dill
-from typing import List, Dict, Any, Tuple, Set
-
-import utils
+import copy
 
 import numpy as np
 import pandas as pd
+from d3m.container import dataset
+from processing import pipeline
 from sklearn import metrics
 from sklearn.preprocessing import LabelBinarizer
-from sklearn.model_selection import (train_test_split,
-                                     KFold, StratifiedKFold)
 
-from d3m.container import dataset
-from d3m.metadata.pipeline import Pipeline
-from d3m import runtime
-from d3m import utils as dutils
-
-from processing import pipeline
-
-import copy
 
 class Scorer:
     def __init__(self, logger, task, score_config, fitted_pipeline, target_idx):
@@ -39,25 +28,24 @@ class Scorer:
     def run(self):
 
         # Attempt to load extant 'fit' solution
-        #fit_fn = utils.make_job_fn(self.solution_id)
-        #with open(fit_fn, 'rb') as f:
+        # fit_fn = utils.make_job_fn(self.solution_id)
+        # with open(fit_fn, 'rb') as f:
         #    unpacked = dill.load(f)
         #    runtime = unpacked['runtime']
         #    fitted_pipeline = unpacked['pipeline']
-
 
         # Load the data to test
         self.inputs = dataset.Dataset.load(self.dataset_uri)
 
         # TODO: actually accept new data
-        if self.method == 'holdout':
+        if self.method == "holdout":
             return self.hold_out_score()
-        elif self.method == 'ranking':
+        elif self.method == "ranking":
             return self.ranking()
-        #elif self.method == 'k_fold':
+        # elif self.method == 'k_fold':
         #    #return self.k_fold_score()
         else:
-            raise ValueError('Cannot score {} type'.format(self.method))
+            raise ValueError("Cannot score {} type".format(self.method))
 
     def _get_pos_label(self, labels_series):
         """Return pos_label if needed, False if not needed.
@@ -69,12 +57,12 @@ class Scorer:
         labels_dtype = labels_series.dtype.name
         # not ideal to compare by string name, but direct comparison of the dtype will throw errors
         # for categorical for older versions of pandas
-        if labels_dtype == 'object' or labels_dtype == 'category':
+        if labels_dtype == "object" or labels_dtype == "category":
             # (not in problem schema or data schema)
             labels_list = labels_series.unique().tolist()
             # since problem / data schema don't list positive label, we'll do a quick heuristic
-            if set(labels_list).equals(set('0', '1')):
-                return '1'
+            if set(labels_list).equals(set("0", "1")):
+                return "1"
             else:
                 # grab first label arbitrarily bc as of now, no good way to determine what is positive label
                 return labels_list[0]
@@ -116,46 +104,48 @@ class Scorer:
         return metrics.roc_auc_score(binary_true, binary_preds)
 
     def _rmse_avg(self, true, preds):
-        return np.average(metrics.mean_squared_error(true, preds, multioutput='raw_values') ** 0.5)
+        return np.average(
+            metrics.mean_squared_error(true, preds, multioutput="raw_values") ** 0.5
+        )
 
     def _score(self, metric, true, preds):
-        if metric == 'f1_micro':
-            score = metrics.f1_score(true, preds, average='micro')
-        elif metric == 'f1_macro':
-            score = metrics.f1_score(true, preds, average='macro')
-        elif metric == 'f1':
+        if metric == "f1_micro":
+            score = metrics.f1_score(true, preds, average="micro")
+        elif metric == "f1_macro":
+            score = metrics.f1_score(true, preds, average="macro")
+        elif metric == "f1":
             score = self._f1(true, preds)
-        elif metric == 'roc_auc':
+        elif metric == "roc_auc":
             score = self._roc_score(true, preds)
-        elif metric == 'roc_auc_micro':
-            score = self._roc_score(true, preds, average='micro')
-        elif metric == 'roc_auc_macro':
-            score = self._roc_score(true, preds, average='macro')
-        elif metric == 'accuracy':
+        elif metric == "roc_auc_micro":
+            score = self._roc_score(true, preds, average="micro")
+        elif metric == "roc_auc_macro":
+            score = self._roc_score(true, preds, average="macro")
+        elif metric == "accuracy":
             score = metrics.accuracy_score(true, preds)
-        elif metric == 'precision':
+        elif metric == "precision":
             score = self._precision(true, preds)
-        elif metric == 'recall':
+        elif metric == "recall":
             score = self._recall(true, preds)
-        elif metric == 'mean_squared_error':
+        elif metric == "mean_squared_error":
             score = metrics.mean_squared_error(true, preds)
-        elif metric == 'root_mean_squared_error':
+        elif metric == "root_mean_squared_error":
             score = metrics.mean_squared_error(true, preds) ** 0.5
-        elif metric == 'root_mean_squared_error_avg':
+        elif metric == "root_mean_squared_error_avg":
             score = self._rmse_avg(true, preds)
-        elif metric == 'mean_absolute_error':
+        elif metric == "mean_absolute_error":
             score = metrics.mean_absolute_error(true, preds)
-        elif metric == 'r_squared':
+        elif metric == "r_squared":
             score = metrics.r2_score(true, preds)
-        elif metric == 'jaccard_similarity_score':
+        elif metric == "jaccard_similarity_score":
             score = metrics.jaccard_similarity_score(true, preds)
-        elif metric == 'normalized_mutual_information':
+        elif metric == "normalized_mutual_information":
             score = metrics.normalized_mutual_info_score(true, preds)
-        elif metric == 'object_detection_average_precision':
-            self.logger.warning(f'{metric} metric unsuppported - returning 0')
+        elif metric == "object_detection_average_precision":
+            self.logger.warning(f"{metric} metric unsuppported - returning 0")
             score = 0.0
         else:
-            raise ValueError('Cannot score metric {}'.format(metric))
+            raise ValueError("Cannot score metric {}".format(metric))
         return score
 
     def hold_out_score(self):
@@ -196,10 +186,10 @@ class Scorer:
 
     def ranking(self):
         # rank is always 1 when requested since the system only generates a single solution
-        if self.metric == 'rank':
+        if self.metric == "rank":
             score = [1]
         else:
-            raise ValueError(f'Cannot rank metric {self.metric}')
+            raise ValueError(f"Cannot rank metric {self.metric}")
         return score
 
     """
