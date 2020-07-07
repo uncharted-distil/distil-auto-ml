@@ -117,6 +117,8 @@ class Tasks(Base):
     started_at = Column(DateTime)
     ended = Column(Boolean,
                    default=False)
+    fitted = Column(Boolean,
+                   default=False)
     ended_at = Column(
         DateTime)
     error = Column(

@@ -81,7 +81,7 @@ def score_task(logger, session, server, task):
         else:
             raise TypeError("no problem definition available for scoring")
 
-        if task.ended is False:
+        if task.fitted is False:
             fit_task(logger, session, server, task)
 
         fitted_runtime = server.get_fitted_runtime(task.solution_id)
@@ -154,6 +154,7 @@ def fit_task(logger, session, server, task):
         # Update DB with task results
         # and mark task 'ended' and when
         task.ended = True
+        task.fitted = True
         task.ended_at = datetime.datetime.utcnow()
         session.commit()
 
