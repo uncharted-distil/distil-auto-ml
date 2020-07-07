@@ -145,8 +145,13 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         name="outputs",
         argument_type=ArgumentType.CONTAINER,
         data_reference=input_val.format(target_step),
-    )
+    step.add_hyperparameter(
+        name='quantiles',
+        argument_type=ArgumentType.VALUE,
+        data=[0.05, 0.95])
     step.add_output("produce")
+    
+    
     deepar_pipeline.add_step(step)
     previous_step += 1
     tune_steps.append(previous_step)
