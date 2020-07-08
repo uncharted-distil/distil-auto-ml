@@ -6,6 +6,7 @@ from common_primitives.extract_columns_semantic_types import (
     ExtractColumnsBySemanticTypesPrimitive,
 )
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
+from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.primitives.time_series_forecasting.vector_autoregression import VAR

@@ -5,6 +5,7 @@ import os
 import pickle
 import time
 import typing
+import copy
 from collections import defaultdict
 from multiprocessing import Process
 from typing import Tuple, List, Dict, Optional
@@ -82,7 +83,8 @@ def create(
     # allow for use of GPU optimized pipelines
     gpu = _use_gpu()
 
-    # how long to allow hyperparam tuning to run for
+    # Optionally enable external hyperparameter tuning.
+    tune_pipeline = config.HYPERPARAMETER_TUNING
 
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
@@ -144,6 +146,7 @@ def create(
                     **pipeline_info,
                     profiler="simple",
                     use_boost=True,
+                    grid_search=not tune_pipeline
                 )
             )
             pipelines.append(
@@ -153,6 +156,7 @@ def create(
                     **pipeline_info,
                     profiler="simple",
                     use_boost=False,
+                    grid_search=not tune_pipeline
                 )
             )
             pipelines.append(
@@ -162,6 +166,7 @@ def create(
                     **pipeline_info,
                     profiler="simon",
                     use_boost=False,
+                    grid_search=not tune_pipeline
                 )
             )
 
@@ -172,6 +177,7 @@ def create(
                     **pipeline_info,
                     profiler="simon",
                     use_boost=True,
+                    grid_search=not tune_pipeline
                 )
             )
         else:
@@ -191,6 +197,7 @@ def create(
                     **pipeline_info,
                     profiler="none",
                     use_boost=False,
+                    grid_search=not tune_pipeline
                 )
             )
     elif pipeline_type == "graph_matching":
@@ -296,11 +303,6 @@ def create(
             )
         )
     elif pipeline_type == "timeseries_forecasting":
-        # VAR hyperparameters for period need to be tuned to get meaningful results so we're using regression
-        # for now
-        # pipeline = tabular.create_pipeline(metric)
-        # the above was in the exline repo not sure what is the most up to date?
-
         pipelines.append(
             timeseries_var.create_pipeline(metric=metric, resolver=resolver)
         )
@@ -341,18 +343,17 @@ def create(
 
     # prepend to the base pipeline
     if prepend is not None:
-        pipelines_prepend = []
+        pipelines_prepend: List[Tuple[pipeline.Pipeline, List[int]]] = []
         for pipeline in pipelines:
-            pipeline = _prepend_pipeline(pipeline[0], prepend)
+            pipeline = _prepend_pipeline(pipeline, prepend)
             pipelines_prepend.append(pipeline)
-        pipelines = [
-            (pipelines_prepend[i], pipeline[i][1]) for i in range(len(pipelines))
-        ]
+        pipelines = pipelines_prepend
 
     tuned_pipelines = []
     scores = []
     for i, pipeline in enumerate(pipelines):
-        if len(pipeline[1]) > 0:
+        # tune the pipeline if tuning info was generated, and tuning is enabled
+        if len(pipeline[1]) > 0  and tune_pipeline:
             try:
                 pipeline = hyperparam_tune(
                     pipeline,
@@ -447,8 +448,8 @@ def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
 
 
 def _prepend_pipeline(
-    base: pipeline.Pipeline, prepend: pipeline.Pipeline
-) -> pipeline.Pipeline:
+    base: Tuple[pipeline.Pipeline, List[int]], prepend: pipeline.Pipeline
+) -> Tuple[pipeline.Pipeline, List[int]]:
 
     # make a copy of the prepend
     prepend = copy.deepcopy(prepend)
@@ -468,7 +469,7 @@ def _prepend_pipeline(
 
     # update prepend outputs to use those from base pipeline
     updated_outputs: List[Dict[str, str]] = []
-    for base_output in base.outputs:
+    for base_output in base[0].outputs:
         # use the base pipeline output but increase the index to account for the appended base pipeline length
         base_ref = base_output["data"].split(".")
         updated_base_ref = (
@@ -478,7 +479,7 @@ def _prepend_pipeline(
     prepend.outputs = updated_outputs
 
     # add each of the base steps, updating their references as necessary
-    for base_idx, base_step in enumerate(base.steps):
+    for base_idx, base_step in enumerate(base[0].steps):
         base_step.index = replace_index + base_idx
         if base_idx == 0:
             prepend.steps[base_step.index] = base_step
@@ -496,7 +497,9 @@ def _prepend_pipeline(
                     "data"
                 ] = f"{arg_ref[0]}.{int(arg_ref[1]) + replace_index}.{arg_ref[2]}"
 
-    return prepend
+    # offset the tuning references to account for the prepend
+    tune_steps = [tune_idx + replace_index for tune_idx in base[1]]
+    return (prepend, tune_steps)
 
 
 def _use_gpu() -> bool:
@@ -700,7 +703,7 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
     performance_metric_ref = problem["problem"]["performance_metrics"][0]
     lower_is_better = metric_map[performance_metric_ref["metric"]]
     params, defaults = get_pipeline_hyperparams(pipeline, tune_steps)
-    # alg = sherpa.algorithms.GPyOpt(initial_data_points=defaults, max_num_trials=128)
+    #alg = sherpa.algorithms.GPyOpt(initial_data_points=defaults, max_num_trials=128)
     alg = sherpa.algorithms.LocalSearch(seed_configuration=defaults[0])
     alg.next_trial = None
     scheduler = sherpa.schedulers.LocalScheduler()
@@ -835,10 +838,9 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
                                 name=name, argument_type=ArgumentType.VALUE, data=value
                             )
                     except Exception as e:
-                        import pdb
-
-                        pdb.set_trace()
-                        print(e)
+                        # import pdb
+                        # pdb.set_trace()
+                        logger.error(f"failed to recreate final pipeline - {e.msg}")
     if final_result.get("Objective") is None:
         return None
     return (
