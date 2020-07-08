@@ -839,9 +839,8 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
                             )
                     except Exception as e:
                         # import pdb
-
                         # pdb.set_trace()
-                        print(e)
+                        logger.error(f"failed to recreate final pipeline - {e.msg}")
     if final_result.get("Objective") is None:
         return None
     return (
