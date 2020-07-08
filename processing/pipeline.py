@@ -83,7 +83,8 @@ def create(
     # allow for use of GPU optimized pipelines
     gpu = _use_gpu()
 
-    # how long to allow hyperparam tuning to run for
+    # Optionally enable external hyperparameter tuning.
+    tune_pipeline = config.HYPERPARAMETER_TUNING
 
     # Load dataset in the same way the d3m runtime will
     train_dataset = dataset.Dataset.load(dataset_doc_path)
@@ -145,6 +146,7 @@ def create(
                     **pipeline_info,
                     profiler="simple",
                     use_boost=True,
+                    grid_search=not tune_pipeline
                 )
             )
             pipelines.append(
@@ -154,6 +156,7 @@ def create(
                     **pipeline_info,
                     profiler="simple",
                     use_boost=False,
+                    grid_search=not tune_pipeline
                 )
             )
             pipelines.append(
@@ -163,6 +166,7 @@ def create(
                     **pipeline_info,
                     profiler="simon",
                     use_boost=False,
+                    grid_search=not tune_pipeline
                 )
             )
 
@@ -173,6 +177,7 @@ def create(
                     **pipeline_info,
                     profiler="simon",
                     use_boost=True,
+                    grid_search=not tune_pipeline
                 )
             )
         else:
@@ -192,6 +197,7 @@ def create(
                     **pipeline_info,
                     profiler="none",
                     use_boost=False,
+                    grid_search=not tune_pipeline
                 )
             )
     elif pipeline_type == "graph_matching":
@@ -297,11 +303,6 @@ def create(
             )
         )
     elif pipeline_type == "timeseries_forecasting":
-        # VAR hyperparameters for period need to be tuned to get meaningful results so we're using regression
-        # for now
-        # pipeline = tabular.create_pipeline(metric)
-        # the above was in the exline repo not sure what is the most up to date?
-
         pipelines.append(
             timeseries_var.create_pipeline(metric=metric, resolver=resolver)
         )
@@ -351,7 +352,8 @@ def create(
     tuned_pipelines = []
     scores = []
     for i, pipeline in enumerate(pipelines):
-        if len(pipeline[1]) > 0:
+        # tune the pipeline if tuning info was generated, and tuning is enabled
+        if len(pipeline[1]) > 0  and tune_pipeline:
             try:
                 pipeline = hyperparam_tune(
                     pipeline,

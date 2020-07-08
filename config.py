@@ -35,5 +35,8 @@ AUG_MAX_COLS = int(os.getenv("AUG_MAX_COLS", 50))
 # maximum number of augment rows to support
 AUG_MAX_ROWS = int(os.getenv("AUG_MAX_ROWS", 50000))
 
-# maximum amount of time for hyperparam tuning
+# maximum amount of time for hyperparam tuning in seconds
 TIME_LIMIT = int(os.getenv("TIME_LIMIT", 600))
+
+# use untuned/internally tuned pipelines (faster) or external tuning (better results)
+HYPERPARAMETER_TUNING = os.getenv("HYPERPARAMETER_TUNING", True) == 'True'
