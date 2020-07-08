@@ -181,15 +181,15 @@ def create(
                 )
             )
         else:
-            # pipelines.append(
-            #     tabular.create_pipeline(
-            #         metric=metric,
-            #         resolver=resolver,
-            #         **pipeline_info,
-            #         profiler="none",
-            #         use_boost=True,
-            #     )
-            # )
+            pipelines.append(
+                tabular.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    **pipeline_info,
+                    profiler="none",
+                    use_boost=True,
+                )
+            )
             pipelines.append(
                 tabular.create_pipeline(
                     metric=metric,
