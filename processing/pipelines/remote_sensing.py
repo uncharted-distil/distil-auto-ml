@@ -23,25 +23,19 @@ from distil.primitives.satellite_image_loader import (
     DataFrameSatelliteImageLoaderPrimitive,
 )
 
-PipelineContext = utils.Enum(value="PipelineContext", names=["TESTING"], start=1)
-#
-
 # Overall implementation relies on passing the entire dataset through the pipeline, with the primitives
 # identifying columns to operate on based on type.  Alternative implementation (that better lines up with
 # D3M approach, but generates more complex pipelines) would be to extract sub-sets by semantic type using
 # a common primitive, apply the type-specific primitive to the sub-set, and then merge the changes
 # (replace or join) back into the original data.
 def create_pipeline(metric: str,
-                    cat_mode: str = 'one_hot',
-                    max_one_hot: int = 16,
-                    scale: bool = False,
                     min_meta: bool = False,
-                    sample: bool = False,
                     grid_search: bool = False,
+                    batch_size: int = 128,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
     # create the basic pipeline
-    image_pipeline = Pipeline(context=PipelineContext.TESTING)
+    image_pipeline = Pipeline()
     image_pipeline.add_input(name='inputs')
     tune_steps = []
 
@@ -93,8 +87,8 @@ def create_pipeline(metric: str,
     step = PrimitiveStep(primitive_description=RemoteSensingPretrained.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
     step.add_output('produce')
+    step.add_hyperparameter('batch_size', ArgumentType.VALUE, batch_size)
     image_pipeline.add_step(step)
-    step.add_hyperparameter('batch_size', ArgumentType.VALUE, 128)
     previous_step += 1
     input_step = previous_step
 
