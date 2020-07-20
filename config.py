@@ -26,6 +26,9 @@ D3MSTATICDIR = os.getenv("D3MSTATICDIR", '/static')
 # Enable GPU pipelines - "auto" will try to detect, "true" and "false" will force
 GPU = os.getenv("GPU", "auto")
 
+# Batch size to apply to primitives where feasible
+REMMOTE_SENSING_BATCH_SIZE = int(os.getenv("REMOTE_SENSING_BATCH_SIZE", 128))
+
 # Solution serach progress update message interval in seconds
 PROGRESS_INTERVAL = float(os.getenv("PROGRESS_INTERVAL", 10.0))
 

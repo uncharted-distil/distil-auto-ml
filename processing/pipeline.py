@@ -242,7 +242,8 @@ def create(
     elif pipeline_type == "remote_sensing":
         pipelines.append(
             remote_sensing.create_pipeline(
-                metric=metric, resolver=resolver, grid_search=True, **pipeline_info
+                metric=metric, resolver=resolver, grid_search=True,
+                batch_size=config.REMMOTE_SENSING_BATCH_SIZE, **pipeline_info
             )
         )
         pipelines.append(
