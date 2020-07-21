@@ -15,6 +15,7 @@ from d3m.metrics import class_map
 from sklearn.model_selection import train_test_split
 import numpy as np
 
+
 def fit(
     pipeline: pipeline.Pipeline,
     problem: problem.Problem,
@@ -100,7 +101,10 @@ def main(client, trial):
             PerformanceMetric.OBJECT_DETECTION_AVERAGE_PRECISION: -1,
             PerformanceMetric.HAMMING_LOSS: 1,
             PerformanceMetric.MEAN_RECIPROCAL_RANK: -1,
-            PerformanceMetric.HITS_AT_K: -1
+            PerformanceMetric.HITS_AT_K: -1,
+            PerformanceMetric.ROC_AUC: -1,
+            PerformanceMetric.ROC_AUC_MACRO: -1,
+            PerformanceMetric.ROC_AUC_MICRO: -1,
         }
 
         performance_metric_ref = problem["problem"]["performance_metrics"][0]
@@ -121,7 +125,6 @@ def main(client, trial):
                             name=name, argument_type=ArgumentType.VALUE, data=value
                         )
 
-
         fitted_pipeline, predictions = fit(trial_pipeline, problem, train_dataset)
         performance_metric_ref = problem["problem"]["performance_metrics"][0]
         if "params" in performance_metric_ref:
@@ -133,15 +136,24 @@ def main(client, trial):
         predictions, _ = produce_pipeline(fitted_pipeline, test_dataset)
         predictions["d3mIndex"] = predictions["d3mIndex"].astype(int)
         print(predictions)
-        true_data = test_dataset["learningData"][[x for x in predictions.columns if x != 'confidence']]
+        true_data = test_dataset["learningData"][
+            [x for x in predictions.columns if x != "confidence"]
+        ]
         true_data["d3mIndex"] = true_data["d3mIndex"].astype(int)
         true_data = true_data[
             true_data["d3mIndex"].isin(predictions["d3mIndex"])
         ]  # todo why are these different?
         # make sure that true_Data and predictions are of the same type.
         print(true_data)
-        label_col = predictions.columns[-1]
-        true_data = true_data.astype(predictions[label_col].dtype)
+        if 'confidence' in predictions.columns:
+            label_col = predictions.columns[-2]
+        else:
+            label_col = predictions.columns[-1]
+        try:
+            true_data = true_data.astype(predictions[label_col].dtype)
+        except ValueError:
+            true_data = true_data.astype(float)
+            true_data = true_data.astype(int)
         score = performance_metric.score(true_data, predictions)
     except Exception as e:
         print(f"Error on pipeline trail {trial} : {e}")
@@ -153,6 +165,6 @@ def main(client, trial):
 
 
 if __name__ == "__main__":
-    client = Client(port=27017, host='localhost')
+    client = Client(port=27017, host="localhost")
     trial = client.get_trial()
     main(client, trial)

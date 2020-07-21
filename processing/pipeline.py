@@ -275,7 +275,7 @@ def create(
         )
     elif pipeline_type == "link_prediction":
         pipelines.append(
-            link_prediction.create_pipeline(metric=metric, resolver=resolver)
+            link_prediction.create_pipeline(metric=metric, resolver=resolver,  **pipeline_info)
         )
         pipelines.append(
             link_prediction_jhu.create_pipeline(metric=metric, resolver=resolver)
@@ -696,6 +696,9 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
         PerformanceMetric.HAMMING_LOSS: True,
         PerformanceMetric.MEAN_RECIPROCAL_RANK: False,
         PerformanceMetric.HITS_AT_K: False,
+        PerformanceMetric.ROC_AUC: False,
+        PerformanceMetric.ROC_AUC_MACRO: False,
+        PerformanceMetric.ROC_AUC_MICRO: False,
     }
     performance_metric_ref = problem["problem"]["performance_metrics"][0]
     lower_is_better = metric_map[performance_metric_ref["metric"]]
