@@ -346,7 +346,7 @@ def create(
             pipeline = _prepend_pipeline(pipeline[0], prepend)
             pipelines_prepend.append(pipeline)
         pipelines = [
-            (pipelines_prepend[i], pipeline[i][1]) for i in range(len(pipelines))
+            (pipelines_prepend[i], [x+len(prepend.steps) for x in pipelines[i][1]]) for i in range(len(pipelines))
         ]
 
     tuned_pipelines = []
@@ -838,9 +838,6 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
                                 name=name, argument_type=ArgumentType.VALUE, data=value
                             )
                     except Exception as e:
-                        import pdb
-
-                        pdb.set_trace()
                         print(e)
     if final_result.get("Objective") is None:
         return None
