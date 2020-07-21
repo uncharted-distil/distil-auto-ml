@@ -151,7 +151,7 @@ def _run_seed_dataset(problem):
 
     with open('d3m_test_dummy.txt', 'w') as f:
         env["CUDA_VISIBLE_DEVICES"] = '2'  # no cuda for test, OOM is a pain with multiprocessing.
-        command = f"python -m dummy_ta3.dummy_ta3 -p ./seed_datasets_current/{problem}/TRAIN/problem_TRAIN/problemDoc.json -d ./seed_datasets_current -e 0.0.0.0 -t 45042"
+        command = f"python -m dummy_ta3.dummy_ta3 -p ./seed_datasets_current/{problem}/TRAIN/problem_TRAIN/problemDoc.json -d ./seed_datasets_current -e 0.0.0.0 -t 45042 --time-bound-search 1800"
         process = subprocess.Popen(command.split(' '), env=env, stderr=f, stdout=f, preexec_fn=os.setsid)
 
         start = time.time()
@@ -177,14 +177,21 @@ def _run_seed_dataset(problem):
         for line in f:
             pipeline_ids.append(line.strip())
 
+    search_id = pipeline_ids[0]
+    # if not os.path.isdir(f"{D3MOUTPUTDIR}/{search_id}"):
+    #     os.mkdir(f"{D3MOUTPUTDIR}/{search_id}")
+    if not os.path.isdir(f"{D3MOUTPUTDIR}/{search_id}/score/"):
+        os.mkdir(f"{D3MOUTPUTDIR}/{search_id}/score/")
+
+    pipeline_ids = pipeline_ids[1:]
     for pipeline_id in pipeline_ids:
         run_pipeline_command = ("python -m d3m runtime "
                                 f"--volumes {D3MSTATICDIR} "
                                 f"-d {problem} "
                                 f"--context TESTING --random-seed 0 "
                                 f"fit-score "
-                                f"--scores {D3MOUTPUTDIR}/score/{pipeline_id}.csv "
-                                f"-p {D3MOUTPUTDIR}/pipelines_ranked/{pipeline_id}.json "
+                                f"--scores {D3MOUTPUTDIR}/{search_id}/score/{pipeline_id}.csv "
+                                f"-p {D3MOUTPUTDIR}/{search_id}/pipelines_ranked/{pipeline_id}.json "
                                 f"-r {D3MINPUTDIR}/{problem}/{problem}_problem/problemDoc.json "
                                 f"-i {D3MINPUTDIR}/{problem}/TRAIN/dataset_TRAIN/datasetDoc.json "
                                 f"-t {D3MINPUTDIR}/{problem}/TEST/dataset_TEST/datasetDoc.json "
@@ -210,7 +217,7 @@ def _run_seed_dataset(problem):
     best_metric = None
     for pipeline_id in pipeline_ids:
         try:
-            score = pd.read_csv(f"{D3MOUTPUTDIR}/score/{pipeline_id}.csv", "r")
+            score = pd.read_csv(f"{D3MOUTPUTDIR}/{search_id}/score/{pipeline_id}.csv", "r")
         except pd.errors.EmptyDataError:
             # raise Exception(f"No score was generated for pipeline {pipeline_id}")
             continue  # only one pipeline needs to work
@@ -226,6 +233,8 @@ def _run_seed_dataset(problem):
                 best_metric = metric[1]
     if best_metric is None:
         raise Exception("No valid pipeline was fitted")
+    with open("test_results.csv", 'a') as f:
+        f.write(f"{problem}: {best_metric}\n")
     if problem in problem_thresholds:
         print(f"{best_metric} <> {problem_thresholds[problem]}")
         if lower_is_better[metric[0]]:

@@ -11,7 +11,6 @@ DEBUG = os.getenv("DEBUG", False)
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output")
 
 # Port to make worker service available on
-# PORT = os.getenv("PORT", "45042")
 PORT = os.getenv("PORT", "45042")
 
 # Configurable filename for output logs
