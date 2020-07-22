@@ -246,9 +246,9 @@ def create(
                 batch_size=config.REMMOTE_SENSING_BATCH_SIZE, **pipeline_info
             )
         )
-        pipelines.append(
-            image.create_pipeline(metric=metric, resolver=resolver)
-        )
+        # pipelines.append(
+        #     image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
+        # )
 
     elif pipeline_type == "object_detection":
         # pipelines.append(
@@ -307,10 +307,10 @@ def create(
         pipelines.append(
             timeseries_var.create_pipeline(metric=metric, resolver=resolver)
         )
-        if gpu:
-            pipelines.append(
-                timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
-            )
+        # if gpu:
+        #     pipelines.append(
+        #         timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
+        #     )
             # avoid CUDA OOM by not using it.
             # os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
