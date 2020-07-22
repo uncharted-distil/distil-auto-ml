@@ -243,11 +243,11 @@ def create(
         pipelines.append(
             remote_sensing.create_pipeline(
                 metric=metric, resolver=resolver, grid_search=True,
-                batch_size=config.REMMOTE_SENSING_BATCH_SIZE, binary=pipeline_info.binary, **pipeline_info
+                batch_size=config.REMMOTE_SENSING_BATCH_SIZE, **pipeline_info
             )
         )
         pipelines.append(
-            image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
+            image.create_pipeline(metric=metric, resolver=resolver)
         )
 
     elif pipeline_type == "object_detection":

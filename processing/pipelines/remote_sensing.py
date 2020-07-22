@@ -33,7 +33,7 @@ def create_pipeline(metric: str,
                     min_meta: bool = False,
                     grid_search: bool = False,
                     batch_size: int = 128,
-                    binary_classification: bool = False,
+                    binary: bool = False,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
     # create the basic pipeline
@@ -105,7 +105,7 @@ def create_pipeline(metric: str,
     target_step = previous_step
 
     # step 6 - Generates a random forest ensemble model.
-    if binary_classification:
+    if binary:
         # use linear svc
         step = PrimitiveStep(primitive_description=RankedLinearSVCPrimitive.metadata.query(), resolver=resolver)
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(input_step))
