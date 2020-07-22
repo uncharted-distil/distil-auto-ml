@@ -16,6 +16,7 @@ from d3m.primitives.remote_sensing.remote_sensing_pretrained import (
     RemoteSensingPretrained,
 )
 
+from distil.primitives.ranked_linear_svc import RankedLinearSVCPrimitive
 from distil.primitives.satellite_image_loader import DataFrameSatelliteImageLoaderPrimitive
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.prediction_expansion import PredictionExpansionPrimitive
@@ -32,6 +33,7 @@ def create_pipeline(metric: str,
                     min_meta: bool = False,
                     grid_search: bool = False,
                     batch_size: int = 128,
+                    binary: bool = False,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
     # create the basic pipeline
@@ -103,12 +105,20 @@ def create_pipeline(metric: str,
     target_step = previous_step
 
     # step 6 - Generates a random forest ensemble model.
-    step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(input_step))
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
-    step.add_output('produce')
-    step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
-    step.add_hyperparameter('grid_search', ArgumentType.VALUE, grid_search)
+    if binary:
+        # use linear svc
+        step = PrimitiveStep(primitive_description=RankedLinearSVCPrimitive.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(input_step))
+        step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
+        step.add_output('produce')
+    else:
+        # use random forest
+        step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(input_step))
+        step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
+        step.add_output('produce')
+        step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
+        step.add_hyperparameter('grid_search', ArgumentType.VALUE, grid_search)
     image_pipeline.add_step(step)
     previous_step += 1
     tune_steps.append(previous_step)
