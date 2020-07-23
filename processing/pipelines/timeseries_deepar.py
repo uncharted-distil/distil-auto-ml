@@ -144,7 +144,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_argument(
         name="outputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(target_step),
+        data_reference=input_val.format(target_step))
     step.add_hyperparameter(
         name='quantiles',
         argument_type=ArgumentType.VALUE,
