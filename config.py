@@ -25,6 +25,9 @@ D3MSTATICDIR = os.getenv("D3MSTATICDIR", '/static')
 # Enable GPU pipelines - "auto" will try to detect, "true" and "false" will force
 GPU = os.getenv("GPU", "auto")
 
+# Batch size to apply to primitives where feasible
+REMMOTE_SENSING_BATCH_SIZE = int(os.getenv("REMOTE_SENSING_BATCH_SIZE", 128))
+
 # Solution serach progress update message interval in seconds
 PROGRESS_INTERVAL = float(os.getenv("PROGRESS_INTERVAL", 10.0))
 
@@ -34,5 +37,8 @@ AUG_MAX_COLS = int(os.getenv("AUG_MAX_COLS", 50))
 # maximum number of augment rows to support
 AUG_MAX_ROWS = int(os.getenv("AUG_MAX_ROWS", 50000))
 
-# maximum amount of time for hyperparam tuning
+# maximum amount of time for hyperparam tuning in seconds
 TIME_LIMIT = int(os.getenv("TIME_LIMIT", 600))
+
+# use untuned/internally tuned pipelines (faster) or external tuning (better results)
+HYPERPARAMETER_TUNING = os.getenv("HYPERPARAMETER_TUNING", True) == 'True'

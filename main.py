@@ -254,6 +254,10 @@ def main(once=False):
     logging.basicConfig(level=logging_level)
     logger.info(f'Logging level to {logging_level}')
 
+    logger.info(f'Baseline time out {config.TIME_LIMIT}')
+    logger.info(f'Full hyperparameter tuning enabled {config.HYPERPARAMETER_TUNING}')
+    logger.info(f'GPU support {config.GPU}')
+
     # Get DB access
     session = models.start_session(config.DB_LOCATION)
 

@@ -16,6 +16,7 @@ from d3m.primitives.remote_sensing.remote_sensing_pretrained import (
     RemoteSensingPretrained,
 )
 
+from distil.primitives.ranked_linear_svc import RankedLinearSVCPrimitive
 from distil.primitives.satellite_image_loader import DataFrameSatelliteImageLoaderPrimitive
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.prediction_expansion import PredictionExpansionPrimitive
@@ -23,25 +24,20 @@ from distil.primitives.satellite_image_loader import (
     DataFrameSatelliteImageLoaderPrimitive,
 )
 
-PipelineContext = utils.Enum(value="PipelineContext", names=["TESTING"], start=1)
-#
-
 # Overall implementation relies on passing the entire dataset through the pipeline, with the primitives
 # identifying columns to operate on based on type.  Alternative implementation (that better lines up with
 # D3M approach, but generates more complex pipelines) would be to extract sub-sets by semantic type using
 # a common primitive, apply the type-specific primitive to the sub-set, and then merge the changes
 # (replace or join) back into the original data.
 def create_pipeline(metric: str,
-                    cat_mode: str = 'one_hot',
-                    max_one_hot: int = 16,
-                    scale: bool = False,
                     min_meta: bool = False,
-                    sample: bool = False,
                     grid_search: bool = False,
+                    batch_size: int = 128,
+                    binary: bool = False,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
     # create the basic pipeline
-    image_pipeline = Pipeline(context=PipelineContext.TESTING)
+    image_pipeline = Pipeline()
     image_pipeline.add_input(name='inputs')
     tune_steps = []
 
@@ -93,8 +89,8 @@ def create_pipeline(metric: str,
     step = PrimitiveStep(primitive_description=RemoteSensingPretrained.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
     step.add_output('produce')
+    step.add_hyperparameter('batch_size', ArgumentType.VALUE, batch_size)
     image_pipeline.add_step(step)
-    step.add_hyperparameter('batch_size', ArgumentType.VALUE, 128)
     previous_step += 1
     input_step = previous_step
 
@@ -109,12 +105,20 @@ def create_pipeline(metric: str,
     target_step = previous_step
 
     # step 6 - Generates a random forest ensemble model.
-    step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(input_step))
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
-    step.add_output('produce')
-    step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
-    step.add_hyperparameter('grid_search', ArgumentType.VALUE, grid_search)
+    if binary:
+        # use linear svc
+        step = PrimitiveStep(primitive_description=RankedLinearSVCPrimitive.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(input_step))
+        step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
+        step.add_output('produce')
+    else:
+        # use random forest
+        step = PrimitiveStep(primitive_description=EnsembleForestPrimitive.metadata.query(), resolver=resolver)
+        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(input_step))
+        step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
+        step.add_output('produce')
+        step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
+        step.add_hyperparameter('grid_search', ArgumentType.VALUE, grid_search)
     image_pipeline.add_step(step)
     previous_step += 1
     tune_steps.append(previous_step)
