@@ -66,6 +66,7 @@ from processing.pipelines import (
 import pymongo
 import signal
 import psutil
+import copy
 
 # data_augmentation_tabular)
 
@@ -275,7 +276,9 @@ def create(
         )
     elif pipeline_type == "link_prediction":
         pipelines.append(
-            link_prediction.create_pipeline(metric=metric, resolver=resolver,  **pipeline_info)
+            link_prediction.create_pipeline(
+                metric=metric, resolver=resolver, **pipeline_info
+            )
         )
         pipelines.append(
             link_prediction_jhu.create_pipeline(metric=metric, resolver=resolver)
@@ -346,7 +349,11 @@ def create(
             pipeline = _prepend_pipeline(pipeline[0], prepend)
             pipelines_prepend.append(pipeline)
         pipelines = [
-            (pipelines_prepend[i], [x+len(prepend.steps) for x in pipelines[i][1]]) for i in range(len(pipelines))
+            (
+                pipelines_prepend[i],
+                [x + len(prepend.steps) - 1 for x in pipelines[i][1]],
+            )
+            for i in range(len(pipelines))
         ]
 
     tuned_pipelines = []
@@ -529,6 +536,8 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
         hyperparams_class = primitive.metadata.get_hyperparams()
         if primitive not in black_list_primtives and i in tune_steps:
             for name in list(hyperparams_class.configuration.keys()):
+                if name == "metric":
+                    continue
                 # don't touch fixed hyperparams #TODO is this right?
                 if name in pipeline.steps[current_step].hyperparams:
                     default_hyperparam = pipeline.steps[current_step].hyperparams[name]
@@ -791,13 +800,15 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
         return None
     # recreate final pipeline
     final_pipeline = pipeline
-    step_params = defaultdict(dict)
+    step_params = {}
     for name, param in final_result.items():
         if name.startswith("step"):
             step = name.split("___")[1]
+            if step not in step_params:
+                step_params[step] = {}
             step_params[step].update({name.split("___")[2]: param})
         for i, step in enumerate(final_pipeline.steps):
-            if step_params[str(i)] != {}:
+            if str(i) in step_params:
                 step.hyperparams = {}
                 if i > 0 and i < len(final_pipeline.steps):
                     try:
@@ -834,9 +845,17 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
                                         else x.strip()
                                         for x in value
                                     )
+                            elif (
+                                step.primitive
+                                == primitives.operator.dataset_map.DataFrameCommon
+                            ):
+
+                                continue
+
                             step.add_hyperparameter(
                                 name=name, argument_type=ArgumentType.VALUE, data=value
                             )
+
                     except Exception as e:
                         print(e)
     if final_result.get("Objective") is None:
