@@ -41,4 +41,4 @@ AUG_MAX_ROWS = int(os.getenv("AUG_MAX_ROWS", 50000))
 TIME_LIMIT = int(os.getenv("TIME_LIMIT", 600))
 
 # use untuned/internally tuned pipelines (faster) or external tuning (better results)
-HYPERPARAMETER_TUNING = os.getenv("HYPERPARAMETER_TUNING", True) == 'True'
+HYPERPARAMETER_TUNING = os.getenv("HYPERPARAMETER_TUNING", 'True') == 'True'
