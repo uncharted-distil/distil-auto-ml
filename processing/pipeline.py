@@ -44,7 +44,7 @@ from processing.pipelines import (
     collaborative_filtering,
     graph_matching,
     image,
-    # remote_sensing,
+    remote_sensing,
     object_detection,
     object_detection_yolo,
     question_answer,
