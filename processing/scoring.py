@@ -162,9 +162,8 @@ class Scorer:
 
         # d3m predictions format columns are [d3mIndex, prediction, weight (optional)] - get the predictions
         # into index sorted order
-        result_df.sort_values(by=['d3mIndex'], inplace=True)
-        result_series = result_df.iloc[:, 1]
-        result_series.fillna(value=0, inplace=True)
+        result_df = result_df.set_index(result_df['d3mIndex'])
+        result_df.index = result_df.index.map(int)
 
         # put the ground truth into a single col dataframe with the d3mIndex
         # as the index - it won't be typed so we forst it to the type used in the
@@ -175,7 +174,13 @@ class Scorer:
         # in case its a multindex, we'll only take one row for each unique index,
         # and sort to make sure its in the same order as teh result series
         true_df.drop_duplicates(inplace=True, subset='d3mIndex')
-        true_df.sort_values(by=['d3mIndex'], inplace=True)
+        true_df = true_df.set_index(pd.to_numeric(true_df['d3mIndex']))
+
+        # only take the d3m indices that exist for results (filtering, etc.)
+        true_df = true_df.loc[result_df.index]
+
+        result_series = result_df.iloc[:, 1]
+        result_series.fillna(value=0, inplace=True)
         true_series = true_df.iloc[:, self.target_idx]
         # force the truth value to the same type as the predicted value
         true_series = true_series.astype(result_series.dtype)
