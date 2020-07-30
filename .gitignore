@@ -19,3 +19,5 @@ pipelines/*_run.yaml.gz
 pipelines/*_run.yaml
 sherpa_temp
 *.pkl
+deepar_weights
+distil-auto-ml.log
