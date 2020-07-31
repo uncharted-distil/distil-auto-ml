@@ -22,7 +22,7 @@ RUN pip3 install -e git+https://github.com/uncharted-distil/distil-fuzzy-join.gi
 # Update as needed when new versions not built into base image
 RUN rm -rf /src/distil-primitives
 RUN rm -rf /app/src/distilprimitives
-RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git@885ca69548171f843bd158647325e041beabfaf84#egg=DistilPrimitives
+RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git@f0fccd53925a6125b0e0aef542c6d619cd0d6db4#egg=DistilPrimitives
 #RUN pip3 install -e git+https://github.com/kungfuai/d3m-primitives.git@67e436e383c59dccb63bf683edb6f6a122b5c1e7#egg=kf-d3m-primitives
 
 COPY . .
