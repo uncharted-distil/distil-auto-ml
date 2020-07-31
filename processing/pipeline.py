@@ -126,7 +126,7 @@ def create(
         prepend_steps = {step.primitive for step in prepend.steps[:-1]}
         semantic_modifiers = {
             primitives.data_transformation.add_semantic_types.Common,
-            primitives.data_transformation.remove_semantic_types.Common,
+            # primitives.data_transformation.remove_semantic_types.Common,
             primitives.data_cleaning.column_type_profiler.Simon,
             SimpleProfilerPrimitive,
         }
@@ -146,7 +146,8 @@ def create(
                     **pipeline_info,
                     profiler="simple",
                     use_boost=True,
-                    grid_search=not tune_pipeline
+                    grid_search=not tune_pipeline,
+                    max_one_hot=8
                 )
             )
             pipelines.append(
@@ -156,7 +157,8 @@ def create(
                     **pipeline_info,
                     profiler="simple",
                     use_boost=False,
-                    grid_search=not tune_pipeline
+                    grid_search=not tune_pipeline,
+                    max_one_hot=8
                 )
             )
             pipelines.append(
@@ -166,7 +168,8 @@ def create(
                     **pipeline_info,
                     profiler="simon",
                     use_boost=False,
-                    grid_search=not tune_pipeline
+                    grid_search=not tune_pipeline,
+                    max_one_hot=8
                 )
             )
 
@@ -177,7 +180,8 @@ def create(
                     **pipeline_info,
                     profiler="simon",
                     use_boost=True,
-                    grid_search=not tune_pipeline
+                    grid_search=not tune_pipeline,
+                    max_one_hot=8
                 )
             )
         else:
@@ -188,6 +192,7 @@ def create(
                     **pipeline_info,
                     profiler="none",
                     use_boost=True,
+                    max_one_hot=8
                 )
             )
             pipelines.append(
@@ -197,7 +202,8 @@ def create(
                     **pipeline_info,
                     profiler="none",
                     use_boost=False,
-                    grid_search=not tune_pipeline
+                    grid_search=not tune_pipeline,
+                    max_one_hot=8
                 )
             )
     elif pipeline_type == "graph_matching":

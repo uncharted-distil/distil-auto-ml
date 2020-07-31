@@ -333,6 +333,7 @@ def create_pipeline(metric: str,
             resolver=resolver,
         )
         step.add_hyperparameter('grid_search', ArgumentType.VALUE, grid_search)
+        step.add_hyperparameter('small_dataset_fits', ArgumentType.VALUE, 1)
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
