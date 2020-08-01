@@ -65,8 +65,13 @@ class TaskManager():
         else:
             time_limit = int(message.time_bound_search*60)
 
+        if message.rank_solutions_limit is None:
+            max_models = 10
+        else:
+            max_models = message.rank_solutions_limit
+
         # Create search row in DB
-        search = models.Searches(id=search_id, problem=problem_json, time_limit=time_limit, dataset_uri=dataset_uri,
+        search = models.Searches(id=search_id, problem=problem_json, time_limit=time_limit, max_models=max_models, dataset_uri=dataset_uri,
                                  search_template=search_template_json)
 
         self.session.add(search)

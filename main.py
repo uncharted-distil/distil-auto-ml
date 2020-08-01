@@ -179,7 +179,7 @@ def search_task(logger, session, search):
         problem_obj = problem.Problem.from_json_structure(json.loads(search.problem)) if search.problem else None
 
         # based on our problem type and data type, create a pipeline
-        pipeline_objs, dataset, ranks = ex_pipeline.create(search.dataset_uri, problem_obj, search.time_limit, search_template_obj, resolver=resolver)
+        pipeline_objs, dataset, ranks = ex_pipeline.create(search.dataset_uri, problem_obj, search.time_limit, search.max_models, search_template_obj, resolver=resolver)
         for i, pipeline_obj in enumerate(pipeline_objs):
             pipeline_json = pipeline_obj.to_json(nest_subpipelines=True)
 

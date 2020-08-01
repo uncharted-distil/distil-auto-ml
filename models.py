@@ -58,6 +58,7 @@ class Searches(Base):
     dataset_uri = Column(String)
     search_template = Column(String)
     time_limit = Column(Integer)
+    max_models = Column(Integer)
 
 class Requests(Base):
     __tablename__ = 'requests'

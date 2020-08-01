@@ -77,6 +77,7 @@ def create(
     dataset_doc_path: str,
     problem: dict,
     time_limit: int,
+    max_models: int,
     prepend: Optional[Pipeline] = None,
     resolver: Optional[Resolver] = None,
 ) -> Tuple[List[pipeline.Pipeline], container.Dataset, List[float]]:
@@ -185,16 +186,17 @@ def create(
                 )
             )
         else:
-            pipelines.append(
-                tabular.create_pipeline(
-                    metric=metric,
-                    resolver=resolver,
-                    **pipeline_info,
-                    profiler="none",
-                    use_boost=True,
-                    max_one_hot=8
+            if max_models > 1:
+                pipelines.append(
+                    tabular.create_pipeline(
+                        metric=metric,
+                        resolver=resolver,
+                        **pipeline_info,
+                        profiler="none",
+                        use_boost=True,
+                        max_one_hot=8
+                    )
                 )
-            )
             pipelines.append(
                 tabular.create_pipeline(
                     metric=metric,
@@ -230,11 +232,12 @@ def create(
         pipelines.append(
             text.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
         )
-        pipelines.append(
-            text_sent2vec.create_pipeline(
-                metric=metric, resolver=resolver, **pipeline_info
+        if max_models > 1:
+            pipelines.append(
+                text_sent2vec.create_pipeline(
+                    metric=metric, resolver=resolver, **pipeline_info
+                )
             )
-        )
     elif pipeline_type == "image":
         pipelines.append(
             image.create_pipeline(
@@ -313,12 +316,10 @@ def create(
         pipelines.append(
             timeseries_var.create_pipeline(metric=metric, resolver=resolver)
         )
-        if gpu:
+        if max_models > 1:
             pipelines.append(
                 timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
             )
-            # avoid CUDA OOM by not using it.
-            # os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 
     elif pipeline_type == "semisupervised_tabular":
         exclude_column = problem["inputs"][0]["targets"][0]["column_index"]
