@@ -14,6 +14,7 @@ import GPUtil
 import config
 import numpy as np
 import pandas as pd
+from d3m import index
 import sherpa
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.extract_columns_semantic_types import (
@@ -351,13 +352,14 @@ def create(
         for pipeline in pipelines:
             pipeline = _prepend_pipeline(pipeline, prepend)
             pipelines_prepend.append(pipeline)
-        pipelines = [
-            (
-                pipelines_prepend[i],
-                [x + len(prepend.steps) - 1 for x in pipelines[i][1]],
-            )
-            for i in range(len(pipelines))
-        ]
+        # pipelines = [
+        #     (
+        #         pipelines_prepend[i][0],
+        #         [x + len(prepend.steps) - 1 for x in pipelines[i][1]],
+        #     )
+        #     for i in range(len(pipelines))
+        # ]
+        pipelines = pipelines_prepend
 
 
     tuned_pipelines = []
@@ -727,7 +729,11 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
 
     def run_sherpa_optimize(fun, **kwargs):
         fun(**kwargs)
-
+    pipeline_id = pipeline.id
+    if pipeline_id == "":
+        # when running from distil the id gets set to ''. We need an id for storage
+        import uuid
+        pipeline_id = uuid.uuid4()
     p = Process(
         target=run_sherpa_optimize,
         args=(sherpa.optimize,),
@@ -738,7 +744,7 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
             "lower_is_better": lower_is_better,
             "command": "python3 ./processing/run_sherpa.py",
             # "filename": "./processing/run_sherpa.py",
-            "output_dir": f"./sherpa_temp/{pipeline.id}",
+            "output_dir": f"./sherpa_temp/{pipeline_id}",
             "scheduler": scheduler,
             "max_concurrent": 8,
             "verbose": 2,
@@ -854,10 +860,10 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
                                     )
                             elif (
                                 step.primitive
-                                == primitives.operator.dataset_map.DataFrameCommon
+                                == index.get_primitive('d3m.primitives.operator.dataset_map.DataFrameCommon')
                             ):
-
-                                continue
+                                # reset hyperparams to base json representation.
+                                step.hyperparams = {'primitive': {'type': ArgumentType.PRIMITIVE, 'data': step.index-1}}
 
                             step.add_hyperparameter(
                                 name=name, argument_type=ArgumentType.VALUE, data=value
