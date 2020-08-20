@@ -14,13 +14,6 @@ import config
 import logging
 import utils
 
-logging_level = logging.DEBUG if config.DEBUG else logging.INFO
-system_version = utils.get_worker_version()
-logger = utils.setup_logging(logging_level,
-                             log_file=config.LOG_FILENAME,
-                             system_version=system_version)
-
-
 # eval mode, oneof {search, test, ta2ta3}
 D3MRUN = os.getenv("D3MRUN", "invalid")
 
