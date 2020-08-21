@@ -14,6 +14,7 @@ import GPUtil
 import config
 import numpy as np
 import pandas as pd
+from d3m import index
 import sherpa
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.extract_columns_semantic_types import (
@@ -67,6 +68,7 @@ from processing.pipelines import (
 import pymongo
 import signal
 import psutil
+import copy
 
 # data_augmentation_tabular)
 
@@ -292,7 +294,9 @@ def create(
         )
     elif pipeline_type == "link_prediction":
         pipelines.append(
-            link_prediction.create_pipeline(metric=metric, resolver=resolver)
+            link_prediction.create_pipeline(
+                metric=metric, resolver=resolver, **pipeline_info
+            )
         )
         pipelines.append(
             link_prediction_jhu.create_pipeline(metric=metric, resolver=resolver)
@@ -355,7 +359,15 @@ def create(
         for pipeline in pipelines:
             pipeline = _prepend_pipeline(pipeline, prepend)
             pipelines_prepend.append(pipeline)
+        # pipelines = [
+        #     (
+        #         pipelines_prepend[i][0],
+        #         [x + len(prepend.steps) - 1 for x in pipelines[i][1]],
+        #     )
+        #     for i in range(len(pipelines))
+        # ]
         pipelines = pipelines_prepend
+
 
     tuned_pipelines = []
     scores = []
@@ -540,6 +552,8 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
         hyperparams_class = primitive.metadata.get_hyperparams()
         if primitive not in black_list_primtives and i in tune_steps:
             for name in list(hyperparams_class.configuration.keys()):
+                if name == "metric":
+                    continue
                 # don't touch fixed hyperparams #TODO is this right?
                 if name in pipeline.steps[current_step].hyperparams:
                     default_hyperparam = pipeline.steps[current_step].hyperparams[name]
@@ -707,6 +721,9 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
         PerformanceMetric.HAMMING_LOSS: True,
         PerformanceMetric.MEAN_RECIPROCAL_RANK: False,
         PerformanceMetric.HITS_AT_K: False,
+        PerformanceMetric.ROC_AUC: False,
+        PerformanceMetric.ROC_AUC_MACRO: False,
+        PerformanceMetric.ROC_AUC_MICRO: False,
     }
     performance_metric_ref = problem["problem"]["performance_metrics"][0]
     lower_is_better = metric_map[performance_metric_ref["metric"]]
@@ -719,7 +736,11 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
 
     def run_sherpa_optimize(fun, **kwargs):
         fun(**kwargs)
-
+    pipeline_id = pipeline.id
+    if pipeline_id == "":
+        # when running from distil the id gets set to ''. We need an id for storage
+        import uuid
+        pipeline_id = uuid.uuid4()
     p = Process(
         target=run_sherpa_optimize,
         args=(sherpa.optimize,),
@@ -730,7 +751,7 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
             "lower_is_better": lower_is_better,
             "command": "python3 ./processing/run_sherpa.py",
             # "filename": "./processing/run_sherpa.py",
-            "output_dir": f"./sherpa_temp/{pipeline.id}",
+            "output_dir": f"./sherpa_temp/{pipeline_id}",
             "scheduler": scheduler,
             "max_concurrent": 8,
             "verbose": 2,
@@ -799,13 +820,15 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
         return None
     # recreate final pipeline
     final_pipeline = pipeline
-    step_params = defaultdict(dict)
+    step_params = {}
     for name, param in final_result.items():
         if name.startswith("step"):
             step = name.split("___")[1]
+            if step not in step_params:
+                step_params[step] = {}
             step_params[step].update({name.split("___")[2]: param})
         for i, step in enumerate(final_pipeline.steps):
-            if step_params[str(i)] != {}:
+            if str(i) in step_params:
                 step.hyperparams = {}
                 if i > 0 and i < len(final_pipeline.steps):
                     try:
@@ -842,9 +865,17 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
                                         else x.strip()
                                         for x in value
                                     )
+                            elif (
+                                step.primitive
+                                == index.get_primitive('d3m.primitives.operator.dataset_map.DataFrameCommon')
+                            ):
+                                # reset hyperparams to base json representation.
+                                step.hyperparams = {'primitive': {'type': ArgumentType.PRIMITIVE, 'data': step.index-1}}
+
                             step.add_hyperparameter(
                                 name=name, argument_type=ArgumentType.VALUE, data=value
                             )
+
                     except Exception as e:
                         # import pdb
                         # pdb.set_trace()

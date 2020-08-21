@@ -193,7 +193,7 @@ class TaskManager():
 
     def GetScoreSolutionResults(self, message):
         request_id = self.validator.validate_get_score_solution_results_request(message, self.session)
-        seen_ids = []
+        seen_ids = []   
 
         solution_id = self.session.query(models.Requests) \
                       .filter(models.Requests.id==request_id) \

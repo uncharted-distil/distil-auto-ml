@@ -7,13 +7,16 @@ from collections import defaultdict
 from typing import Tuple, Optional
 
 from sherpa import Client
-from d3m import container, runtime
+from d3m import container, runtime, primitives
+from d3m import index
 from d3m.metadata import base as metadata_base, pipeline, problem, pipeline_run
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.problem import PerformanceMetricBase, PerformanceMetric
 from d3m.metrics import class_map
 from sklearn.model_selection import train_test_split
 import numpy as np
+import logging
+logger = logging.getLogger(__name__)
 
 def fit(
     pipeline: pipeline.Pipeline,
@@ -100,27 +103,35 @@ def main(client, trial):
             PerformanceMetric.OBJECT_DETECTION_AVERAGE_PRECISION: -1,
             PerformanceMetric.HAMMING_LOSS: 1,
             PerformanceMetric.MEAN_RECIPROCAL_RANK: -1,
-            PerformanceMetric.HITS_AT_K: -1
+            PerformanceMetric.HITS_AT_K: -1,
+            PerformanceMetric.ROC_AUC: -1,
+            PerformanceMetric.ROC_AUC_MACRO: -1,
+            PerformanceMetric.ROC_AUC_MICRO: -1,
         }
 
         performance_metric_ref = problem["problem"]["performance_metrics"][0]
         lower_is_better_sign = metric_map[performance_metric_ref["metric"]]
 
         trial_pipeline = pipeline
-        step_params = defaultdict(dict)
+        step_params = {}
         for name, param in trial.parameters.items():
             if name.startswith("step"):
                 step = name.split("___")[1]
+                if step not in step_params:
+                    step_params[step] = {}
                 step_params[step].update({name.split("___")[2]: param})
         for i, step in enumerate(trial_pipeline.steps):
-            if step_params[str(i)] != {}:
-                step.hyperparams = {}
-                if i > 0 and i < len(trial_pipeline.steps):
-                    for name, value in step_params[str(i)].items():
-                        step.add_hyperparameter(
-                            name=name, argument_type=ArgumentType.VALUE, data=value
-                        )
-
+            if str(i) in step_params:
+                if step.primitive == index.get_primitive('d3m.primitives.operator.dataset_map.DataFrameCommon'):
+                    step.hyperparams = {'primitive': {'type': ArgumentType.PRIMITIVE, 'data': step.index - 1}}
+                elif step_params[str(i)] != {}:
+                    step.hyperparams = {}
+                    if i > 0 and i < len(trial_pipeline.steps):
+                        for name, value in step_params[str(i)].items():
+                            step.add_hyperparameter(
+                                name=name, argument_type=ArgumentType.VALUE, data=value
+                            )
+            print(step.hyperparams)
 
         fitted_pipeline, predictions = fit(trial_pipeline, problem, train_dataset)
         performance_metric_ref = problem["problem"]["performance_metrics"][0]
@@ -133,15 +144,24 @@ def main(client, trial):
         predictions, _ = produce_pipeline(fitted_pipeline, test_dataset)
         predictions["d3mIndex"] = predictions["d3mIndex"].astype(int)
         print(predictions)
-        true_data = test_dataset["learningData"][[x for x in predictions.columns if x != 'confidence']]
+        true_data = test_dataset["learningData"][
+            [x for x in predictions.columns if x != "confidence"]
+        ]
         true_data["d3mIndex"] = true_data["d3mIndex"].astype(int)
         true_data = true_data[
             true_data["d3mIndex"].isin(predictions["d3mIndex"])
         ]  # todo why are these different?
         # make sure that true_Data and predictions are of the same type.
         print(true_data)
-        label_col = predictions.columns[-1]
-        true_data = true_data.astype(predictions[label_col].dtype)
+        if 'confidence' in predictions.columns:
+            label_col = predictions.columns[-2]
+        else:
+            label_col = predictions.columns[-1]
+        try:
+            true_data = true_data.astype(predictions[label_col].dtype)
+        except ValueError:
+            true_data = true_data.astype(float)
+            true_data = true_data.astype(int)
         score = performance_metric.score(true_data, predictions)
     except Exception as e:
         print(f"Error on pipeline trail {trial} : {e}")
@@ -153,6 +173,6 @@ def main(client, trial):
 
 
 if __name__ == "__main__":
-    client = Client(port=27017, host='localhost')
+    client = Client(port=27017, host="localhost")
     trial = client.get_trial()
     main(client, trial)
