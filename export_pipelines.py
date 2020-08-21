@@ -55,7 +55,8 @@ PIPE_TO_DATASET = {
     'semisupervised_tabular': ('SEMI_1040_sylva_prior_MIN_METADATA', 'f1Macro', {}),
     'timeseries_lstm_fcn': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
     'data_augmentation_tabular': ('DA_ny_taxi_demand_MIN_METADATA', 'meanAbsoluteError', {}),
-    'remote_sensing': ('big-earth-sample', 'f1Macro', {})
+    'remote_sensing': ('big-earth-sample', 'f1Macro', {}),
+    'remote_sensing_mlp': ('locusts-nano', 'f1Macro', {'spatial_dim': 1})
 }
 
 # Subset of pipelines that are aimed at coverage of only the primitives that we intend to
@@ -134,7 +135,7 @@ if __name__ == '__main__':
             lib = importlib.import_module('processing.pipelines.' + p)
             dataset_to_use, metric, hyperparams = PIPE_TO_DATASET[p]
             pipe_obj = lib.create_pipeline(metric=metric, **hyperparams)
-            pipe_json = pipe_obj.to_json_structure()
+            pipe_json = pipe_obj[0].to_json_structure()
             strip_digests(pipe_json)
 
             hash = generate_hash(pipe_json)
