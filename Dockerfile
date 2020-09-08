@@ -15,6 +15,9 @@ RUN apt-get update
 RUN apt-get install -y mongodb-org
 RUN mkdir ./sherpa_temp
 
+# lzo support since it is not currently built into the d3m image
+RUN apt-get install -y zlib1g-dev
+RUN apt-get install -y liblzo2-dev
 
 ARG CACHEBUSTER=0
 RUN pip3 install -e git+https://github.com/uncharted-distil/distil-fuzzy-join.git@d171c9dc29d699dba10c1fdd5f00db8bbdd37f7d#egg=DistilFuzzyJoin
@@ -22,8 +25,8 @@ RUN pip3 install -e git+https://github.com/uncharted-distil/distil-fuzzy-join.gi
 # Update as needed when new versions not built into base image
 RUN rm -rf /src/distil-primitives
 RUN rm -rf /app/src/distilprimitives
-RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git@f0fccd53925a6125b0e0aef542c6d619cd0d6db4#egg=DistilPrimitives
-#RUN pip3 install -e git+https://github.com/kungfuai/d3m-primitives.git@67e436e383c59dccb63bf683edb6f6a122b5c1e7#egg=kf-d3m-primitives
+RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git@ac4792f7947f9c9f23734c598b3cae22b9c11ab0#egg=DistilPrimitives
+RUN pip3 install -e git+https://github.com/kungfuai/d3m-primitives.git@5cf4fbb7050b877bf3863ef45c8e8f4679db1ef3#egg=kf-d3m-primitives
 
 COPY . .
 
