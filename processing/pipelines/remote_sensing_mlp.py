@@ -83,15 +83,6 @@ def create_pipeline(metric: str,
     parse_step = previous_step
 
 
-    # step 4 - featurize imagery
-    step = PrimitiveStep(primitive_description=RemoteSensingPretrained.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
-    step.add_output('produce')
-    step.add_hyperparameter('batch_size', ArgumentType.VALUE, batch_size)
-    image_pipeline.add_step(step)
-    previous_step += 1
-    input_step = previous_step
-
     # step 5 - extract targets
     step = PrimitiveStep(primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
@@ -101,6 +92,16 @@ def create_pipeline(metric: str,
     image_pipeline.add_step(step)
     previous_step += 1
     pre_encoded_target_step = previous_step
+
+    # step 4 - featurize imagery
+    step = PrimitiveStep(primitive_description=RemoteSensingPretrained.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(parse_step))
+    step.add_output('produce')
+    step.add_hyperparameter('batch_size', ArgumentType.VALUE, batch_size)
+    image_pipeline.add_step(step)
+    previous_step += 1
+    input_step = previous_step
+
 
     # step 6 - convert target to numeric labels
     step = PrimitiveStep(primitive_description=SKLabelEncoder.metadata.query(), resolver=resolver)
@@ -115,15 +116,14 @@ def create_pipeline(metric: str,
     step = PrimitiveStep(primitive_description=MlpClassifier.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(input_step))
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
-    step.add_output('produce')
-    step.add_hyperparameter('spatial_dim', ArgumentType.VALUE, spatial_dim)
+    step.add_output('produce_explanations')
     image_pipeline.add_step(step)
     previous_step += 1
     tune_steps.append(previous_step)
 
     # step 8 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step) + '_explanations')
     step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(image_step))
     step.add_output('produce')
     step.add_hyperparameter('use_columns', ArgumentType.VALUE, [0, 1])
