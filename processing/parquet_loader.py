@@ -1,0 +1,218 @@
+import os
+import json
+import logging
+from typing import Dict
+from urllib import parse as url_parse
+import numpy as np
+import pandas as pd
+from d3m.container import pandas as container_pandas
+from d3m.metadata import base as metadata_base
+from d3m.container.dataset import D3MDatasetLoader, ComputeDigest, Dataset, \
+    D3M_COLUMN_TYPE_CONSTANTS_TO_SEMANTIC_TYPES, D3M_ROLE_CONSTANTS_TO_SEMANTIC_TYPES
+from d3m import exceptions
+
+D3M_COLUMN_TYPE_CONSTANTS_TO_STRUCT_TYPES = {
+    'boolean': bool,
+    'integer': int,
+    'real': float,
+    'string': str,
+    'categorical': str,
+    'dateTime': str,
+    'realVector': [],
+    'json': str,
+    'geojson': str,
+    'unknown': str,
+}
+
+logger = logging.getLogger(__name__)
+
+class ParquetDatasetLoader(D3MDatasetLoader):
+    """
+    A class for loading a dataset from a parquet file.  Currently relies on the presence of a datasetDoc for
+    type info.
+
+    Loader supports both loading a dataset from a local file system or remote locations.
+    URI should point to a file with ``.parquet`` file extension.
+    """
+
+    def __init__(self):
+        self._dataset_doc = {}
+
+
+    # checks to see if this is a simple d3m tabular dataset that stores the table data
+    # as a parquet file
+    def can_load(self, dataset_uri: str) -> bool:
+        # check the base can_load to make sure we're pointing to a valid datasetDoc.json
+        can_load = super().can_load(dataset_uri)
+        if not can_load:
+             return False
+
+        # check to see that there is a parquet file for the learning data
+        return self._validate_dataset_doc(dataset_uri)
+
+    def load(self, dataset_uri: str, *, dataset_id: str = None, dataset_version: str = None, dataset_name: str = None, lazy: bool = False,
+             compute_digest: ComputeDigest = ComputeDigest.ONLY_IF_MISSING, strict_digest: bool = False, handle_score_split: bool = True) -> 'Dataset':
+        assert self.can_load(dataset_uri)
+
+        parsed_uri = url_parse.urlparse(dataset_uri, allow_fragments=False)
+
+        # Pandas requires a host for "file" URIs.
+        if parsed_uri.scheme == 'file' and parsed_uri.netloc == '':
+            parsed_uri = parsed_uri._replace(netloc='localhost')
+            dataset_uri = url_parse.urlunparse(parsed_uri)
+
+        dataset_size = None
+
+        resources: Dict = {}
+        metadata = metadata_base.DataMetadata()
+
+        if not lazy:
+            load_lazy = None
+
+            metadata = self._load_data(resources, metadata, dataset_uri=dataset_uri)
+
+        else:
+            def load_lazy(dataset: Dataset) -> None:
+                # "dataset" can be used as "resources", it is a dict of values.
+                dataset.metadata = self._load_data(
+                    dataset, dataset.metadata, dataset_uri=dataset_uri
+                )
+
+                new_metadata = {
+                    'dimension': {'length': len(dataset)},
+                    'stored_size': dataset_size,
+                }
+
+                dataset.metadata = dataset.metadata.update((), new_metadata)
+                dataset.metadata = dataset.metadata.generate(dataset)
+
+                dataset._load_lazy = None
+
+        dataset_metadata = {
+            'schema': metadata_base.CONTAINER_SCHEMA_VERSION,
+            'structural_type': Dataset,
+            'id': dataset_id or dataset_uri,
+            'name': dataset_name or os.path.basename(parsed_uri.path),
+            'location_uris': [
+                dataset_uri,
+            ],
+            'dimension': {
+                'name': 'resources',
+                'semantic_types': ['https://metadata.datadrivendiscovery.org/types/DatasetResource'],
+                'length': len(resources),
+            },
+        }
+
+        if dataset_version is not None:
+            dataset_metadata['version'] = dataset_version
+
+        if dataset_size is not None:
+            dataset_metadata['stored_size'] = dataset_size
+
+        metadata = metadata.update((), dataset_metadata)
+
+        return Dataset(resources, metadata, load_lazy=load_lazy)
+
+    # returns true if the referenced dataset is a single table d3m dataset where the table
+    # data is stored as a parquet file
+    def _validate_dataset_doc(self, dataset_uri) -> bool:
+
+        if self._dataset_doc == {}:
+            # load the metadata to see if we're pointing to a parquet file
+            parsed_url = url_parse.urlparse(dataset_uri)
+            dataset_doc_path = parsed_url.path
+            try:
+                with open(dataset_doc_path, 'r', encoding='utf8') as dataset_doc_file:
+                    self._dataset_doc = json.load(dataset_doc_file)
+            except FileNotFoundError:
+                return False
+
+        # this should be a dataset consisting of a single resource
+        if len(self._dataset_doc['dataResources']) is not 1:
+            return False
+
+        mainResource = self._dataset_doc['dataResources'][0]
+
+        # should be a table resource
+        resType = mainResource['resType']
+        if resType != 'table':
+            return False
+
+        # table should be a parquet file
+        resFormat = mainResource['resFormat']
+        if next(iter(resFormat)) != 'application/parquet':
+            return False
+
+        return True
+
+    def _load_data(self, resources: Dict, metadata, *, dataset_uri: str) -> metadata_base.DataMetadata:
+        # validate the dataset doc
+        if not self._validate_dataset_doc(dataset_uri):
+            raise exceptions.InvalidDatasetError(f"Dataset '{dataset_uri}' is not a valid parquet dataset.")
+
+        # find the resource path
+        resources = self._dataset_doc['dataResources'][0]
+        resource_path = resources['resPath']
+
+        # read in the parquet data
+        parsed_url = url_parse.urlparse(dataset_uri)
+        tables_path = os.path.join(os.path.dirname(parsed_url.path), resource_path)
+        raw_df = pd.read_parquet(tables_path)
+
+        df = container_pandas.DataFrame(raw_df)
+
+        resource_id = resources['resID']
+        resources[resource_id] = df
+
+        if 'd3mIndex' not in df.columns:
+            df.insert(0, 'd3mIndex', range(len(df)))
+            d3m_index_generated = True
+        else:
+            d3m_index_generated = False
+
+
+        metadata = metadata.update((resource_id,), {
+            'structural_type': type(df),
+            'semantic_types': [
+                'https://metadata.datadrivendiscovery.org/types/Table',
+                'https://metadata.datadrivendiscovery.org/types/DatasetEntryPoint',
+            ],
+            'dimension': {
+                'name': 'rows',
+                'semantic_types': ['https://metadata.datadrivendiscovery.org/types/TabularRow'],
+                'length': len(df),
+            },
+        })
+
+        metadata = metadata.update(('learningData', metadata_base.ALL_ELEMENTS), {
+            'dimension': {
+                'name': 'columns',
+                'semantic_types': ['https://metadata.datadrivendiscovery.org/types/TabularColumn'],
+                'length': len(df.columns),
+            },
+        })
+
+        dataset_doc_columns = resources['columns']
+        columns_by_index = { int(col_data['colIndex']):col_data for col_data in dataset_doc_columns}
+        for i, column_name in enumerate(df.columns):
+            if i == 0 and d3m_index_generated:
+                metadata = metadata.update((resource_id, metadata_base.ALL_ELEMENTS, i), {
+                    'name': column_name,
+                    'structural_type': np.int64,
+                    'semantic_types': [
+                        'http://schema.org/Integer',
+                        'https://metadata.datadrivendiscovery.org/types/PrimaryKey',
+                    ],
+                })
+            else:
+                # populate semantic types from column role and type
+                col_data = columns_by_index[i]
+                semantic_types = [D3M_COLUMN_TYPE_CONSTANTS_TO_SEMANTIC_TYPES[col_data['colType']]]
+                semantic_types += [D3M_ROLE_CONSTANTS_TO_SEMANTIC_TYPES[role] for role in col_data['role']]
+                metadata = metadata.update(('learningData', metadata_base.ALL_ELEMENTS, i), {
+                    'name': column_name,
+                    'structural_type': D3M_COLUMN_TYPE_CONSTANTS_TO_STRUCT_TYPES[col_data['colType']],
+                    'semantic_types': semantic_types,
+                })
+
+        return metadata
