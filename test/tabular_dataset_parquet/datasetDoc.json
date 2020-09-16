@@ -1,0 +1,54 @@
+{
+  "about": {
+    "datasetID": "test_data",
+    "datasetName": "test_data",
+    "license": "CC-BY license",
+    "approximateSize": "",
+    "datasetSchemaVersion": "4.0.0",
+    "redacted": true,
+    "datasetVersion": "1.0"
+  },
+  "dataResources": [
+    {
+      "resID": "learningData",
+      "resPath": "tables/learningData.parquet",
+      "resType": "table",
+      "resFormat": {
+        "application/parquet": ["parquet"]
+      },
+      "isCollection": false,
+      "columns": [
+        {
+          "colIndex": 0,
+          "colName": "d3mIndex",
+          "colType": "integer",
+          "role": ["index"]
+        },
+        {
+          "colIndex": 1,
+          "colName": "alpha",
+          "colType": "integer",
+          "role": ["attribute"]
+        },
+        {
+          "colIndex": 2,
+          "colName": "bravo",
+          "colType": "real",
+          "role": ["attribute"]
+        },
+        {
+          "colIndex": 3,
+          "colName": "charlie",
+          "colType": "string",
+          "role": ["attribute"]
+        },
+        {
+          "colIndex": 4,
+          "colName": "delta",
+          "colType": "categorical",
+          "role": ["attribute"]
+        }
+      ]
+    }
+  ]
+}

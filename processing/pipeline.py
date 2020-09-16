@@ -3,6 +3,7 @@ import logging
 import math
 import os
 import pickle
+from processing.parquet_loader import ParquetDatasetLoader
 import time
 import typing
 import copy
@@ -74,6 +75,9 @@ import copy
 
 logger = logging.getLogger(__name__)
 
+# add the parquet datset loader to the loaders to try - order matters, and
+# we want to ensure it run before the D3M dataset loader
+dataset.Dataset.loaders.insert(0, ParquetDatasetLoader())
 
 def create(
     dataset_doc_path: str,
