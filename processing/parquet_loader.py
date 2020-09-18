@@ -5,7 +5,7 @@ from typing import Dict, Tuple
 from urllib import parse as url_parse
 import numpy as np
 import pandas as pd
-from d3m.container import pandas as container_pandas
+from d3m.container import pandas as container_pandas, ndarray as container_ndarray
 from d3m.metadata import base as metadata_base
 from d3m.container.dataset import D3MDatasetLoader, ComputeDigest, Dataset, \
     D3M_COLUMN_TYPE_CONSTANTS_TO_SEMANTIC_TYPES, D3M_ROLE_CONSTANTS_TO_SEMANTIC_TYPES
@@ -18,7 +18,7 @@ D3M_COLUMN_TYPE_CONSTANTS_TO_STRUCT_TYPES = {
     'string': str,
     'categorical': str,
     'dateTime': str,
-    'realVector': [],
+    'realVector': container_ndarray,
     'json': str,
     'geojson': str,
     'unknown': str,

@@ -14,45 +14,44 @@
    limitations under the License.
 """
 
+from ast import literal_eval
 import unittest
 from os import path
 import urllib.parse
-from urllib.parse import urlunparse
-from d3m.utils import url_parse
-import pandas as pd
 
-from processing.parquet_loader import ParquetDatasetLoader
 from d3m import container
 from d3m.metadata import base as metadata_base
 from d3m.base import utils as base_utils
+from processing.parquet_loader import ParquetDatasetLoader, container_ndarray
+
+_parquet_dataset_path = path.abspath(path.join(path.dirname(__file__), 'tabular_dataset_parquet'))
+_csv_dataset_path = path.abspath(path.join(path.dirname(__file__), 'tabular_dataset_csv'))
 
 class ParquetDatasetLoaderTestCase(unittest.TestCase):
-
-    _parquet_dataset_path = path.abspath(path.join(path.dirname(__file__), 'tabular_dataset_parquet'))
-    _csv_dataset_path = path.abspath(path.join(path.dirname(__file__), 'tabular_dataset_csv'))
-
     def test_can_load(self) -> None:
-        dataset_path=path.join(self._parquet_dataset_path, 'datasetDoc.json')
+        dataset_path=path.join(_parquet_dataset_path, 'datasetDoc.json')
         dataset_url = urllib.parse.urlunparse(('file', '', dataset_path, '', '', ''))
         loader = ParquetDatasetLoader()
         self.assertTrue(loader.can_load(dataset_url))
 
     def test_cannot_load(self) -> None:
-        dataset_path=path.join(self._csv_dataset_path, 'datasetDoc.json')
+        dataset_path=path.join(_csv_dataset_path, 'datasetDoc.json')
         dataset_url = urllib.parse.urlunparse(('file', '', dataset_path, '', '', ''))
         loader = ParquetDatasetLoader()
         self.assertFalse(loader.can_load(dataset_url))
 
     def test_load(self) -> None:
-        dataset_path=path.join(self._parquet_dataset_path, 'datasetDoc.json')
+        csv_to_parquet()
+
+        dataset_path=path.join(_parquet_dataset_path, 'datasetDoc.json')
         dataset_url = urllib.parse.urlunparse(('file', '', dataset_path, '', '', ''))
         loader = ParquetDatasetLoader()
         dataset = loader.load(dataset_uri=dataset_url)
 
-        df = base_utils.get_tabular_resource(dataset, 'learningData')
+        _, df = base_utils.get_tabular_resource(dataset, 'learningData')
         self.assertIsNotNone(df)
 
-        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS))['dimension']['length'], 5)
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS))['dimension']['length'], 6)
 
         self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 0))['name'], 'd3mIndex')
         self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 0))['structural_type'], int)
@@ -89,8 +88,22 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
             "https://metadata.datadrivendiscovery.org/types/Attribute"
         ))
 
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 5))['name'], 'echo')
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 5))['structural_type'], container.ndarray)
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 5))['semantic_types'], (
+            "https://metadata.datadrivendiscovery.org/types/FloatVector",
+            "https://metadata.datadrivendiscovery.org/types/Attribute"
+        ))
+
+        self.assertEqual(df.iloc[0,0], 1)
+        self.assertEqual(df.iloc[0,1], 10)
+        self.assertEqual(df.iloc[0,2], 1.0)
+        self.assertEqual(df.iloc[0,3], "xray")
+        self.assertEqual(df.iloc[0,4], " tango sierra")
+        self.assertListEqual(df.iloc[0,5].tolist(), [0,1,2,3])
+
     def test_lazy_load(self) -> None:
-        dataset_path=path.join(self._parquet_dataset_path, 'datasetDoc.json')
+        dataset_path=path.join(_parquet_dataset_path, 'datasetDoc.json')
         dataset_url = urllib.parse.urlunparse(('file', '', dataset_path, '', '', ''))
         loader = ParquetDatasetLoader()
         dataset = loader.load(dataset_uri=dataset_url, lazy=True)
@@ -98,7 +111,7 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
 
         df = base_utils.get_tabular_resource(dataset, 'learningData')
         self.assertIsNotNone(df)
-        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS))['dimension']['length'], 5)
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS))['dimension']['length'], 6)
 
 def csv_to_parquet():
     _csv_dataset_path = path.abspath(path.join(path.dirname(__file__), 'tabular_dataset_csv'))
@@ -112,8 +125,9 @@ def csv_to_parquet():
     df.iloc[:, 2] = df.iloc[:, 2].astype(float)
     df.iloc[:, 3] = df.iloc[:, 3].astype(str)
     df.iloc[:, 4] = df.iloc[:, 4].astype(str)
+    df.iloc[:, 5] = df.iloc[:, 5].apply(lambda x: literal_eval(f'[{x}]'))
 
-    df.to_parquet(path.join(self._parquet_dataset_path, 'tables', 'tabular_dataset.parquet'), index=False)
+    df.to_parquet(path.join(_parquet_dataset_path, 'tables', 'learningData.parquet'), index=False)
 
 if __name__ == '__main__':
     unittest.main()
