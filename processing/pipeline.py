@@ -3,6 +3,8 @@ import logging
 import math
 import os
 import pickle
+
+from d3m.container.dataset import Dataset
 from processing.parquet_loader import ParquetDatasetLoader
 import time
 import typing
@@ -75,10 +77,6 @@ import copy
 
 logger = logging.getLogger(__name__)
 
-# add the parquet datset loader to the loaders to try - order matters, and
-# we want to ensure it run before the D3M dataset loader
-dataset.Dataset.loaders.insert(0, ParquetDatasetLoader())
-
 def create(
     dataset_doc_path: str,
     problem: dict,
@@ -94,7 +92,7 @@ def create(
     tune_pipeline = config.HYPERPARAMETER_TUNING
 
     # Load dataset in the same way the d3m runtime will
-    train_dataset = dataset.Dataset.load(dataset_doc_path)
+    train_dataset = _load_data(dataset_doc_path)
 
     # If there isn't a placeholder this is a fully specified pipeline.  Return the pipeline unmodified along with the
     # dataset.
@@ -542,6 +540,19 @@ def _use_gpu() -> bool:
     logger.info(f"GPU enabled pipelines {use_gpu}")
     return use_gpu
 
+def _load_data(dataset_doc_path: str) -> Dataset:
+    # Add the parquet datset loader to the loaders to try - order matters, and
+    # we want to ensure it run before the D3M dataset loader.  We have to do this
+    # lazily because the loaders array is globally initialized in core.
+    hasLoader = False
+    for loader in dataset.Dataset.loaders:
+        if type(loader) == ParquetDatasetLoader:
+            hasLoader = True
+    if not hasLoader:
+        dataset.Dataset.loaders.insert(0, ParquetDatasetLoader())
+
+    # Load dataset in the same way the d3m runtime will
+    return dataset.Dataset.load(dataset_doc_path)
 
 def get_pipeline_hyperparams(pipeline, tune_steps):
     parameters = []
