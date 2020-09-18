@@ -68,15 +68,12 @@ class ParquetDatasetLoader(D3MDatasetLoader):
 
         if not lazy:
             load_lazy = None
-
-            metadata, resources= self._load_data(metadata, dataset_uri=dataset_uri)
-
+            metadata, resources = self._load_data(metadata, dataset_uri=dataset_uri)
         else:
             def load_lazy(dataset: Dataset) -> None:
-                # "dataset" can be used as "resources", it is a dict of values.
                 dataset.metadata, resources = self._load_data(dataset.metadata, dataset_uri=dataset_uri)
                 for k, v in resources.items():
-                    dataset[k] = v
+                        dataset[k] = v
 
                 new_metadata = {
                     'dimension': {'length': len(dataset)},
@@ -84,8 +81,6 @@ class ParquetDatasetLoader(D3MDatasetLoader):
                 }
 
                 dataset.metadata = dataset.metadata.update((), new_metadata)
-                dataset.metadata = dataset.metadata.generate(dataset)
-
                 dataset._load_lazy = None
 
         dataset_metadata = {
