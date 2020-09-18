@@ -24,6 +24,7 @@ import pandas as pd
 from processing.parquet_loader import ParquetDatasetLoader
 from d3m import container
 from d3m.metadata import base as metadata_base
+from d3m.base import utils as base_utils
 
 class ParquetDatasetLoaderTestCase(unittest.TestCase):
 
@@ -46,48 +47,58 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
         dataset_path=path.join(self._parquet_dataset_path, 'datasetDoc.json')
         dataset_url = urllib.parse.urlunparse(('file', '', dataset_path, '', '', ''))
         loader = ParquetDatasetLoader()
-        df = loader.load(dataset_uri=dataset_url)
+        dataset = loader.load(dataset_uri=dataset_url)
 
-        df.metadata.pretty_print()
-
+        df = base_utils.get_tabular_resource(dataset, 'learningData')
         self.assertIsNotNone(df)
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS))['dimension']['length'], 5)
 
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 0))['name'], 'd3mIndex')
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 0))['structural_type'], int)
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 0))['semantic_types'], (
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS))['dimension']['length'], 5)
+
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 0))['name'], 'd3mIndex')
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 0))['structural_type'], int)
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 0))['semantic_types'], (
             "http://schema.org/Integer",
             "https://metadata.datadrivendiscovery.org/types/PrimaryKey"
         ))
 
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 1))['name'], 'alpha')
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 1))['structural_type'], int)
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 1))['semantic_types'], (
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 1))['name'], 'alpha')
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 1))['structural_type'], int)
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 1))['semantic_types'], (
             "http://schema.org/Integer",
             "https://metadata.datadrivendiscovery.org/types/Attribute"
         ))
 
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 2))['name'], 'bravo')
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 2))['structural_type'], float)
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 2))['semantic_types'], (
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 2))['name'], 'bravo')
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 2))['structural_type'], float)
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 2))['semantic_types'], (
             "http://schema.org/Float",
             "https://metadata.datadrivendiscovery.org/types/Attribute"
         ))
 
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 3))['name'], 'charlie')
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 3))['structural_type'], str)
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 3))['semantic_types'], (
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 3))['name'], 'charlie')
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 3))['structural_type'], str)
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 3))['semantic_types'], (
             "http://schema.org/Text",
             "https://metadata.datadrivendiscovery.org/types/Attribute"
         ))
 
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 4))['name'], 'delta')
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 4))['structural_type'], str)
-        self.assertEqual(df.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 4))['semantic_types'], (
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 4))['name'], 'delta')
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 4))['structural_type'], str)
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 4))['semantic_types'], (
             "https://metadata.datadrivendiscovery.org/types/CategoricalData",
             "https://metadata.datadrivendiscovery.org/types/Attribute"
         ))
 
+    def test_lazy_load(self) -> None:
+        dataset_path=path.join(self._parquet_dataset_path, 'datasetDoc.json')
+        dataset_url = urllib.parse.urlunparse(('file', '', dataset_path, '', '', ''))
+        loader = ParquetDatasetLoader()
+        dataset = loader.load(dataset_uri=dataset_url, lazy=True)
+        dataset.load_lazy()
+
+        df = base_utils.get_tabular_resource(dataset, 'learningData')
+        self.assertIsNotNone(df)
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS))['dimension']['length'], 5)
 
 def csv_to_parquet():
     _csv_dataset_path = path.abspath(path.join(path.dirname(__file__), 'tabular_dataset_csv'))

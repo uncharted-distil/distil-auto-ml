@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from typing import Dict
+from typing import Dict, Tuple
 from urllib import parse as url_parse
 import numpy as np
 import pandas as pd
@@ -69,14 +69,14 @@ class ParquetDatasetLoader(D3MDatasetLoader):
         if not lazy:
             load_lazy = None
 
-            metadata = self._load_data(resources, metadata, dataset_uri=dataset_uri)
+            metadata, resources= self._load_data(metadata, dataset_uri=dataset_uri)
 
         else:
             def load_lazy(dataset: Dataset) -> None:
                 # "dataset" can be used as "resources", it is a dict of values.
-                dataset.metadata = self._load_data(
-                    dataset, dataset.metadata, dataset_uri=dataset_uri
-                )
+                dataset.metadata, resources = self._load_data(dataset.metadata, dataset_uri=dataset_uri)
+                for k, v in resources.items():
+                    dataset[k] = v
 
                 new_metadata = {
                     'dimension': {'length': len(dataset)},
@@ -92,6 +92,7 @@ class ParquetDatasetLoader(D3MDatasetLoader):
             'schema': metadata_base.CONTAINER_SCHEMA_VERSION,
             'structural_type': Dataset,
             'id': dataset_id or dataset_uri,
+            'digest': 'D3ADB33F',
             'name': dataset_name or os.path.basename(parsed_uri.path),
             'location_uris': [
                 dataset_uri,
@@ -145,7 +146,7 @@ class ParquetDatasetLoader(D3MDatasetLoader):
 
         return True
 
-    def _load_data(self, resources: Dict, metadata, *, dataset_uri: str) -> metadata_base.DataMetadata:
+    def _load_data(self, metadata, *, dataset_uri: str) -> Tuple[metadata_base.DataMetadata, Dict]:
         # validate the dataset doc
         if not self._validate_dataset_doc(dataset_uri):
             raise exceptions.InvalidDatasetError(f"Dataset '{dataset_uri}' is not a valid parquet dataset.")
@@ -215,4 +216,4 @@ class ParquetDatasetLoader(D3MDatasetLoader):
                     'semantic_types': semantic_types,
                 })
 
-        return metadata
+        return metadata, resources
