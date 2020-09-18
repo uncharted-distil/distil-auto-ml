@@ -47,6 +47,12 @@
           "colName": "delta",
           "colType": "categorical",
           "role": ["attribute"]
+        },
+        {
+          "colIndex": 5,
+          "colName": "echo",
+          "colType": "realVector",
+          "role": ["attribute"]
         }
       ]
     }
