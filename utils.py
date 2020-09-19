@@ -1,12 +1,14 @@
+from api.utils import ValueType
+from importlib.abc import ExecutionLoader
 import os
 import uuid
 import logging
-import importlib
 import subprocess
 import pathlib
 
 import config
 
+logger = logging.getLogger('distil')
 
 def generate_id():
     _id = str(uuid.uuid4())
@@ -59,16 +61,24 @@ def make_job_fn(task_id):
     filepath = pathlib.Path(config.OUTPUT_DIR, filename)
     return filepath.resolve()
 
-def make_preds_filename(task_id, output_key=None):
+def make_preds_filename(task_id, output_key=None, output_type=None):
     """Return the absolute path to the predictions filename.
 
     None of that os.path.join garbage, just good sweet Path.absolute()
 
     Down with os.path.join. I have learned my lesson.
     """
-    if output_key is not None:
-        path = pathlib.Path(config.OUTPUT_DIR, f'{format(task_id)}_{output_key}.csv').resolve()
+    if output_type == ValueType.PARQUET_URI:
+        extension = 'parquet'
+    elif output_type == ValueType.CSV_URI:
+        extension = 'csv'
     else:
-        path = pathlib.Path(config.OUTPUT_DIR, f'{format(task_id)}.csv').resolve()
+        extension = 'csv'
+        logger.warn(f"unhandled output type '{output_type}'.  Default to '{ValueType.CSV_URI}'")
+
+    if output_key is not None:
+        path = pathlib.Path(config.OUTPUT_DIR, f'{format(task_id)}_{output_key}.{extension}').resolve()
+    else:
+        path = pathlib.Path(config.OUTPUT_DIR, f'{format(task_id)}.{extension}').resolve()
 
     return path

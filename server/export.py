@@ -1,12 +1,11 @@
+from api.utils import ValueType
 import os
 import json
 import pickle
-import yaml
+from server.task_manager import api_utils
 import shutil
 import pathlib
 import urllib
-
-from d3m.metadata import pipeline
 
 import utils
 
@@ -52,7 +51,7 @@ def export_predictions(solution_task):
     solution_results_dir = pathlib.Path(D3MOUTPUTDIR + '/' + solution_task.search_id + '/predictions/' + str(solution_task.id))
     solution_results_dir.mkdir(parents=True, exist_ok=True)
     # TODO solution_task.output_keys is none, but make_preds_filename requires it.
-    original_preds_path = utils.make_preds_filename(solution_task.id)
+    original_preds_path = utils.make_preds_filename(solution_task.id, output_type=ValueType.CSV_URI)
     # check if predictions were actually generated and export them if so
     if os.path.exists(original_preds_path):
         shutil.copy(original_preds_path, solution_results_dir)

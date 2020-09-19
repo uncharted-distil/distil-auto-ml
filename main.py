@@ -5,7 +5,7 @@ import logging
 import datetime
 import io
 import jsonschema
-from google.protobuf import json_format
+from api.utils import ValueType
 
 import config
 
@@ -13,19 +13,15 @@ import utils
 import models
 import uuid
 from server.server import Server
-from server.export import export_run
 
 from processing import pipeline as ex_pipeline
 from processing.scoring import Scorer
 from server import export
-import api.utils as api_utils
-from api import problem_pb2
 
 from d3m.container import dataset
-from d3m.metadata import pipeline, problem, pipeline_run
+from d3m.metadata import pipeline, problem
 
-import pickle
-import pandas as pd
+from server import messages
 
 # Configure output dir
 pathlib.Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
@@ -41,10 +37,25 @@ def produce_task(logger, session, server, task):
 
         # pull out the results the caller requested, ignore any others that were exposed
         output_keys = json.loads(task.output_keys)
+
+        # loop over the (ordered) list of requested output types until we find one that we support
+        output_types = json.loads(task.output_types)
+        selected_output_type = None
+        for output_type in output_types:
+            if output_type in messages.ALLOWED_TYPES:
+                selected_output_type = output_type
+                break
+        if not selected_output_type:
+            raise ValueError(f"could not write results in requested formats '{output_types}'")
+
         for output_key in output_keys:
             if output_key in results.values:
-                preds_path = utils.make_preds_filename(task.request_id, output_key=output_key)
-                results.values[output_key].to_csv(preds_path, index=False)
+                if selected_output_type == ValueType.PARQUET_URI:
+                    preds_path = utils.make_preds_filename(task.request_id, output_key=output_key, output_type=selected_output_type)
+                    results.values[output_key].to_parquet(preds_path, index=False)
+                elif selected_output_type == ValueType.CSV_URI:
+                    preds_path = utils.make_preds_filename(task.request_id, output_key=output_key, output_type=selected_output_type)
+                    results.values[output_key].to_csv(preds_path, index=False)
         session.commit()
     except Exception as e:
         logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
