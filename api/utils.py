@@ -76,6 +76,7 @@ class ValueType(d3m_utils.Enum):
     PLASMA_ID = 'PLASMA_ID'
     LARGE_RAW = 'LARGE_RAW'
     LARGE_PICKLE_BLOB = 'LARGE_PICKLE_BLOB'
+    PARQUET_URI = 'PARQUET_URI'
 
 
 def _can_encode_raw(value):

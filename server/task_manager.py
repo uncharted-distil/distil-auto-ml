@@ -2,22 +2,18 @@
 Hello - TaskManager translates between
 protobuf messages and DAG tasks for the worker.
 """
+from api.utils import ValueType
 import json
 import logging
 import time
 import pathlib
-from sqlalchemy import exists, and_
 
 import config
 
 import models
 import utils
-import server
-from server import export
-from server.messages import Messaging
+from server.messages import ALLOWED_TYPES, Messaging
 from server.validation import RequestValidator
-
-from google.protobuf import json_format
 
 from api import utils as api_utils
 from d3m.metadata import pipeline
@@ -193,7 +189,7 @@ class TaskManager():
 
     def GetScoreSolutionResults(self, message):
         request_id = self.validator.validate_get_score_solution_results_request(message, self.session)
-        seen_ids = []   
+        seen_ids = []
 
         solution_id = self.session.query(models.Requests) \
                       .filter(models.Requests.id==request_id) \
@@ -324,10 +320,11 @@ class TaskManager():
 
         # Validate request is in required format, extract if it is
         extracted_fields = self.validator.validate_produce_solution_request(message)
-        fitted_solution_id, dataset_uri, output_keys = extracted_fields
+        fitted_solution_id, dataset_uri, output_keys, output_types = extracted_fields
 
         # serialize the output key list json for storage
         output_keys_json = json.dumps(output_keys)
+        output_types_json = json.dumps(output_types)
 
         # Get existing fit_solution.id
         fit_solution = self.session.query(models.FitSolution) \
@@ -345,7 +342,8 @@ class TaskManager():
                             fit_solution_id=fitted_solution_id,
                             solution_id=fit_solution.solution_id,
                             dataset_uri=dataset_uri,
-                            output_keys=output_keys_json)
+                            output_keys=output_keys_json,
+                            output_types=output_types_json)
         self.session.add(task)
         self.session.commit()
 
@@ -382,10 +380,19 @@ class TaskManager():
                 # build a map of (output_key, URI)
                 task_keys = json.loads(task.output_keys)
                 output_key_map = {}
+
+                # loop  through the allowed output types in order and select the first we support
+                output_types = json.loads(task.output_types)
+                selected_output_type = ValueType.CSV_URI
+                for output_type in output_types:
+                    if output_type in ALLOWED_TYPES:
+                        selected_output_type = output_type
+                        break
+
                 for task_key in task_keys:
                     # generate a uri from the key and make sure the file exists
                     # TODO(jtorrez): predictions filename creation should live somewhere better than utils
-                    preds_path = utils.make_preds_filename(task.request_id, output_key=task_key)
+                    preds_path = utils.make_preds_filename(task.request_id, output_key=task_key, output_type=selected_output_type)
                     if not preds_path.exists() and not preds_path.is_file():
                         raise FileNotFoundError("Predictions file {} doesn't exist".format(preds_path))
 

@@ -1,4 +1,5 @@
 import pathlib
+from api import utils as api_utils
 from google.protobuf import json_format
 
 import config
@@ -8,6 +9,9 @@ from api import core_pb2, problem_pb2, value_pb2, pipeline_pb2, primitive_pb2, u
 from d3m.metadata import pipeline
 
 from d3m import index
+
+# List of value types the we support for returning data to the TA3
+ALLOWED_TYPES = set([api_utils.ValueType.CSV_URI, api_utils.ValueType.PARQUET_URI])
 
 class Messaging:
 
@@ -123,9 +127,10 @@ class Messaging:
         resp = core_pb2.HelloResponse(
             user_agent=config.SERVER_USER_AGENT,
             version=core_pb2.DESCRIPTOR.GetOptions().Extensions[core_pb2.protocol_version])
-        resp.allowed_value_types.append('RAW')
-        resp.allowed_value_types.append('DATASET_URI')
+        resp.allowed_value_types.append('PARQUET_URI')
         resp.allowed_value_types.append('CSV_URI')
+        resp.allowed_value_types.append('DATASET_URI')
+        resp.allowed_value_types.append('RAW')
         return resp
 
     def get_solution_id(self, message):
@@ -152,10 +157,16 @@ class Messaging:
         return resp
 
     def get_output_keys(self, message):
-        output_keys = message.expose_outputs
         output_keys = list(message.expose_outputs)
         if len(output_keys) != 0:
             return output_keys
+        else:
+            return None
+
+    def get_output_types(self, message):
+        output_types = list(message.expose_value_types)
+        if len(output_types) != 0:
+            return output_types
         else:
             return None
 
@@ -163,7 +174,8 @@ class Messaging:
         fitted_solution_id = self.get_fitted_solution_id(message)
         dataset_uri = self.get_dataset_uri(message)
         expose_output_keys = self.get_output_keys(message)
-        return fitted_solution_id, dataset_uri, expose_output_keys
+        output_types = self.get_output_types(message)
+        return fitted_solution_id, dataset_uri, expose_output_keys, output_types
 
     def make_produce_solution_response(self, request_id):
         return core_pb2.ProduceSolutionResponse(request_id=request_id)
