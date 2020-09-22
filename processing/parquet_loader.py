@@ -1,7 +1,7 @@
 import os
 import json
 import logging
-from typing import Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 from urllib import parse as url_parse
 import numpy as np
 import pandas as pd
@@ -35,10 +35,6 @@ class ParquetDatasetLoader(D3MDatasetLoader):
     URI should point to a file with ``.parquet`` file extension.
     """
 
-    def __init__(self):
-        self._dataset_doc = {}
-
-
     # checks to see if this is a simple d3m tabular dataset that stores the table data
     # as a parquet file
     def can_load(self, dataset_uri: str) -> bool:
@@ -48,12 +44,14 @@ class ParquetDatasetLoader(D3MDatasetLoader):
              return False
 
         # check to see that there is a parquet file for the learning data
-        return self._validate_dataset_doc(dataset_uri)
+        dataset_doc = self._load_dataset_doc(dataset_uri)
+        if dataset_doc is None:
+            return False
+
+        return self._validate_dataset_doc(dataset_doc)
 
     def load(self, dataset_uri: str, *, dataset_id: str = None, dataset_version: str = None, dataset_name: str = None, lazy: bool = False,
              compute_digest: ComputeDigest = ComputeDigest.ONLY_IF_MISSING, strict_digest: bool = False, handle_score_split: bool = True) -> 'Dataset':
-        assert self.can_load(dataset_uri)
-
         parsed_uri = url_parse.urlparse(dataset_uri, allow_fragments=False)
 
         # Pandas requires a host for "file" URIs.
@@ -109,25 +107,24 @@ class ParquetDatasetLoader(D3MDatasetLoader):
 
         return Dataset(resources, metadata, load_lazy=load_lazy)
 
+    def _load_dataset_doc(self, dataset_uri: str) -> Optional[Dict[Any, Any]]:
+        # load the metadata to see if we're pointing to a parquet file
+        parsed_url = url_parse.urlparse(dataset_uri)
+        dataset_doc_path = parsed_url.path
+        try:
+            with open(dataset_doc_path, 'r', encoding='utf8') as dataset_doc_file:
+                return json.load(dataset_doc_file)
+        except FileNotFoundError:
+            return None
+
     # returns true if the referenced dataset is a single table d3m dataset where the table
     # data is stored as a parquet file
-    def _validate_dataset_doc(self, dataset_uri) -> bool:
-
-        if self._dataset_doc == {}:
-            # load the metadata to see if we're pointing to a parquet file
-            parsed_url = url_parse.urlparse(dataset_uri)
-            dataset_doc_path = parsed_url.path
-            try:
-                with open(dataset_doc_path, 'r', encoding='utf8') as dataset_doc_file:
-                    self._dataset_doc = json.load(dataset_doc_file)
-            except FileNotFoundError:
-                return False
-
+    def _validate_dataset_doc(self, dataset_doc) -> bool:
         # this should be a dataset consisting of a single resource
-        if len(self._dataset_doc['dataResources']) is not 1:
+        if len(dataset_doc['dataResources']) is not 1:
             return False
 
-        mainResource = self._dataset_doc['dataResources'][0]
+        mainResource = dataset_doc['dataResources'][0]
 
         # should be a table resource
         resType = mainResource['resType']
@@ -142,12 +139,16 @@ class ParquetDatasetLoader(D3MDatasetLoader):
         return True
 
     def _load_data(self, metadata, *, dataset_uri: str) -> Tuple[metadata_base.DataMetadata, Dict]:
+        dataset_doc = self._load_dataset_doc(dataset_uri)
+        if dataset_doc is None:
+            raise exceptions.InvalidDatasetError(f"Dataset '{dataset_uri}' can be found.")
+
         # validate the dataset doc
-        if not self._validate_dataset_doc(dataset_uri):
+        if not self._validate_dataset_doc(dataset_doc):
             raise exceptions.InvalidDatasetError(f"Dataset '{dataset_uri}' is not a valid parquet dataset.")
 
         # find the resource path
-        resources = self._dataset_doc['dataResources'][0]
+        resources = dataset_doc['dataResources'][0]
         resource_path = resources['resPath']
 
         # read in the parquet data
