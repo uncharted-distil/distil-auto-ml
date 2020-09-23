@@ -14,6 +14,7 @@ import models
 import utils
 from server.messages import ALLOWED_TYPES, Messaging
 from server.validation import RequestValidator
+from server import export
 
 from api import utils as api_utils
 from d3m.metadata import pipeline
