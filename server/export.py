@@ -2,7 +2,6 @@ from api.utils import ValueType
 import os
 import json
 import pickle
-from server.task_manager import api_utils
 import shutil
 import pathlib
 import urllib
@@ -10,7 +9,6 @@ import urllib
 import utils
 
 import config
-import logging
 import utils
 
 # eval mode, oneof {search, test, ta2ta3}
@@ -80,7 +78,6 @@ def export(solution_task, rank):
     # Write out pipelines_ranked
     # first the pipeline
     pipeline_ranked_dir = pathlib.Path(D3MOUTPUTDIR + '/' + str(solution_task.search_id) + '/pipelines_ranked')
-    logger.info(f"ranked_dir: {pipeline_ranked_dir}")
     pipeline_ranked_dir.mkdir(parents=True, exist_ok=True)
     pipeline_file = pathlib.Path(pipeline_ranked_dir, '{}.json'.format(solution_task.id))
     with open(pipeline_file, 'w') as f:
@@ -128,7 +125,7 @@ def save_fitted_pipeline(fitted_solution_id, runtime):
     return filename.as_uri()
 
 def load_pipeline(solution_uri):
-    with open(filename, 'r') as f:
+    with open(solution_uri, 'r') as f:
         json_data = json.load(f)
     return json_data
 
