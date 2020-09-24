@@ -87,7 +87,6 @@ def create(
 ) -> Tuple[List[pipeline.Pipeline], container.Dataset, List[float]]:
     # allow for use of GPU optimized pipelines
     gpu = _use_gpu()
-    max_models=4
     # Optionally enable external hyperparameter tuning.
     tune_pipeline = config.HYPERPARAMETER_TUNING
 
