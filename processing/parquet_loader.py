@@ -81,11 +81,17 @@ class ParquetDatasetLoader(D3MDatasetLoader):
                 dataset.metadata = dataset.metadata.update((), new_metadata)
                 dataset._load_lazy = None
 
+        if dataset_id is None:
+            dataset_doc = self._load_dataset_doc(dataset_uri)
+            if dataset_doc is None:
+                raise exceptions.InvalidDatasetError(f"Dataset '{dataset_uri}' can't be found.")
+            dataset_id = dataset_doc['about']['datasetID']
+
         dataset_metadata = {
             'schema': metadata_base.CONTAINER_SCHEMA_VERSION,
             'structural_type': Dataset,
-            'id': dataset_id or dataset_uri,
-            'digest': 'D3ADB33F',
+            'id': dataset_id,
+            'digest': 'D3ADB33F', # how to compute proper digest from parquet file
             'name': dataset_name or os.path.basename(parsed_uri.path),
             'location_uris': [
                 dataset_uri,
@@ -141,7 +147,7 @@ class ParquetDatasetLoader(D3MDatasetLoader):
     def _load_data(self, metadata, *, dataset_uri: str) -> Tuple[metadata_base.DataMetadata, Dict]:
         dataset_doc = self._load_dataset_doc(dataset_uri)
         if dataset_doc is None:
-            raise exceptions.InvalidDatasetError(f"Dataset '{dataset_uri}' can be found.")
+            raise exceptions.InvalidDatasetError(f"Dataset '{dataset_uri}' can't be found.")
 
         # validate the dataset doc
         if not self._validate_dataset_doc(dataset_doc):
