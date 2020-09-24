@@ -87,7 +87,7 @@ def create(
 ) -> Tuple[List[pipeline.Pipeline], container.Dataset, List[float]]:
     # allow for use of GPU optimized pipelines
     gpu = _use_gpu()
-
+    max_models=4
     # Optionally enable external hyperparameter tuning.
     tune_pipeline = config.HYPERPARAMETER_TUNING
 
@@ -373,9 +373,10 @@ def create(
 
     tuned_pipelines = []
     scores = []
+    # try:
     for i, pipeline in enumerate(pipelines):
         # tune the pipeline if tuning info was generated, and tuning is enabled
-        if len(pipeline[1]) > 0  and tune_pipeline:
+        if len(pipeline[1]) > 0 and tune_pipeline:
             try:
                 pipeline = hyperparam_tune(
                     pipeline,
@@ -387,6 +388,7 @@ def create(
                     tuned_pipelines.append(pipeline[0])
                     if pipeline[1] is None:
                         scores.append(np.nan)
+                        yield pipeline[0], train_dataset, pipeline[1]
                     else:
                         scores.append(pipeline[1])
                 else:
@@ -399,17 +401,18 @@ def create(
                 scores.append(np.nan)
 
         else:
+            yield pipeline[0], train_dataset, np.nan
             tuned_pipelines.append(pipeline[0])
             scores.append(np.nan)
-
-    # tuned_pipelines = [pipeline[0] for pipeline in pipelines]
-    # scores = np.arange(len(tuned_pipelines))
-
-    ranks: List[float] = []
-    for i in np.argsort(scores):
-        ranks.append(int(i + 1))
-
-    return tuned_pipelines, train_dataset, ranks
+    # except StopIteration:
+    #     # tuned_pipelines = [pipeline[0] for pipeline in pipelines]
+    #     # scores = np.arange(len(tuned_pipelines))
+    #
+    #     ranks: List[float] = []
+    #     for i in np.argsort(scores):
+    #         ranks.append(int(i + 1))
+    #
+    #     return tuned_pipelines, train_dataset, ranks, True
 
 
 def fit(

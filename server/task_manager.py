@@ -75,6 +75,17 @@ class TaskManager():
         self.session.commit()
         return search_id
 
+    def StopSearchSolution(self, request):
+        """
+        Get current running search and set early stop to true.
+        """
+        search_id = self.validator.validate_get_search_solutions_results_request(request, self.session)
+
+        search = self.session.query(models.Searches) \
+            .filter(models.Searches.id == str(search_id)).first()
+        search.stop_search = True
+        self.session.commit()
+
     def GetSearchSolutionsResults(self, request):
         """
         Searches for pipelines

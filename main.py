@@ -22,7 +22,8 @@ from d3m.container import dataset
 from d3m.metadata import pipeline, problem
 
 from server import messages
-
+import numpy as np
+from typing import List
 # Configure output dir
 pathlib.Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
@@ -190,7 +191,24 @@ def search_task(logger, session, search):
         problem_obj = problem.Problem.from_json_structure(json.loads(search.problem)) if search.problem else None
 
         # based on our problem type and data type, create a pipeline
-        pipeline_objs, dataset, ranks = ex_pipeline.create(search.dataset_uri, problem_obj, search.time_limit, search.max_models, search_template_obj, resolver=resolver)
+        pipline_creator = iter(ex_pipeline.create(search.dataset_uri, problem_obj, search.time_limit, search.max_models, search_template_obj, resolver=resolver))
+        pipeline_objs: List[pipeline.Pipeline] = [];
+        scores: List[float] = [];
+        while True:
+            try:
+                session.refresh(search)
+                if not search.stop_search:
+                    pipeline_obj, dataset, score = next(pipline_creator)
+                    pipeline_objs.append(pipeline_obj)
+                    scores.append(score)
+                else:
+                    raise StopIteration
+            except StopIteration:
+                ranks: List[float] = []
+                for i in np.argsort(scores):
+                    ranks.append(int(i + 1))
+                break
+
         for i, pipeline_obj in enumerate(pipeline_objs):
             pipeline_json = pipeline_obj.to_json(nest_subpipelines=True)
 

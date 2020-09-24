@@ -59,6 +59,7 @@ class Searches(Base):
     search_template = Column(String)
     time_limit = Column(Integer)
     max_models = Column(Integer)
+    stop_search = Column(Boolean, default=False)
 
 class Requests(Base):
     __tablename__ = 'requests'
