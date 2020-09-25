@@ -426,12 +426,12 @@ def fit(
     problem: problem.Problem,
     input_dataset: container.Dataset,
     is_standard_pipeline=True,
-) -> Tuple[Optional[runtime.Runtime], Optional[container.DataFrame], Optional[runtime.Result]]:
+) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
     hyperparams = None
     random_seed = 0
     volumes_dir = config.D3MSTATICDIR
 
-    fitted_runtime, fitted_results, result = runtime.fit(
+    fitted_runtime, _, result = runtime.fit(
         pipeline,
         [input_dataset],
         problem_description=problem,
@@ -446,7 +446,7 @@ def fit(
     if result.has_error():
         raise result.error
 
-    return fitted_runtime, fitted_results, result
+    return fitted_runtime, result
 
 
 def produce(

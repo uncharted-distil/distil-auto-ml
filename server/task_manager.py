@@ -313,13 +313,17 @@ class TaskManager():
                 self.session.add(fit_solution)
                 self.session.commit()
 
-                output_key_map = {}
-                preds_path = utils.make_preds_filename(task.request_id, output_key='outputs.0')
-                if not preds_path.exists() and not preds_path.is_file():
-                    raise FileNotFoundError("Predictions file {} doesn't exist".format(preds_path))
+                output_key_map = None
+                if task.output_keys:
+                    task_keys = json.loads(task.output_keys)
+                    output_key_map = {}
+                    for task_key in task_keys:
+                        preds_path = utils.make_preds_filename(task.request_id, output_key=task_key)
+                        if not preds_path.exists() and not preds_path.is_file():
+                            raise FileNotFoundError("Predictions file {} doesn't exist".format(preds_path))
 
-                preds_uri = pathlib.Path(preds_path).absolute().as_uri()
-                output_key_map['outputs.0'] = preds_uri
+                        preds_uri = pathlib.Path(preds_path).absolute().as_uri()
+                        output_key_map[task_key] = preds_uri
 
                 progress_msg = self.msg.make_progress_msg("COMPLETED")
                 yield self.msg.make_get_fit_solution_results_response(task.fit_solution_id, progress_msg, output_key_map)
