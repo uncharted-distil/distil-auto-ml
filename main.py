@@ -123,7 +123,9 @@ def fit_task(logger, session, server, task):
         run_as_standard = not task.fully_specified
 
         train_dataset = dataset.Dataset.load(task.dataset_uri)
-        fitted_runtime, result = ex_pipeline.fit(pipeline_obj, problem_obj, train_dataset, is_standard_pipeline=run_as_standard)
+        fitted_runtime, fitted_results, result = ex_pipeline.fit(pipeline_obj, problem_obj, train_dataset, is_standard_pipeline=run_as_standard)
+
+        fitted_results.to_csv(utils.make_preds_filename(task.request_id, output_key='outputs.0'), index=False)
 
         # fitted runtime needs to have the fitted pipeline ID we've generated
         fitted_runtime.pipeline.id = task.fit_solution_id

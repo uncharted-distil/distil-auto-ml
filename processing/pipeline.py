@@ -46,15 +46,16 @@ from processing.pipelines import (
     graph_matching,
     image,
     remote_sensing,
+    remote_sensing_mlp,
     object_detection,
-    object_detection_yolo,
+    # object_detection_yolo,
     question_answer,
     tabular,
     text,
     text_sent2vec,
     link_prediction,
     link_prediction_jhu,
-    audio,
+    # audio,
     vertex_nomination,
     # vertex_nomination_jhu,
     vertex_classification,
@@ -261,16 +262,26 @@ def create(
             image.create_pipeline(metric=metric, resolver=resolver)
         )
 
-    elif pipeline_type == "object_detection":
+    elif pipeline_type == "remote_sensing_mlp":
+        pipelines.append(
+            remote_sensing_mlp.create_pipeline(
+                metric=metric, resolver=resolver,
+                batch_size=config.REMMOTE_SENSING_BATCH_SIZE, **pipeline_info
+            )
+        )
+        pipelines.append(
+            image.create_pipeline(metric=metric, resolver=resolver)
+        )
+    # elif pipeline_type == "object_detection":
         # pipelines.append(
         #     object_detection.create_pipeline(
         #         metric=metric, resolver=resolver
         #     ))
-        pipelines.append(
-            object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
-        )
-    elif pipeline_type == "audio":
-        pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))
+        # pipelines.append(
+        #     object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
+        # )
+    # elif pipeline_type == "audio":
+    #     pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))
     elif pipeline_type == "collaborative_filtering":
         if gpu:
             pipelines.append(
@@ -415,12 +426,12 @@ def fit(
     problem: problem.Problem,
     input_dataset: container.Dataset,
     is_standard_pipeline=True,
-) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
+) -> Tuple[Optional[runtime.Runtime], Optional[container.DataFrame], Optional[runtime.Result]]:
     hyperparams = None
     random_seed = 0
     volumes_dir = config.D3MSTATICDIR
 
-    fitted_runtime, _, result = runtime.fit(
+    fitted_runtime, fitted_results, result = runtime.fit(
         pipeline,
         [input_dataset],
         problem_description=problem,
@@ -435,7 +446,7 @@ def fit(
     if result.has_error():
         raise result.error
 
-    return fitted_runtime, result
+    return fitted_runtime, fitted_results, result
 
 
 def produce(

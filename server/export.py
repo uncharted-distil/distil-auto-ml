@@ -18,7 +18,7 @@ import utils
 D3MRUN = os.getenv("D3MRUN", "invalid")
 
 # directory setup
-local_env = os.getenv("D3MLOCAL") # set this to true if not running in docker.
+local_env = os.getenv("D3MLOCAL", "True") # set this to true if not running in docker.
 if local_env == 'True':
     D3MINPUTDIR = os.getenv("D3MINPUTDIR", "./input")
     D3MOUTPUTDIR = os.getenv("D3MOUTPUTDIR", "./output")

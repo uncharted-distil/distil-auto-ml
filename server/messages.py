@@ -146,9 +146,15 @@ class Messaging:
     def make_fit_solution_message(self, request_id):
         return core_pb2.FitSolutionResponse(request_id=request_id)
 
-    def make_get_fit_solution_results_response(self, fitted_solution_id, progess_msg):
-        resp = core_pb2.GetFitSolutionResultsResponse(fitted_solution_id=fitted_solution_id,
-                                                      progress=progess_msg)
+    def make_get_fit_solution_results_response(self, fitted_solution_id, progess_msg, output_key_map=None):
+        if output_key_map:
+            fb_output_map = { output_id:value_pb2.Value(csv_uri=csv_uri) for (output_id, csv_uri) in output_key_map.items() }
+            resp = core_pb2.GetFitSolutionResultsResponse(fitted_solution_id=fitted_solution_id,
+                                                        progress=progess_msg,
+                                                        exposed_outputs=fb_output_map)
+        else:
+            resp = core_pb2.GetFitSolutionResultsResponse(fitted_solution_id=fitted_solution_id,
+                                                        progress=progess_msg)
         return resp
 
     def get_output_keys(self, message):
