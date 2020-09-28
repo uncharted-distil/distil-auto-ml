@@ -136,6 +136,12 @@ def fit_task(logger, session, server, task):
         train_dataset = dataset.Dataset.load(task.dataset_uri)
         fitted_runtime, result = ex_pipeline.fit(pipeline_obj, problem_obj, train_dataset, is_standard_pipeline=run_as_standard)
 
+        if task.output_keys:
+            output_keys = json.loads(task.output_keys)
+            for output_key in output_keys:
+                if output_key in results.values:
+                    result.values[output_key].to_csv(utils.make_preds_filename(task.request_id, output_key=output_key), index=False)
+
         # fitted runtime needs to have the fitted pipeline ID we've generated
         fitted_runtime.pipeline.id = task.fit_solution_id
 
