@@ -2,6 +2,7 @@
 Hello - TaskManager translates between
 protobuf messages and DAG tasks for the worker.
 """
+from d3m.runtime import fit
 from api.utils import ValueType
 import json
 import logging
@@ -153,6 +154,13 @@ class TaskManager():
                                          .filter(models.Solutions.pipeline_id==models.Pipelines.id) \
                                          .first()
 
+        # extract the pipeline in case the score needs to kick off a fit
+        pipeline_json = pipeline_record.pipelines
+        fully_specified =  pipeline_record.fully_specified
+        # generate a fit solution id for the same reason
+        fit_solution_id = self._generate_id()
+
+
         # Fetch the search record and extract the problem
         search = self.session.query(models.Searches) \
                              .filter(models.Searches.id==pipeline_record.search_id) \
@@ -178,9 +186,12 @@ class TaskManager():
             task = models.Tasks(id=task_id,
                                 type="SCORE",
                                 solution_id=solution_id,
+                                fit_solution_id=fit_solution_id,
                                 dataset_uri=dataset_uri,
                                 score_config_id=conf_id,
-                                problem=search.problem)
+                                problem=search.problem,
+                                pipeline=pipeline_json,
+                                fully_specified=fully_specified)
             self.session.add(task)
             # Add configs and tasks to pool
             self.session.commit()

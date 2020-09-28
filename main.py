@@ -93,10 +93,11 @@ def score_task(logger, session, server, task):
         else:
             raise TypeError("no problem definition available for scoring")
 
-        if task.fitted is False:
-            fit_task(logger, session, server, task)
-
+        # check for successfully completed fit, run if not
         fitted_runtime = server.get_fitted_runtime(task.solution_id)
+        if fitted_runtime is None:
+            fit_task(logger, session, server, task)
+            fitted_runtime = server.get_fitted_runtime(task.solution_id)
 
         scorer = Scorer(logger, task, score_config, fitted_runtime, target_idx)
         score_values = scorer.run()
