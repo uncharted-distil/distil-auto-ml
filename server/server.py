@@ -174,7 +174,7 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
         self.fitted_runtimes[solution_id] = runtime
 
     def get_fitted_runtime(self, solution_id):
-        return self.fitted_runtimes[solution_id]
+        return self.fitted_runtimes.get(solution_id, None)
 
 
 class Server():

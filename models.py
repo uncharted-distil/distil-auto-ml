@@ -106,10 +106,8 @@ class Tasks(Base):
     # End -- SCORE specific
     worker_id = Column(String)
     dataset_uri = Column(String)
-    # Start -- PRODUCE specific --
     output_keys = Column(String)
     output_types = Column(String)
-    # End -- PRODUCE specific --
     pipeline = Column(String)
     pipeline_run = Column(String)
     problem = Column(String)
