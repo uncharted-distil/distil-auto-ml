@@ -98,13 +98,15 @@ class RequestValidator:
         return r
 
     def validate_fit_solution_request(self, request):
-        solution_id = self.msg.get_fit_solution_id(request)
+        solution_id, dataset_uri, output_keys, output_types = self.msg.unpack_fit_solution_request(request)
         if not solution_id:
             raise ValueError("Must pass a solution_id: {}".format(request))
         dataset_uri = self.msg.get_dataset_uri(request)
         if not dataset_uri:
             raise ValueError("Must pass a dataset URI: {}".format(request))
-        return solution_id, dataset_uri
+        # note that output_types and output_keys can be empty based on the ta3ta2 api spec so we don't
+        # validate them here
+        return solution_id, dataset_uri, output_keys, output_types
 
     def validate_produce_solution_request(self, request):
         fitted_solution_id, dataset_uri, output_keys, output_types = self.msg.unpack_produce_solution_request(request)

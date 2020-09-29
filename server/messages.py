@@ -183,6 +183,13 @@ class Messaging:
         output_types = self.get_output_types(message)
         return fitted_solution_id, dataset_uri, expose_output_keys, output_types
 
+    def unpack_fit_solution_request(self, message):
+        solution_id = self.get_solution_id(message)
+        dataset_uri = self.get_dataset_uri(message)
+        expose_output_keys = self.get_output_keys(message)
+        output_types = self.get_output_types(message)
+        return solution_id, dataset_uri, expose_output_keys, output_types
+
     def make_produce_solution_response(self, request_id):
         return core_pb2.ProduceSolutionResponse(request_id=request_id)
 

@@ -241,15 +241,18 @@ class TaskManager():
         # Generate request ID
         request_id = self._generate_id()
 
-        # Extract the associated solution ID and the dataset URI
-        solution_id, dataset_uri = self.validator.validate_fit_solution_request(message)
+        # Validate request is in required format, extract if it is
+        solution_id, dataset_uri, output_keys, output_types = self.validator.validate_fit_solution_request(message)
+
+        # serialize the output key list json for storage
+        output_keys_json = json.dumps(output_keys) if output_keys else None
+        output_types_json = json.dumps(output_types) if output_types else None
 
         # Fetch the pipeline record
         _, pipeline_record = self.session.query(models.Solutions, models.Pipelines) \
                                          .filter(models.Solutions.id==solution_id) \
                                          .filter(models.Solutions.pipeline_id==models.Pipelines.id) \
                                          .first()
-
 
         # Fetch the search record and extract the problem
         search = self.session.query(models.Searches) \
@@ -272,7 +275,9 @@ class TaskManager():
                             dataset_uri=dataset_uri,
                             pipeline=pipeline_json,
                             problem=search.problem,
-                            fully_specified = fully_specified)
+                            fully_specified=fully_specified,
+                            output_keys=output_keys_json,
+                            output_types=output_types_json)
         self.session.add(task)
         self.session.commit()
 
@@ -347,8 +352,8 @@ class TaskManager():
         fitted_solution_id, dataset_uri, output_keys, output_types = extracted_fields
 
         # serialize the output key list json for storage
-        output_keys_json = json.dumps(output_keys)
-        output_types_json = json.dumps(output_types)
+        output_keys_json = json.dumps(output_keys) if output_keys else None
+        output_types_json = json.dumps(output_types) if output_types else None
 
         # Get existing fit_solution.id
         fit_solution = self.session.query(models.FitSolution) \
