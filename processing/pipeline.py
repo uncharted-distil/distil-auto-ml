@@ -9,7 +9,6 @@ from processing.parquet_loader import ParquetDatasetLoader
 import time
 import typing
 import copy
-from collections import defaultdict
 from multiprocessing import Process
 from typing import Tuple, List, Dict, Optional
 
@@ -50,7 +49,8 @@ from processing.pipelines import (
     image,
     remote_sensing,
     remote_sensing_mlp,
-    object_detection,
+    remote_sensing_pretrained,
+    # object_detection,
     object_detection_yolo,
     question_answer,
     tabular,
@@ -112,6 +112,7 @@ def create(
 
     # determine type of pipeline required for dataset
     pipeline_type, pipeline_info = router.get_routing_info(dataset_doc, problem, metric)
+    logger.info(f"Identified problem type as {pipeline_type}")
 
     # Check if all columns have valid metadata
     # TODO check for unknown types as well.
@@ -245,14 +246,8 @@ def create(
             )
     elif pipeline_type == "image":
         pipelines.append(
-            image.create_pipeline(
-                metric=metric, resolver=resolver, **pipeline_info, sample=True
-            )
-        )
-        pipelines.append(
             image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
         )
-
     elif pipeline_type == "remote_sensing":
         pipelines.append(
             remote_sensing.create_pipeline(
@@ -260,10 +255,6 @@ def create(
                 batch_size=config.REMMOTE_SENSING_BATCH_SIZE, **pipeline_info
             )
         )
-        pipelines.append(
-            image.create_pipeline(metric=metric, resolver=resolver)
-        )
-
     elif pipeline_type == "remote_sensing_mlp":
         pipelines.append(
             remote_sensing_mlp.create_pipeline(
@@ -271,9 +262,24 @@ def create(
                 batch_size=config.REMMOTE_SENSING_BATCH_SIZE, **pipeline_info
             )
         )
+    elif pipeline_type == "remote_sensing_pretrained":
         pipelines.append(
-            image.create_pipeline(metric=metric, resolver=resolver)
+            remote_sensing_pretrained.create_pipeline(
+                metric=metric,
+                resolver=resolver,
+                use_linear_svc=True,
+                **pipeline_info
+            )
         )
+        if max_models > 1:
+            pipelines.append(
+                remote_sensing_pretrained.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    use_linear_svc=False,
+                    **pipeline_info
+                )
+            )
     elif pipeline_type == "object_detection":
         # pipelines.append(
         #     object_detection.create_pipeline(
