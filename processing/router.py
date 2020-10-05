@@ -39,7 +39,15 @@ def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
         == 0
     ):
         return False
-    elif _problem.TaskKeyword.SEMISUPERVISED in task_keywords:
+    elif (
+        len(
+            set(task_keywords)
+            & set(
+                [_problem.TaskKeyword.SEMISUPERVISED, _problem.TaskKeyword.REMOTE_SENSING]
+            )
+        )
+        != 0
+    ):
         return False
     elif resource_types == ["table"]:
         return True
@@ -124,6 +132,18 @@ def is_image(dataset_doc: dict, problem: dict) -> bool:
         and not remote_sensing
     )
 
+
+def is_remote_sensing_pretrained(dataset_doc: dict, problem: dict) -> bool:
+    classification = (
+        _problem.TaskKeyword.CLASSIFICATION in problem["problem"]["task_keywords"]
+    )
+    remote_sensing = (
+        _problem.TaskKeyword.REMOTE_SENSING in problem["problem"]["task_keywords"]
+    )
+    return (
+        "image" not in get_resource_types(dataset_doc)
+        and classification and remote_sensing
+    )
 
 def is_remote_sensing(dataset_doc: dict, problem: dict) -> bool:
     classification = (
@@ -251,9 +271,13 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
     elif is_image(dataset_doc, problem):
         return "image", {}
 
+    elif is_remote_sensing_pretrained(dataset_doc, problem):
+        return "remote_sensing_pretrained", {}
+
     elif is_remote_sensing(dataset_doc, problem):
         binary = _problem.TaskKeyword.BINARY in problem["problem"]["task_keywords"]
         return "remote_sensing", {"binary": binary}
+
 
     elif is_object_detection(problem):
         return "object_detection", {}

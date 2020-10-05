@@ -186,7 +186,10 @@ class Server():
 
     def create_server(self, port):
         self.servicer = ServerServicer()
-        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=30))
+        # Limit to a single executor.  The sqlalchemy session commit doesn't seem to be
+        # thread safe, and while it did suffice to put a read lock around calls to it, it
+        # limiting to a single thread will have almost no performance impact and is cleaner.
+        self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
         core_pb2_grpc.add_CoreServicer_to_server(
             self.servicer, self.server)
         address = '[::]:{}'.format(port)
