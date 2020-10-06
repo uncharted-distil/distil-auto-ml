@@ -17,7 +17,6 @@ from d3m.primitives.remote_sensing.remote_sensing_pretrained import (
 )
 from d3m.primitives.remote_sensing.mlp import MlpClassifier
 
-from distil.primitives.prediction_expansion import PredictionExpansionPrimitive
 from distil.primitives.satellite_image_loader import (
     DataFrameSatelliteImageLoaderPrimitive,
 )
