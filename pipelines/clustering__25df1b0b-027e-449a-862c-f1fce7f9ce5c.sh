@@ -1,3 +1,0 @@
-#!/bin/bash
-python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/1491_one_hundred_plants_margin_clust/1491_one_hundred_plants_margin_clust_problem/problemDoc.json 	-i $D3MINPUTDIR/1491_one_hundred_plants_margin_clust/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/1491_one_hundred_plants_margin_clust/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/1491_one_hundred_plants_margin_clust/SCORE/dataset_TEST/datasetDoc.json -p pipelines/clustering__25df1b0b-027e-449a-862c-f1fce7f9ce5c.json -O pipelines/clustering__25df1b0b-027e-449a-862c-f1fce7f9ce5c_run.yaml && 
-gzip -f pipelines/clustering__25df1b0b-027e-449a-862c-f1fce7f9ce5c_run.yaml

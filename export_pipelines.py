@@ -57,7 +57,7 @@ PIPE_TO_DATASET = {
     'data_augmentation_tabular': ('DA_ny_taxi_demand_MIN_METADATA', 'meanAbsoluteError', {}),
     'remote_sensing': ('big-earth-sample', 'f1Macro', {'svc': False}),
     'remote_sensing': ('big-earth-sample', 'f1Macro', {'svc': True}),
-    'remote_sensing_mlp': ('locusts-nano', 'f1Macro', {'spatial_dim': 1})
+    'remote_sensing_mlp': ('locusts-nano', 'f1Macro', {})
 }
 
 # Subset of pipelines that are aimed at coverage of only the primitives that we intend to

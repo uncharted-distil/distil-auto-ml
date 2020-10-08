@@ -29,7 +29,6 @@ from distil.primitives.label_encoder import SKLabelEncoder
 # (replace or join) back into the original data.
 def create_pipeline(metric: str,
                     min_meta: bool = False,
-                    spatial_dim: int = 4,
                     batch_size: int = 128,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
@@ -115,7 +114,6 @@ def create_pipeline(metric: str,
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(input_step))
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
     step.add_output('produce')
-    step.add_hyperparameter('spatial_dim', ArgumentType.VALUE, spatial_dim)
     image_pipeline.add_step(step)
     previous_step += 1
     tune_steps.append(previous_step)

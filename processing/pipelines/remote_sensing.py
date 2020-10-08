@@ -17,7 +17,6 @@ from d3m.primitives.remote_sensing.remote_sensing_pretrained import (
 )
 
 from distil.primitives.ranked_linear_svc import RankedLinearSVCPrimitive
-from distil.primitives.satellite_image_loader import DataFrameSatelliteImageLoaderPrimitive
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.satellite_image_loader import (
     DataFrameSatelliteImageLoaderPrimitive,
