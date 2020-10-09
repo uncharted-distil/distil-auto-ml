@@ -180,7 +180,7 @@ def create_pipeline(metric: str,
     step.add_argument(
         name="reference",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(parse_step),
+        data_reference=input_val.format(profile_step),
     )
     step.add_output("produce")
     common_pipeline.add_step(step)
