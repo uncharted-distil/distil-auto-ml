@@ -1,0 +1,3 @@
+#!/bin/bash
+python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/59_umls_MIN_METADATA/59_umls_MIN_METADATA_problem/problemDoc.json 	-i $D3MINPUTDIR/59_umls_MIN_METADATA/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/59_umls_MIN_METADATA/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/59_umls_MIN_METADATA/SCORE/dataset_SCORE/datasetDoc.json -p pipelines/link_prediction__2ab6d30b-7d82-4d06-85fb-3d7bdde43a96.json -O pipelines/link_prediction__2ab6d30b-7d82-4d06-85fb-3d7bdde43a96_run.yaml && 
+gzip -f pipelines/link_prediction__2ab6d30b-7d82-4d06-85fb-3d7bdde43a96_run.yaml

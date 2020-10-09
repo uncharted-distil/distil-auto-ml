@@ -1,0 +1,3 @@
+#!/bin/bash
+python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/6_70_com_amazon_MIN_METADATA/6_70_com_amazon_MIN_METADATA_problem/problemDoc.json 	-i $D3MINPUTDIR/6_70_com_amazon_MIN_METADATA/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/6_70_com_amazon_MIN_METADATA/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/6_70_com_amazon_MIN_METADATA/SCORE/dataset_SCORE/datasetDoc.json -p pipelines/community_detection__7df23b1b-9605-410b-ba4a-7e82ec095ff5.json -O pipelines/community_detection__7df23b1b-9605-410b-ba4a-7e82ec095ff5_run.yaml && 
+gzip -f pipelines/community_detection__7df23b1b-9605-410b-ba4a-7e82ec095ff5_run.yaml

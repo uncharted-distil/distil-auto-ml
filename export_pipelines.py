@@ -51,13 +51,15 @@ PIPE_TO_DATASET = {
     'timeseries_var': ('LL1_736_population_spawn_simpler_MIN_METADATA', 'meanAbsoluteError', {}),
     'timeseries_deepar': ('56_sunspots_MIN_METADATA', 'meanAbsoluteError', {}),
     'vertex_nomination': ('LL1_net_nomination_seed_MIN_METADATA', 'accuracy', {}),
+    'vertex_nomination': ('LL1_EDGELIST_net_nomination_seed_MIN_METADATA', 'accuracy', {'is_edgelist': True}),
     'vertex_classification': ('LL1_VTXC_1369_synthetic_MIN_METADATA', 'f1Macro', {}),
     'semisupervised_tabular': ('SEMI_1040_sylva_prior_MIN_METADATA', 'f1Macro', {}),
     'timeseries_lstm_fcn': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
     'data_augmentation_tabular': ('DA_ny_taxi_demand_MIN_METADATA', 'meanAbsoluteError', {}),
     'remote_sensing': ('big-earth-sample', 'f1Macro', {'svc': False}),
     'remote_sensing': ('big-earth-sample', 'f1Macro', {'svc': True}),
-    'remote_sensing_mlp': ('locusts-nano', 'f1Macro', {})
+    'remote_sensing_mlp': ('locusts-nano', 'f1Macro', {}),
+    'common': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', {})
 }
 
 # Subset of pipelines that are aimed at coverage of only the primitives that we intend to

@@ -1,0 +1,72 @@
+{
+    "id": "8aa0b05c-eabf-41c5-b2cd-691ba5e8dcf8",
+    "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
+    "created": "2020-10-09T15:18:46.034541Z",
+    "inputs": [
+        {
+            "name": "inputs"
+        }
+    ],
+    "outputs": [
+        {
+            "data": "steps.1.produce",
+            "name": "output"
+        }
+    ],
+    "steps": [
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "ae0797506-ea7b-4a7f-a7e4-2f91e2082f05",
+                "version": "0.4.1",
+                "python_path": "d3m.primitives.data_transformation.load_graphs.DistilGraphLoader",
+                "name": "Load graphs into a parseable object"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "inputs.0"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                },
+                {
+                    "id": "produce_target"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "8baea8e6-9d3a-46d7-acf1-04fd593dcd37",
+                "version": "0.4.1",
+                "python_path": "d3m.primitives.graph_matching.seeded_graph_matching.DistilSeededGraphMatcher",
+                "name": "SeededGraphMatcher"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce"
+                },
+                "outputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce_target"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "metric": {
+                    "type": "VALUE",
+                    "data": "accuracy"
+                }
+            }
+        }
+    ],
+    "digest": "987145fd4e96dc3d9a8ec9cddb83a01106d755a855d1a56783c0c9acb842ae9d"
+}

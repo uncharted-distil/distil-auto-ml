@@ -1,0 +1,3 @@
+#!/bin/bash
+python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/LL0_acled_reduced_MIN_METADATA/LL0_acled_reduced_MIN_METADATA_problem/problemDoc.json 	-i $D3MINPUTDIR/LL0_acled_reduced_MIN_METADATA/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/LL0_acled_reduced_MIN_METADATA/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/LL0_acled_reduced_MIN_METADATA/SCORE/dataset_SCORE/datasetDoc.json -p pipelines/common__b6862815-d582-4bbc-a61c-6c490b9d3531.json -O pipelines/common__b6862815-d582-4bbc-a61c-6c490b9d3531_run.yaml && 
+gzip -f pipelines/common__b6862815-d582-4bbc-a61c-6c490b9d3531_run.yaml
