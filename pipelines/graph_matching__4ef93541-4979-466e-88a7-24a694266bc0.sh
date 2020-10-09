@@ -1,3 +1,0 @@
-#!/bin/bash
-python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/49_facebook_MIN_METADATA/49_facebook_MIN_METADATA_problem/problemDoc.json 	-i $D3MINPUTDIR/49_facebook_MIN_METADATA/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/49_facebook_MIN_METADATA/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/49_facebook_MIN_METADATA/SCORE/dataset_SCORE/datasetDoc.json -p pipelines/graph_matching__4ef93541-4979-466e-88a7-24a694266bc0.json -O pipelines/graph_matching__4ef93541-4979-466e-88a7-24a694266bc0_run.yaml && 
-gzip -f pipelines/graph_matching__4ef93541-4979-466e-88a7-24a694266bc0_run.yaml

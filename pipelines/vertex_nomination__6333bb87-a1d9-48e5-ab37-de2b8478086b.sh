@@ -1,3 +1,0 @@
-#!/bin/bash
-python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/LL1_EDGELIST_net_nomination_seed_MIN_METADATA/LL1_EDGELIST_net_nomination_seed_MIN_METADATA_problem/problemDoc.json 	-i $D3MINPUTDIR/LL1_EDGELIST_net_nomination_seed_MIN_METADATA/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/LL1_EDGELIST_net_nomination_seed_MIN_METADATA/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/LL1_EDGELIST_net_nomination_seed_MIN_METADATA/SCORE/dataset_SCORE/datasetDoc.json -p pipelines/vertex_nomination__6333bb87-a1d9-48e5-ab37-de2b8478086b.json -O pipelines/vertex_nomination__6333bb87-a1d9-48e5-ab37-de2b8478086b_run.yaml && 
-gzip -f pipelines/vertex_nomination__6333bb87-a1d9-48e5-ab37-de2b8478086b_run.yaml

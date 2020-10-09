@@ -169,6 +169,24 @@ def create_pipeline(metric: str,
     previous_step += 1
     tune_steps.append(previous_step)
 
+    step = PrimitiveStep(
+        primitive_description=ConstructPredictionsPrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(previous_step),
+    )
+    step.add_argument(
+        name="reference",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(parse_step),
+    )
+    step.add_output("produce")
+    common_pipeline.add_step(step)
+    previous_step += 1
+
     common_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
     return common_pipeline, tune_steps

@@ -1,3 +1,0 @@
-#!/bin/bash
-python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/32_wikiqa_MIN_METADATA/32_wikiqa_MIN_METADATA_problem/problemDoc.json 	-i $D3MINPUTDIR/32_wikiqa_MIN_METADATA/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/32_wikiqa_MIN_METADATA/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/32_wikiqa_MIN_METADATA/SCORE/dataset_SCORE/datasetDoc.json -p pipelines/question_answer__e6f78ee1-5eea-4cd9-b877-479071a9eaf5.json -O pipelines/question_answer__e6f78ee1-5eea-4cd9-b877-479071a9eaf5_run.yaml && 
-gzip -f pipelines/question_answer__e6f78ee1-5eea-4cd9-b877-479071a9eaf5_run.yaml

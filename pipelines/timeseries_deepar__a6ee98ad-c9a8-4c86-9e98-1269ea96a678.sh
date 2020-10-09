@@ -1,3 +1,0 @@
-#!/bin/bash
-python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/56_sunspots_MIN_METADATA/56_sunspots_MIN_METADATA_problem/problemDoc.json 	-i $D3MINPUTDIR/56_sunspots_MIN_METADATA/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/56_sunspots_MIN_METADATA/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/56_sunspots_MIN_METADATA/SCORE/dataset_SCORE/datasetDoc.json -p pipelines/timeseries_deepar__a6ee98ad-c9a8-4c86-9e98-1269ea96a678.json -O pipelines/timeseries_deepar__a6ee98ad-c9a8-4c86-9e98-1269ea96a678_run.yaml && 
-gzip -f pipelines/timeseries_deepar__a6ee98ad-c9a8-4c86-9e98-1269ea96a678_run.yaml

@@ -1,3 +1,0 @@
-#!/bin/bash
-python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/LL1_penn_fudan_pedestrian_MIN_METADATA/LL1_penn_fudan_pedestrian_MIN_METADATA_problem/problemDoc.json 	-i $D3MINPUTDIR/LL1_penn_fudan_pedestrian_MIN_METADATA/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/LL1_penn_fudan_pedestrian_MIN_METADATA/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/LL1_penn_fudan_pedestrian_MIN_METADATA/SCORE/dataset_SCORE/datasetDoc.json -p pipelines/object_detection__0e4bdd43-e7c3-4abf-82c3-9adbede92e77.json -O pipelines/object_detection__0e4bdd43-e7c3-4abf-82c3-9adbede92e77_run.yaml && 
-gzip -f pipelines/object_detection__0e4bdd43-e7c3-4abf-82c3-9adbede92e77_run.yaml
