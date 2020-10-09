@@ -1,0 +1,72 @@
+{
+    "id": "6333bb87-a1d9-48e5-ab37-de2b8478086b",
+    "schema": "https://metadata.datadrivendiscovery.org/schemas/v0/pipeline.json",
+    "created": "2020-10-09T18:58:17.601466Z",
+    "inputs": [
+        {
+            "name": "inputs"
+        }
+    ],
+    "outputs": [
+        {
+            "data": "steps.1.produce",
+            "name": "output"
+        }
+    ],
+    "steps": [
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "4acc81e5-4b9c-443e-a72a-18dd9a7dcc3b",
+                "version": "0.4.1",
+                "python_path": "d3m.primitives.data_transformation.load_edgelist.DistilEdgeListLoader",
+                "name": "Load edgelist into a parseable object"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "inputs.0"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                },
+                {
+                    "id": "produce_target"
+                }
+            ]
+        },
+        {
+            "type": "PRIMITIVE",
+            "primitive": {
+                "id": "0130828c-1ac0-47a9-a167-f05bae5a3146",
+                "version": "0.4.1",
+                "python_path": "d3m.primitives.vertex_nomination.vertex_nomination.DistilVertexNomination",
+                "name": "VertexNomination"
+            },
+            "arguments": {
+                "inputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce"
+                },
+                "outputs": {
+                    "type": "CONTAINER",
+                    "data": "steps.0.produce_target"
+                }
+            },
+            "outputs": [
+                {
+                    "id": "produce"
+                }
+            ],
+            "hyperparams": {
+                "metric": {
+                    "type": "VALUE",
+                    "data": "accuracy"
+                }
+            }
+        }
+    ],
+    "digest": "dee5280baa0f9a1228ef421aca96aa87eb63a794e27b46b911e59fc2aff9f176"
+}

@@ -1,0 +1,3 @@
+#!/bin/bash
+python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/LL1_736_population_spawn_simpler_MIN_METADATA/LL1_736_population_spawn_simpler_MIN_METADATA_problem/problemDoc.json 	-i $D3MINPUTDIR/LL1_736_population_spawn_simpler_MIN_METADATA/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/LL1_736_population_spawn_simpler_MIN_METADATA/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/LL1_736_population_spawn_simpler_MIN_METADATA/SCORE/dataset_SCORE/datasetDoc.json -p pipelines/timeseries_var__999fad74-141e-4a41-a194-59b3fc68e3f5.json -O pipelines/timeseries_var__999fad74-141e-4a41-a194-59b3fc68e3f5_run.yaml && 
+gzip -f pipelines/timeseries_var__999fad74-141e-4a41-a194-59b3fc68e3f5_run.yaml

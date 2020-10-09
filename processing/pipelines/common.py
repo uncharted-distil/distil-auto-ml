@@ -9,6 +9,9 @@ from common_primitives.datetime_range_filter import DatetimeRangeFilterPrimitive
 from common_primitives.term_filter import TermFilterPrimitive
 from common_primitives.regex_filter import RegexFilterPrimitive
 from common_primitives.numeric_range_filter import NumericRangeFilterPrimitive
+from common_primitives.xgboost_gbtree import XGBoostGBTreeClassifierPrimitive
+from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
+from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
 from d3m import utils
 from d3m.metadata.base import ArgumentType
@@ -107,6 +110,64 @@ def create_pipeline(metric: str,
     step.add_hyperparameter("parse_semantic_types", ArgumentType.VALUE, semantic_types)
     common_pipeline.add_step(step)
     previous_step += 1
+    parse_step = previous_step
+
+    step = PrimitiveStep(
+        primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(parse_step),
+    )
+    step.add_output("produce")
+    step.add_hyperparameter(
+        "semantic_types",
+        ArgumentType.VALUE,
+        ("https://metadata.datadrivendiscovery.org/types/Attribute",),
+    )
+    common_pipeline.add_step(step)
+    previous_step += 1
+    attributes_step = previous_step
+
+    step = PrimitiveStep(
+        primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(parse_step),
+    )
+    step.add_output("produce")
+    target_types = (
+        "https://metadata.datadrivendiscovery.org/types/Target",
+        "https://metadata.datadrivendiscovery.org/types/TrueTarget",
+    )
+    step.add_hyperparameter("semantic_types", ArgumentType.VALUE, target_types)
+    common_pipeline.add_step(step)
+    previous_step += 1
+    target_step = previous_step
+
+    step = PrimitiveStep(
+        primitive_description=XGBoostGBTreeClassifierPrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(attributes_step),
+    )
+    step.add_argument(
+        name="outputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(target_step),
+    )
+    step.add_output("produce")
+    common_pipeline.add_step(step)
+    previous_step += 1
+    tune_steps.append(previous_step)
 
     common_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 

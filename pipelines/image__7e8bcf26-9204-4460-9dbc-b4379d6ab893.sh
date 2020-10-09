@@ -1,0 +1,3 @@
+#!/bin/bash
+python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/22_handgeometry_MIN_METADATA/22_handgeometry_MIN_METADATA_problem/problemDoc.json 	-i $D3MINPUTDIR/22_handgeometry_MIN_METADATA/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/22_handgeometry_MIN_METADATA/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/22_handgeometry_MIN_METADATA/SCORE/dataset_SCORE/datasetDoc.json -p pipelines/image__7e8bcf26-9204-4460-9dbc-b4379d6ab893.json -O pipelines/image__7e8bcf26-9204-4460-9dbc-b4379d6ab893_run.yaml && 
+gzip -f pipelines/image__7e8bcf26-9204-4460-9dbc-b4379d6ab893_run.yaml

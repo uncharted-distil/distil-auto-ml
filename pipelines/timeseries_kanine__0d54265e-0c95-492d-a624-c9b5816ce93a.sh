@@ -1,0 +1,3 @@
+#!/bin/bash
+python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/LL1_50words_MIN_METADATA/LL1_50words_MIN_METADATA_problem/problemDoc.json 	-i $D3MINPUTDIR/LL1_50words_MIN_METADATA/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/LL1_50words_MIN_METADATA/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/LL1_50words_MIN_METADATA/SCORE/dataset_SCORE/datasetDoc.json -p pipelines/timeseries_kanine__0d54265e-0c95-492d-a624-c9b5816ce93a.json -O pipelines/timeseries_kanine__0d54265e-0c95-492d-a624-c9b5816ce93a_run.yaml && 
+gzip -f pipelines/timeseries_kanine__0d54265e-0c95-492d-a624-c9b5816ce93a_run.yaml
