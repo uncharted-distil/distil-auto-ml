@@ -13,7 +13,6 @@ from common_primitives.xgboost_gbtree import XGBoostGBTreeClassifierPrimitive
 from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 
-from d3m import utils
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 
@@ -23,7 +22,6 @@ def create_pipeline(metric: str,
     input_val = 'steps.{}.produce'
     common_pipeline = Pipeline()
     common_pipeline.add_input(name='inputs')
-    tune_steps = []
 
     step = PrimitiveStep(
         primitive_description=DatasetToDataFramePrimitive.metadata.query(),
@@ -42,6 +40,7 @@ def create_pipeline(metric: str,
     step.add_output('produce')
     common_pipeline.add_step(step)
     previous_step += 1
+    profile_step = previous_step
 
     step = PrimitiveStep(primitive_description=DatetimeFieldComposePrimitive.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
@@ -167,8 +166,26 @@ def create_pipeline(metric: str,
     step.add_output("produce")
     common_pipeline.add_step(step)
     previous_step += 1
-    tune_steps.append(previous_step)
+
+    # convert predictions to expected format
+    step = PrimitiveStep(
+        primitive_description=ConstructPredictionsPrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(previous_step),
+    )
+    step.add_argument(
+        name="reference",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(parse_step),
+    )
+    step.add_output("produce")
+    common_pipeline.add_step(step)
+    previous_step += 1
 
     common_pipeline.add_output(name='output', data_reference=input_val.format(previous_step))
 
-    return common_pipeline, tune_steps
+    return common_pipeline, []
