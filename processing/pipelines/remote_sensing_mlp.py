@@ -15,12 +15,12 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.primitives.remote_sensing.remote_sensing_pretrained import (
     RemoteSensingPretrained,
 )
-from d3m.primitives.remote_sensing.mlp import MlpClassifier
+# TEMP REMOVAL FOR FIRST PASS PIPELINE SUBMISSION
+#from d3m.primitives.remote_sensing.mlp import MlpClassifier
 
 from distil.primitives.satellite_image_loader import (
     DataFrameSatelliteImageLoaderPrimitive,
 )
-from distil.primitives.label_encoder import SKLabelEncoder
 
 # Overall implementation relies on passing the entire dataset through the pipeline, with the primitives
 # identifying columns to operate on based on type.  Alternative implementation (that better lines up with
@@ -98,25 +98,16 @@ def create_pipeline(metric: str,
     step.add_hyperparameter('semantic_types', ArgumentType.VALUE, target_types)
     image_pipeline.add_step(step)
     previous_step += 1
-    pre_encoded_target_step = previous_step
-
-    # step 6 - convert target to numeric labels
-    step = PrimitiveStep(primitive_description=SKLabelEncoder.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(pre_encoded_target_step))
-    step.add_output('produce')
-    step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
-    image_pipeline.add_step(step)
-    previous_step += 1
-    target_step = previous_step
 
     # step 7 - use MLP classifier
-    step = PrimitiveStep(primitive_description=MlpClassifier.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(input_step))
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
-    step.add_output('produce')
-    image_pipeline.add_step(step)
-    previous_step += 1
-    tune_steps.append(previous_step)
+    # TEMP REMOVAL FOR FIRST PASS PIPELINE SUBMISSION
+    # step = PrimitiveStep(primitive_description=MlpClassifier.metadata.query(), resolver=resolver)
+    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(input_step))
+    # step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    # step.add_output('produce')
+    # image_pipeline.add_step(step)
+    # previous_step += 1
+    # tune_steps.append(previous_step)
 
     # step 8 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query(), resolver=resolver)
