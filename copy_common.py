@@ -41,7 +41,7 @@ for idx, primitive_path in enumerate(primitives):
     os.makedirs(json_target, exist_ok=True)
     if idx == 0:
         shutil.copyfile(json_source, json_target_path)
-        json_symlink_source = json_target_path
+        json_symlink_source = os.path.join("..", primitive_path, json_target_filename)
     elif not os.path.exists(json_target_path):
             os.symlink(json_symlink_source, json_target_path)
 
@@ -52,7 +52,7 @@ for idx, primitive_path in enumerate(primitives):
         os.makedirs(run_target, exist_ok=True)
         if idx == 0:
             shutil.copyfile(run_source, run_target_path)
-            run_symlink_source = run_target_path
+            run_symlink_source = os.path.join("..", primitive_path, run_target_filename)
         elif not os.path.exists(run_target_path):
             os.symlink(run_symlink_source, run_target_path)
 
