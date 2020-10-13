@@ -5,7 +5,7 @@ import json
 import shutil
 import sys
 
-require_pipeline_and_run = (len(sys.argv) > 1) and (sys.argv[1] != '-norun')
+require_pipeline_and_run = True#(len(sys.argv) > 1) and (sys.argv[1] != '--no-run')
 print(f'Requiring pipeline and run: {require_pipeline_and_run}')
 
 def clean_pipelines(folder_path):
@@ -31,7 +31,6 @@ for p in pipeline_files:
         id = p.split('/')[-1].replace('.json', '').split('__')[1]
         if id in run_ids:
             pipelines[id] = json.load(f)
-        # pipelines[id] = json.load(f)
 
 # Loop over each primitive that we have a generated annotation for
 primitive_files = glob.glob('../distil-primitives/annotations/*.json')
@@ -49,7 +48,7 @@ for p in primitive_files:
     # sibling `primitives` project
     folder_path = os.path.join(
         '../primitives',
-        'v' + annotation['primitive_code']['interfaces_version'],
+        'primitives',
         annotation['source']['name'],
         annotation['python_path'],
         annotation['version']
