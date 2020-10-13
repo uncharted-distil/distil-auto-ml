@@ -31,7 +31,7 @@ META_DIR = 'pipelines'
 PIPE_TO_DATASET = {
     'tabular': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', {'profiler': 'simple', 'use_boost': False, 'grid_search': True}),
     'audio': ('31_urbansound_MIN_METADATA', 'accuracy', {}),
-    'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', {
+    'clustering': ('1491_one_hundred_plants_margin_clust_MIN_METADATA', 'normalizedMutualInformation', {
         'num_clusters': 100,
         'cluster_col_name': 'Class',
         'profiler': 'simon'
@@ -62,7 +62,7 @@ PIPE_TO_DATASET = {
 }
 
 # Subset of pipelines that are aimed at coverage of only the primitives that we intend to
-# submit the d3m repo.
+# submit to the d3m repo.
 SUBMISSION_SUBSET = set([
     'tabular',
     'audio',
@@ -75,7 +75,9 @@ SUBMISSION_SUBSET = set([
     'question_answer',
     'text',
     'vertex_nomination',
-    'semisupervised_tabular'
+    'remote_sensing',
+    'remote_sensing_mlp',
+    'common'
 ])
 
 def generate_hash(pipe_json):

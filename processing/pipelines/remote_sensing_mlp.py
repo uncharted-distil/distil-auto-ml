@@ -15,8 +15,7 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.primitives.remote_sensing.remote_sensing_pretrained import (
     RemoteSensingPretrained,
 )
-# TEMP REMOVAL FOR FIRST PASS PIPELINE SUBMISSION
-#from d3m.primitives.remote_sensing.mlp import MlpClassifier
+from d3m.primitives.remote_sensing.mlp import MlpClassifier
 
 from distil.primitives.satellite_image_loader import (
     DataFrameSatelliteImageLoaderPrimitive,
@@ -100,14 +99,13 @@ def create_pipeline(metric: str,
     previous_step += 1
 
     # step 7 - use MLP classifier
-    # TEMP REMOVAL FOR FIRST PASS PIPELINE SUBMISSION
-    # step = PrimitiveStep(primitive_description=MlpClassifier.metadata.query(), resolver=resolver)
-    # step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(input_step))
-    # step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    # step.add_output('produce')
-    # image_pipeline.add_step(step)
-    # previous_step += 1
-    # tune_steps.append(previous_step)
+    step = PrimitiveStep(primitive_description=MlpClassifier.metadata.query(), resolver=resolver)
+    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(input_step))
+    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
+    step.add_output('produce')
+    image_pipeline.add_step(step)
+    previous_step += 1
+    tune_steps.append(previous_step)
 
     # step 8 - convert predictions to expected format
     step = PrimitiveStep(primitive_description=ConstructPredictionsPrimitive.metadata.query(), resolver=resolver)
