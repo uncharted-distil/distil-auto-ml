@@ -110,6 +110,11 @@ def create(
     metric = metrics.translate_proto_metric(protobuf_metric)
     logger.info(f"Optimizing on metric {metric}")
 
+    # flag whether or not we need confidences based on env var setting + metric request
+    compute_confidences = False
+    if config.COMPUTE_CONFIDENCES or metric.startswith('rocAuc'):
+        compute_confidences = True
+
     # determine type of pipeline required for dataset
     pipeline_type, pipeline_info = router.get_routing_info(dataset_doc, problem, metric)
     logger.info(f"Identified problem type as {pipeline_type}")
@@ -154,7 +159,8 @@ def create(
                     profiler="simple",
                     use_boost=True,
                     grid_search=not tune_pipeline,
-                    max_one_hot=8
+                    max_one_hot=8,
+                    compute_confidences=compute_confidences
                 )
             )
             pipelines.append(
@@ -165,7 +171,8 @@ def create(
                     profiler="simple",
                     use_boost=False,
                     grid_search=not tune_pipeline,
-                    max_one_hot=8
+                    max_one_hot=8,
+                    compute_confidences=compute_confidences
                 )
             )
             pipelines.append(
@@ -176,7 +183,8 @@ def create(
                     profiler="simon",
                     use_boost=False,
                     grid_search=not tune_pipeline,
-                    max_one_hot=8
+                    max_one_hot=8,
+                    compute_confidences=compute_confidences
                 )
             )
 
@@ -188,7 +196,8 @@ def create(
                     profiler="simon",
                     use_boost=True,
                     grid_search=not tune_pipeline,
-                    max_one_hot=8
+                    max_one_hot=8,
+                    compute_confidences=compute_confidences
                 )
             )
         else:
@@ -200,7 +209,8 @@ def create(
                         **pipeline_info,
                         profiler="none",
                         use_boost=True,
-                        max_one_hot=8
+                        max_one_hot=8,
+                        compute_confidences=compute_confidences
                     )
                 )
             pipelines.append(
@@ -211,7 +221,8 @@ def create(
                     profiler="none",
                     use_boost=False,
                     grid_search=not tune_pipeline,
-                    max_one_hot=8
+                    max_one_hot=8,
+                    compute_confidences=compute_confidences
                 )
             )
     elif pipeline_type == "graph_matching":

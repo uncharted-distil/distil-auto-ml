@@ -25,8 +25,6 @@ from sklearn_wrap import SKStandardScaler
 from dsbox.datapreprocessing.cleaner.iterative_regression import IterativeRegressionImputation
 
 
-# CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
-# in a naively implemented state for readability for now.
 def create_pipeline(metric: str,
                     semi: bool = False,
                     cat_mode: str = 'one_hot',
@@ -34,9 +32,9 @@ def create_pipeline(metric: str,
                     scale: bool = False,
                     include_one_hot = True,
                     profiler = 'none',
-                    multi: bool =False,
                     use_boost: bool = True,
                     grid_search = False,
+                    compute_confidences = False,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
     tune_steps = []
@@ -334,6 +332,7 @@ def create_pipeline(metric: str,
         )
         step.add_hyperparameter('grid_search', ArgumentType.VALUE, grid_search)
         step.add_hyperparameter('small_dataset_fits', ArgumentType.VALUE, 1)
+        step.add_hyperparameter('compute_confidences', ArgumentType.VALUE, compute_confidences)
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
