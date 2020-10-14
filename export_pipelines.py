@@ -56,8 +56,8 @@ PIPE_TO_DATASET = {
     'semisupervised_tabular': ('SEMI_1040_sylva_prior_MIN_METADATA', 'f1Macro', {}),
     'timeseries_lstm_fcn': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
     'data_augmentation_tabular': ('DA_ny_taxi_demand_MIN_METADATA', 'meanAbsoluteError', {}),
-    'remote_sensing': ('LL1_bigearth_land_use', 'f1Macro', {'svc': True}),
-    'remote_sensing_mlp': ('LL1_bigearth_land_use', 'f1Macro', {}),
+    'remote_sensing': ('LL1_bigearth_landuse_detection', 'f1Macro', {'svc': True}),
+    'remote_sensing_mlp': ('LL1_bigearth_landuse_detection', 'f1Macro', {}),
     'common': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', {})
 }
 
