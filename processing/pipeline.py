@@ -92,13 +92,12 @@ def create(
     # Optionally enable external hyperparameter tuning.
     tune_pipeline = config.HYPERPARAMETER_TUNING
 
+    # If there isn't a placeholder this is a fully specified pipeline.
+    if prepend and not [True for s in prepend.steps if isinstance(s, PlaceholderStep)]:
+        return ([prepend], None, [1.0])
+
     # Load dataset in the same way the d3m runtime will
     train_dataset = _load_data(dataset_doc_path)
-
-    # If there isn't a placeholder this is a fully specified pipeline.  Return the pipeline unmodified along with the
-    # dataset.
-    if prepend and not [True for s in prepend.steps if isinstance(s, PlaceholderStep)]:
-        return ([prepend], train_dataset, [1.0])
 
     # Load the dataset doc itself
     modified_path = dataset_doc_path.replace("file://", "")
