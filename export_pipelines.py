@@ -79,7 +79,8 @@ SUBMISSION_SUBSET = set([
     'remote_sensing',
     'remote_sensing_mlp',
     'timeseries_var',
-    'common'
+    'common',
+    'mi_ranking'
 ])
 
 def generate_hash(pipe_json):
