@@ -5,9 +5,6 @@ import json
 import shutil
 import sys
 
-require_pipeline_and_run = True#(len(sys.argv) > 1) and (sys.argv[1] != '--no-run')
-print(f'Requiring pipeline and run: {require_pipeline_and_run}')
-
 def clean_pipelines(folder_path):
     sub_folders = ('pipelines', 'pipeline_runs')
     for sub_folder in sub_folders:
@@ -58,40 +55,37 @@ for p in primitive_files:
     clean_pipelines(folder_path)
 
     # loop through primitives in each pipeline to find one that matches our current annotation
-    pipeline_match = True
+    pipeline_match = False
+    for pipeline_id, pipeline_json in pipelines.items():
+        for step in pipeline_json['steps']:
+            pipe_prim = step['primitive']['python_path']
+            if pipe_prim == key:
+                # this pipeline has a primitive step that uses the current annotation
+                pipeline_match = True
 
-    if require_pipeline_and_run:
-        pipeline_match = False
-        for pipeline_id, pipeline_json in pipelines.items():
-            for step in pipeline_json['steps']:
-                pipe_prim = step['primitive']['python_path']
-                if pipe_prim == key:
-                    # this pipeline has a primitive step that uses the current annotation
-                    pipeline_match = True
+                # Incoming filenames are <pipeline type>__<pipeline id>.json
+                # Format for deploy is <pipeline id>.json
 
-                    # Incoming filenames are <pipeline type>__<pipeline id>.json
-                    # Format for deploy is <pipeline id>.json
+                old_pipeline_path = [p for p in pipeline_files if pipeline_id in p][0]
+                new_pipeline_path = os.path.join(folder_path, 'pipelines', pipeline_id + '.json')
 
-                    old_pipeline_path = [p for p in pipeline_files if pipeline_id in p][0]
-                    new_pipeline_path = os.path.join(folder_path, 'pipelines', pipeline_id + '.json')
+                old_run_path = [p for p in run_files if pipeline_id in p][0]
+                new_run_path = os.path.join(folder_path, 'pipeline_runs', pipeline_id + '_run.yaml.gz')
 
-                    old_run_path = [p for p in run_files if pipeline_id in p][0]
-                    new_run_path = os.path.join(folder_path, 'pipeline_runs', pipeline_id + '_run.yaml.gz')
+                dir_name, _ = os.path.split(new_pipeline_path)
+                os.makedirs(dir_name, exist_ok=True)
 
-                    dir_name, _ = os.path.split(new_pipeline_path)
-                    os.makedirs(dir_name, exist_ok=True)
+                dir_name, _ = os.path.split(new_run_path)
+                os.makedirs(dir_name, exist_ok=True)
 
-                    dir_name, _ = os.path.split(new_run_path)
-                    os.makedirs(dir_name, exist_ok=True)
+                # only copy one pipeline file for any given primitive
+                pipeline_root_path = os.path.join(folder_path, 'pipelines')
+                if os.path.isdir(pipeline_root_path) and not os.listdir(pipeline_root_path):
+                    shutil.copy(old_pipeline_path, new_pipeline_path)
 
-                    # only copy one pipeline file for any given primitive
-                    pipeline_root_path = os.path.join(folder_path, 'pipelines')
-                    if os.path.isdir(pipeline_root_path) and not os.listdir(pipeline_root_path):
-                        shutil.copy(old_pipeline_path, new_pipeline_path)
-
-                    run_root_path = os.path.join(folder_path, 'pipeline_runs')
-                    if os.path.isdir(run_root_path) and not os.listdir(run_root_path):
-                        shutil.copy(old_run_path, new_run_path)
+                run_root_path = os.path.join(folder_path, 'pipeline_runs')
+                if os.path.isdir(run_root_path) and not os.listdir(run_root_path):
+                    shutil.copy(old_run_path, new_run_path)
 
     # copy the primitive annotation file into the target folder in the `primitives` project
     primitive_path = os.path.join(folder_path, 'primitive.json')
