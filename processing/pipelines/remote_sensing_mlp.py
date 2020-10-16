@@ -128,6 +128,7 @@ def create_pipeline(metric: str,
     step = PrimitiveStep(primitive_description=MlpClassifier.metadata.query(), resolver=resolver)
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
+    step.add_hyperparameter('all_confidences', ArgumentType.VALUE, False)
     step.add_output('produce')
     image_pipeline.add_step(step)
     previous_step += 1
