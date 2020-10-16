@@ -11,7 +11,6 @@ from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.primitives.clustering.hdbscan import Hdbscan
 from d3m.primitives.data_cleaning.column_type_profiler import Simon
-from distil.primitives.mi_ranking import MIRankingPrimitive
 from distil.modeling.metrics import regression_metrics
 from distil.primitives.binary_encoder import BinaryEncoderPrimitive
 from distil.primitives.categorical_imputer import CategoricalImputerPrimitive
@@ -97,24 +96,6 @@ def create_pipeline(metric: str,
     tabular_pipeline.add_step(step)
     previous_step += 1
     parse_step = previous_step
-
-    step = PrimitiveStep(
-        primitive_description=MIRankingPrimitive.metadata.query(),
-        resolver=resolver
-    )
-    step.add_argument(
-        name="inputs",
-        argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(previous_step)
-    )
-    step.add_output("produce")
-    step.add_hyperparameter(
-        "target_col_index",
-        ArgumentType.VALUE,
-        6
-    )
-    tabular_pipeline.add_step(step)
-    previous_step += 1
 
     # Extract attributes
     step = PrimitiveStep(

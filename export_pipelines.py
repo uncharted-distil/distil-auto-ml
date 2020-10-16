@@ -58,7 +58,8 @@ PIPE_TO_DATASET = {
     'data_augmentation_tabular': ('DA_ny_taxi_demand_MIN_METADATA', 'meanAbsoluteError', {}),
     'remote_sensing': ('LL1_bigearth_land_use', 'f1Macro', {'svc': True}),
     'remote_sensing_mlp': ('LL1_bigearth_land_use', 'f1Macro', {}),
-    'common': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', {})
+    'common': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', {}),
+    'mi_ranking': ('185_baseball_MIN_METADATA', 'f1Macro', {})
 }
 
 # Subset of pipelines that are aimed at coverage of only the primitives that we intend to
