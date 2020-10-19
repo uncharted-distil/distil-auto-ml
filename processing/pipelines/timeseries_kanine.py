@@ -103,18 +103,6 @@ def create_pipeline(
     previous_step += 1
     attributes_step = previous_step
 
-    # extract dataframe from dataset
-    step = PrimitiveStep(
-        primitive_description=DatasetToDataFramePrimitive.metadata.query(),
-        resolver=resolver,
-    )
-    step.add_argument(
-        name="inputs", argument_type=ArgumentType.CONTAINER, data_reference="inputs.0"
-    )
-    step.add_output("produce")
-    pipeline.add_step(step)
-    previous_step += 1
-
     # run profiler
     step = PrimitiveStep(
         primitive_description=SimpleProfilerPrimitive.metadata.query(),

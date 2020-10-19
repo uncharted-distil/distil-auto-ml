@@ -1,27 +1,27 @@
 from typing import Optional
 
+from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
+from common_primitives.add_semantic_types import AddSemanticTypesPrimitive
 from common_primitives.extract_columns_semantic_types import (
     ExtractColumnsBySemanticTypesPrimitive,
 )
+from common_primitives.xgboost_gbtree import XGBoostGBTreeClassifierPrimitive
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
-from common_primitives.construct_predictions import ConstructPredictionsPrimitive
-from distil.primitives.time_series_binner import TimeSeriesBinnerPrimitive
+
+from distil.primitives.mi_ranking import MIRankingPrimitive
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
-from d3m.primitives.time_series_forecasting.vector_autoregression import VAR
+
 
 def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
-    previous_step = 0
-    tune_steps = []
     input_val = "steps.{}.produce"
 
-    # create the basic pipeline
-    var_pipeline = Pipeline()
-    var_pipeline.add_input(name="inputs")
+    mi_ranking_pipeline = Pipeline()
+    mi_ranking_pipeline.add_input(name="inputs")
 
-    # step 0 - Extract dataframe from dataset
+    # convert to a dataframe
     step = PrimitiveStep(
         primitive_description=DatasetToDataFramePrimitive.metadata.query(),
         resolver=resolver,
@@ -30,7 +30,8 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         name="inputs", argument_type=ArgumentType.CONTAINER, data_reference="inputs.0"
     )
     step.add_output("produce")
-    var_pipeline.add_step(step)
+    mi_ranking_pipeline.add_step(step)
+    previous_step = 0
 
     step = PrimitiveStep(
         primitive_description=SimpleProfilerPrimitive.metadata.query(),
@@ -42,11 +43,10 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         data_reference=input_val.format(previous_step),
     )
     step.add_output("produce")
-    var_pipeline.add_step(step)
+    mi_ranking_pipeline.add_step(step)
     previous_step += 1
-    # tune_steps.append(previous_step)
 
-    # step 1 - Parse columns.
+    # parse columns into associated data frame types
     step = PrimitiveStep(
         primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver
     )
@@ -55,33 +55,27 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         argument_type=ArgumentType.CONTAINER,
         data_reference=input_val.format(previous_step),
     )
+    step.add_hyperparameter("parse_categorical_target_columns", ArgumentType.VALUE, True)
     step.add_output("produce")
-    semantic_types = (
-        "http://schema.org/Boolean",
-        "http://schema.org/Integer",
-        "http://schema.org/Float",
-        "https://metadata.datadrivendiscovery.org/types/FloatVector",
-        "http://schema.org/DateTime",
-    )
-    step.add_hyperparameter("parse_semantic_types", ArgumentType.VALUE, semantic_types)
-    var_pipeline.add_step(step)
+    mi_ranking_pipeline.add_step(step)
     previous_step += 1
     parse_step = previous_step
 
-    step = PrimitiveStep(primitive_description=TimeSeriesBinnerPrimitive.metadata.query(), resolver=resolver)
+    # Perform MI ranking and write reuslts to metadata
+    step = PrimitiveStep(
+        primitive_description=MIRankingPrimitive.metadata.query(), resolver=resolver
+    )
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(previous_step)
+        data_reference=input_val.format(previous_step),
     )
     step.add_output("produce")
-    step.add_hyperparameter("grouping_key_col", ArgumentType.VALUE, 1)
-    step.add_hyperparameter("time_col", ArgumentType.VALUE, 3)
-    step.add_hyperparameter("value_cols", ArgumentType.VALUE, [4])
-    step.add_hyperparameter("binning_starting_value", ArgumentType.VALUE, 'min')
-    var_pipeline.add_step(step)
+    step.add_hyperparameter("target_col_index", ArgumentType.VALUE, 18)
+    step.add_hyperparameter("return_as_metadata", ArgumentType.VALUE, True)
+    mi_ranking_pipeline.add_step(step)
     previous_step += 1
-    # parse_step = previous_step
+    ranking_step = previous_step
 
     # Extract attributes
     step = PrimitiveStep(
@@ -91,18 +85,15 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(parse_step),
+        data_reference=input_val.format(ranking_step),
     )
     step.add_output("produce")
     step.add_hyperparameter(
         "semantic_types",
         ArgumentType.VALUE,
-        (
-            "https://metadata.datadrivendiscovery.org/types/Attribute",
-            "https://metadata.datadrivendiscovery.org/types/PrimaryKey",
-        ),
+        ("https://metadata.datadrivendiscovery.org/types/Attribute",),
     )
-    var_pipeline.add_step(step)
+    mi_ranking_pipeline.add_step(step)
     previous_step += 1
     attributes_step = previous_step
 
@@ -114,7 +105,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(parse_step),
+        data_reference=input_val.format(ranking_step),
     )
     step.add_output("produce")
     target_types = (
@@ -122,12 +113,15 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         "https://metadata.datadrivendiscovery.org/types/TrueTarget",
     )
     step.add_hyperparameter("semantic_types", ArgumentType.VALUE, target_types)
-    var_pipeline.add_step(step)
+    mi_ranking_pipeline.add_step(step)
     previous_step += 1
     target_step = previous_step
 
-    # step 2 - Vector Auto Regression
-    step = PrimitiveStep(primitive_description=VAR.metadata.query(), resolver=resolver)
+    # use random forest
+    step = PrimitiveStep(
+        primitive_description=XGBoostGBTreeClassifierPrimitive.metadata.query(),
+        resolver=resolver,
+    )
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
@@ -139,24 +133,31 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         data_reference=input_val.format(target_step),
     )
     step.add_output("produce")
-    var_pipeline.add_step(step)
+
+    mi_ranking_pipeline.add_step(step)
     previous_step += 1
 
-    # step 3 - Generate predictions output
+    # step 8 - convert predictions to expected format
     step = PrimitiveStep(
-        primitive_description=ConstructPredictionsPrimitive.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
-                      data_reference=input_val.format(previous_step))
-    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER,
-                      data_reference=input_val.format(parse_step))
-    step.add_output('produce')
-    var_pipeline.add_step(step)
+        primitive_description=ConstructPredictionsPrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(previous_step),
+    )
+    step.add_argument(
+        name="reference",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(parse_step),
+    )
+    step.add_output("produce")
+    mi_ranking_pipeline.add_step(step)
     previous_step += 1
 
-    # Adding output step to the pipeline
-    var_pipeline.add_output(
+    mi_ranking_pipeline.add_output(
         name="output", data_reference=input_val.format(previous_step)
     )
-    tune_steps.append(previous_step)
 
-    return (var_pipeline, tune_steps)
+    return (mi_ranking_pipeline, [])
