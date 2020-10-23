@@ -41,8 +41,6 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
         self.assertFalse(loader.can_load(dataset_url))
 
     def test_load(self) -> None:
-        csv_to_parquet()
-
         dataset_path=path.join(_parquet_dataset_path, 'datasetDoc.json')
         dataset_url = urllib.parse.urlunparse(('file', '', dataset_path, '', '', ''))
         loader = ParquetDatasetLoader()
@@ -51,7 +49,7 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
         _, df = base_utils.get_tabular_resource(dataset, 'learningData')
         self.assertIsNotNone(df)
 
-        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS))['dimension']['length'], 6)
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS))['dimension']['length'], 7)
 
         self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 0))['name'], 'd3mIndex')
         self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 0))['structural_type'], int)
@@ -95,12 +93,22 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
             "https://metadata.datadrivendiscovery.org/types/Attribute"
         ))
 
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 6))['name'], 'foxtrot')
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 6))['structural_type'], container.ndarray)
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS, 6))['semantic_types'], (
+            "https://metadata.datadrivendiscovery.org/types/FloatVector",
+            "https://metadata.datadrivendiscovery.org/types/Attribute"
+        ))
+
+        print(df)
+
         self.assertEqual(df.iloc[0,0], 1)
         self.assertEqual(df.iloc[0,1], 10)
         self.assertEqual(df.iloc[0,2], 1.0)
         self.assertEqual(df.iloc[0,3], "xray")
         self.assertEqual(df.iloc[0,4], " tango sierra")
         self.assertListEqual(df.iloc[0,5].tolist(), [0,1,2,3])
+        self.assertEqual(df.iloc[0,6], "0,1,2,3")
 
     def test_lazy_load(self) -> None:
         dataset_path=path.join(_parquet_dataset_path, 'datasetDoc.json')
@@ -111,7 +119,7 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
 
         df = base_utils.get_tabular_resource(dataset, 'learningData')
         self.assertIsNotNone(df)
-        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS))['dimension']['length'], 6)
+        self.assertEqual(dataset.metadata.query(('learningData', metadata_base.ALL_ELEMENTS))['dimension']['length'], 7)
 
 def csv_to_parquet():
     _csv_dataset_path = path.abspath(path.join(path.dirname(__file__), 'tabular_dataset_csv'))
@@ -126,6 +134,7 @@ def csv_to_parquet():
     df.iloc[:, 3] = df.iloc[:, 3].astype(str)
     df.iloc[:, 4] = df.iloc[:, 4].astype(str)
     df.iloc[:, 5] = df.iloc[:, 5].apply(lambda x: literal_eval(f'[{x}]'))
+    df.iloc[:, 6] = df.iloc[:, 6].astype(str)
 
     df.to_parquet(path.join(_parquet_dataset_path, 'tables', 'learningData.parquet'), index=False)
 
