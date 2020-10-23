@@ -1,4 +1,5 @@
 import json
+from processing.pipeline import load_data
 import time
 import pathlib
 import logging
@@ -32,7 +33,7 @@ def produce_task(logger, session, server, task):
 
         # call produce on a fitted pipeline
         fitted_runtime = server.get_fitted_runtime(task.fit_solution_id)
-        test_dataset = dataset.Dataset.load(task.dataset_uri)
+        test_dataset = load_data(task.dataset_uri)
         results = ex_pipeline.produce(fitted_runtime, test_dataset)
 
         # pull out the results the caller requested, ignore any others that were exposed
@@ -135,7 +136,7 @@ def fit_task(logger, session, server, task):
         # it doesn't need to be serialized.
         run_as_standard = not task.fully_specified
 
-        train_dataset = dataset.Dataset.load(task.dataset_uri)
+        train_dataset = load_data(task.dataset_uri)
         fitted_runtime, result = ex_pipeline.fit(pipeline_obj, problem_obj, train_dataset, is_standard_pipeline=run_as_standard)
 
         # pull out the results the caller requested, ignore any others that were exposed

@@ -97,7 +97,7 @@ def create(
         return ([prepend], None, [1.0])
 
     # Load dataset in the same way the d3m runtime will
-    train_dataset = _load_data(dataset_doc_path)
+    train_dataset = load_data(dataset_doc_path)
 
     # Load the dataset doc itself
     modified_path = dataset_doc_path.replace("file://", "")
@@ -488,6 +488,19 @@ def produce_pipeline(
         raise result.error
     return output, result
 
+def load_data(dataset_doc_path: str) -> Dataset:
+    # Add the parquet datset loader to the loaders to try - order matters, and
+    # we want to ensure it run before the D3M dataset loader.  We have to do this
+    # lazily because the loaders array is globally initialized in core.
+    hasLoader = False
+    for loader in dataset.Dataset.loaders:
+        if type(loader) == ParquetDatasetLoader:
+            hasLoader = True
+    if not hasLoader:
+        dataset.Dataset.loaders.insert(0, ParquetDatasetLoader())
+
+    # Load dataset in the same way the d3m runtime will
+    return dataset.Dataset.load(dataset_doc_path)
 
 def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
     # if there's a pipeline and it doesn't have a placeholder then its fully specified
@@ -566,20 +579,6 @@ def _use_gpu() -> bool:
         use_gpu = False
     logger.info(f"GPU enabled pipelines {use_gpu}")
     return use_gpu
-
-def _load_data(dataset_doc_path: str) -> Dataset:
-    # Add the parquet datset loader to the loaders to try - order matters, and
-    # we want to ensure it run before the D3M dataset loader.  We have to do this
-    # lazily because the loaders array is globally initialized in core.
-    hasLoader = False
-    for loader in dataset.Dataset.loaders:
-        if type(loader) == ParquetDatasetLoader:
-            hasLoader = True
-    if not hasLoader:
-        dataset.Dataset.loaders.insert(0, ParquetDatasetLoader())
-
-    # Load dataset in the same way the d3m runtime will
-    return dataset.Dataset.load(dataset_doc_path)
 
 def get_pipeline_hyperparams(pipeline, tune_steps):
     parameters = []
