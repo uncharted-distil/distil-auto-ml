@@ -1,6 +1,7 @@
 import os
 import json
 import logging
+import re
 from typing import Any, Dict, Optional, Tuple
 from urllib import parse as url_parse
 import numpy as np
@@ -10,6 +11,7 @@ from d3m.metadata import base as metadata_base
 from d3m.container.dataset import D3MDatasetLoader, ComputeDigest, Dataset, \
     D3M_COLUMN_TYPE_CONSTANTS_TO_SEMANTIC_TYPES, D3M_ROLE_CONSTANTS_TO_SEMANTIC_TYPES
 from d3m import exceptions
+from pandas.core.arrays.sparse import dtype
 
 D3M_COLUMN_TYPE_CONSTANTS_TO_STRUCT_TYPES = {
     'boolean': bool,
@@ -217,5 +219,9 @@ class ParquetDatasetLoader(D3MDatasetLoader):
                     'structural_type': D3M_COLUMN_TYPE_CONSTANTS_TO_STRUCT_TYPES[col_data['colType']],
                     'semantic_types': semantic_types,
                 })
+
+                # remove any possible surrounding characters from a string representation of a float vector
+                if 'https://metadata.datadrivendiscovery.org/types/FloatVector' in semantic_types and df.dtypes[column_name] == 'object':
+                    df[column_name] = df[column_name].replace(to_replace='[\[\]()<>""{}]', value='', regex=True)
 
         return metadata, resources

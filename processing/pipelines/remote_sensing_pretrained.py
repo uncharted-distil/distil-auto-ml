@@ -15,6 +15,8 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.ranked_linear_svc import RankedLinearSVCPrimitive
 from distil.primitives.column_parser import ColumnParserPrimitive
+from distil.primitives.enrich_dates import EnrichDatesPrimitive
+from distil.primitives.list_to_dataframe import ListEncoderPrimitive
 from dsbox.datapreprocessing.cleaner.iterative_regression import (
     IterativeRegressionImputation,
 )
@@ -69,7 +71,7 @@ def create_pipeline(
         data_reference=input_val.format(previous_step),
     )
     step.add_output("produce")
-    semantic_types = ("http://schema.org/Integer", "http://schema.org/Float")
+    semantic_types = ("http://schema.org/Integer", "http://schema.org/Float", "https://metadata.datadrivendiscovery.org/types/FloatVector")
     step.add_hyperparameter("parsing_semantics", ArgumentType.VALUE, semantic_types)
     rs_pretrained_pipeline.add_step(step)
     previous_step += 1
@@ -93,26 +95,7 @@ def create_pipeline(
     )
     rs_pretrained_pipeline.add_step(step)
     previous_step += 1
-
-    # Extract floats
-    step = PrimitiveStep(
-        primitive_description=ExtractColumnsByStructuralTypesPrimitive.metadata.query(),
-        resolver=resolver,
-    )
-    step.add_argument(
-        name="inputs",
-        argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(previous_step),
-    )
-    step.add_output("produce")
-    step.add_hyperparameter(
-        "structural_types",
-        ArgumentType.VALUE,
-        ("float", "numpy.float32", "numpy.float64"),
-    )
-    rs_pretrained_pipeline.add_step(step)
-    previous_step += 1
-    float_step = previous_step
+    attributes_step = previous_step
 
     # Extract targets
     step = PrimitiveStep(
@@ -134,7 +117,54 @@ def create_pipeline(
     previous_step += 1
     target_step = previous_step
 
-    # Adds imputer
+    # List encoder to get from vectors to columns
+    step = PrimitiveStep(
+        primitive_description=ListEncoderPrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(attributes_step),
+    )
+    step.add_output("produce")
+    rs_pretrained_pipeline.add_step(step)
+    previous_step += 1
+
+    # Enrich any dates present
+    step = PrimitiveStep(
+        primitive_description=EnrichDatesPrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(previous_step),
+    )
+    step.add_output("produce")
+    rs_pretrained_pipeline.add_step(step)
+    previous_step += 1
+
+    # Extract floats to ensure that we're only passing valid data into the learner
+    step = PrimitiveStep(
+        primitive_description=ExtractColumnsByStructuralTypesPrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(previous_step),
+    )
+    step.add_output("produce")
+    step.add_hyperparameter(
+        "structural_types",
+        ArgumentType.VALUE,
+        ("float", "numpy.float32", "numpy.float64"),
+    )
+    rs_pretrained_pipeline.add_step(step)
+    previous_step += 1
+
+    # Impute any missing data
     step = PrimitiveStep(
         primitive_description=IterativeRegressionImputation.metadata.query(),
         resolver=resolver,
@@ -142,7 +172,7 @@ def create_pipeline(
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(float_step),
+        data_reference=input_val.format(previous_step),
     )
     step.add_output("produce")
     rs_pretrained_pipeline.add_step(step)

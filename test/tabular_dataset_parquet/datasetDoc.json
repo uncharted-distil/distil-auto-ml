@@ -53,6 +53,12 @@
           "colName": "echo",
           "colType": "realVector",
           "role": ["attribute"]
+        },
+        {
+          "colIndex": 6,
+          "colName": "foxtrot",
+          "colType": "realVector",
+          "role": ["attribute"]
         }
       ]
     }
