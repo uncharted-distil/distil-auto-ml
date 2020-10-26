@@ -9,7 +9,6 @@ from processing.parquet_loader import ParquetDatasetLoader
 import time
 import typing
 import copy
-from collections import defaultdict
 from multiprocessing import Process
 from typing import Tuple, List, Dict, Optional
 
@@ -50,7 +49,8 @@ from processing.pipelines import (
     image,
     remote_sensing,
     remote_sensing_mlp,
-    object_detection,
+    remote_sensing_pretrained,
+    # object_detection,
     object_detection_yolo,
     question_answer,
     tabular,
@@ -92,13 +92,12 @@ def create(
     # Optionally enable external hyperparameter tuning.
     tune_pipeline = config.HYPERPARAMETER_TUNING
 
-    # Load dataset in the same way the d3m runtime will
-    train_dataset = _load_data(dataset_doc_path)
-
-    # If there isn't a placeholder this is a fully specified pipeline.  Return the pipeline unmodified along with the
-    # dataset.
+    # If there isn't a placeholder this is a fully specified pipeline.
     if prepend and not [True for s in prepend.steps if isinstance(s, PlaceholderStep)]:
-        return ([prepend], train_dataset, [1.0])
+        return ([prepend], None, [1.0])
+
+    # Load dataset in the same way the d3m runtime will
+    train_dataset = load_data(dataset_doc_path)
 
     # Load the dataset doc itself
     modified_path = dataset_doc_path.replace("file://", "")
@@ -110,8 +109,14 @@ def create(
     metric = metrics.translate_proto_metric(protobuf_metric)
     logger.info(f"Optimizing on metric {metric}")
 
+    # flag whether or not we need confidences based on env var setting + metric request
+    compute_confidences = False
+    if config.COMPUTE_CONFIDENCES or metric.startswith('rocAuc'):
+        compute_confidences = True
+
     # determine type of pipeline required for dataset
     pipeline_type, pipeline_info = router.get_routing_info(dataset_doc, problem, metric)
+    logger.info(f"Identified problem type as {pipeline_type}")
 
     # Check if all columns have valid metadata
     # TODO check for unknown types as well.
@@ -153,7 +158,8 @@ def create(
                     profiler="simple",
                     use_boost=True,
                     grid_search=not tune_pipeline,
-                    max_one_hot=8
+                    max_one_hot=8,
+                    compute_confidences=compute_confidences
                 )
             )
             pipelines.append(
@@ -164,7 +170,8 @@ def create(
                     profiler="simple",
                     use_boost=False,
                     grid_search=not tune_pipeline,
-                    max_one_hot=8
+                    max_one_hot=8,
+                    compute_confidences=compute_confidences
                 )
             )
             pipelines.append(
@@ -175,7 +182,8 @@ def create(
                     profiler="simon",
                     use_boost=False,
                     grid_search=not tune_pipeline,
-                    max_one_hot=8
+                    max_one_hot=8,
+                    compute_confidences=compute_confidences
                 )
             )
 
@@ -187,7 +195,8 @@ def create(
                     profiler="simon",
                     use_boost=True,
                     grid_search=not tune_pipeline,
-                    max_one_hot=8
+                    max_one_hot=8,
+                    compute_confidences=compute_confidences
                 )
             )
         else:
@@ -199,7 +208,8 @@ def create(
                         **pipeline_info,
                         profiler="none",
                         use_boost=True,
-                        max_one_hot=8
+                        max_one_hot=8,
+                        compute_confidences=compute_confidences
                     )
                 )
             pipelines.append(
@@ -210,7 +220,8 @@ def create(
                     profiler="none",
                     use_boost=False,
                     grid_search=not tune_pipeline,
-                    max_one_hot=8
+                    max_one_hot=8,
+                    compute_confidences=compute_confidences
                 )
             )
     elif pipeline_type == "graph_matching":
@@ -245,14 +256,8 @@ def create(
             )
     elif pipeline_type == "image":
         pipelines.append(
-            image.create_pipeline(
-                metric=metric, resolver=resolver, **pipeline_info, sample=True
-            )
-        )
-        pipelines.append(
             image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
         )
-
     elif pipeline_type == "remote_sensing":
         pipelines.append(
             remote_sensing.create_pipeline(
@@ -260,10 +265,6 @@ def create(
                 batch_size=config.REMMOTE_SENSING_BATCH_SIZE, **pipeline_info
             )
         )
-        pipelines.append(
-            image.create_pipeline(metric=metric, resolver=resolver)
-        )
-
     elif pipeline_type == "remote_sensing_mlp":
         pipelines.append(
             remote_sensing_mlp.create_pipeline(
@@ -271,9 +272,24 @@ def create(
                 batch_size=config.REMMOTE_SENSING_BATCH_SIZE, **pipeline_info
             )
         )
+    elif pipeline_type == "remote_sensing_pretrained":
         pipelines.append(
-            image.create_pipeline(metric=metric, resolver=resolver)
+            remote_sensing_pretrained.create_pipeline(
+                metric=metric,
+                resolver=resolver,
+                use_linear_svc=True,
+                **pipeline_info
+            )
         )
+        if max_models > 1:
+            pipelines.append(
+                remote_sensing_pretrained.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    use_linear_svc=False,
+                    **pipeline_info
+                )
+            )
     elif pipeline_type == "object_detection":
         # pipelines.append(
         #     object_detection.create_pipeline(
@@ -472,6 +488,19 @@ def produce_pipeline(
         raise result.error
     return output, result
 
+def load_data(dataset_doc_path: str) -> Dataset:
+    # Add the parquet datset loader to the loaders to try - order matters, and
+    # we want to ensure it run before the D3M dataset loader.  We have to do this
+    # lazily because the loaders array is globally initialized in core.
+    hasLoader = False
+    for loader in dataset.Dataset.loaders:
+        if type(loader) == ParquetDatasetLoader:
+            hasLoader = True
+    if not hasLoader:
+        dataset.Dataset.loaders.insert(0, ParquetDatasetLoader())
+
+    # Load dataset in the same way the d3m runtime will
+    return dataset.Dataset.load(dataset_doc_path)
 
 def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
     # if there's a pipeline and it doesn't have a placeholder then its fully specified
@@ -550,20 +579,6 @@ def _use_gpu() -> bool:
         use_gpu = False
     logger.info(f"GPU enabled pipelines {use_gpu}")
     return use_gpu
-
-def _load_data(dataset_doc_path: str) -> Dataset:
-    # Add the parquet datset loader to the loaders to try - order matters, and
-    # we want to ensure it run before the D3M dataset loader.  We have to do this
-    # lazily because the loaders array is globally initialized in core.
-    hasLoader = False
-    for loader in dataset.Dataset.loaders:
-        if type(loader) == ParquetDatasetLoader:
-            hasLoader = True
-    if not hasLoader:
-        dataset.Dataset.loaders.insert(0, ParquetDatasetLoader())
-
-    # Load dataset in the same way the d3m runtime will
-    return dataset.Dataset.load(dataset_doc_path)
 
 def get_pipeline_hyperparams(pipeline, tune_steps):
     parameters = []

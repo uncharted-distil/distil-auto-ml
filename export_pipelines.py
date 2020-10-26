@@ -31,7 +31,7 @@ META_DIR = 'pipelines'
 PIPE_TO_DATASET = {
     'tabular': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', {'profiler': 'simple', 'use_boost': False, 'grid_search': True}),
     'audio': ('31_urbansound_MIN_METADATA', 'accuracy', {}),
-    'clustering': ('1491_one_hundred_plants_margin_clust', 'normalizedMutualInformation', {
+    'clustering': ('1491_one_hundred_plants_margin_clust_MIN_METADATA', 'normalizedMutualInformation', {
         'num_clusters': 100,
         'cluster_col_name': 'Class',
         'profiler': 'simon'
@@ -51,16 +51,19 @@ PIPE_TO_DATASET = {
     'timeseries_var': ('LL1_736_population_spawn_simpler_MIN_METADATA', 'meanAbsoluteError', {}),
     'timeseries_deepar': ('56_sunspots_MIN_METADATA', 'meanAbsoluteError', {}),
     'vertex_nomination': ('LL1_net_nomination_seed_MIN_METADATA', 'accuracy', {}),
+    'vertex_nomination': ('LL1_EDGELIST_net_nomination_seed_MIN_METADATA', 'accuracy', {'is_edgelist': True}),
     'vertex_classification': ('LL1_VTXC_1369_synthetic_MIN_METADATA', 'f1Macro', {}),
     'semisupervised_tabular': ('SEMI_1040_sylva_prior_MIN_METADATA', 'f1Macro', {}),
     'timeseries_lstm_fcn': ('LL1_50words_MIN_METADATA', 'f1Macro', {}),
     'data_augmentation_tabular': ('DA_ny_taxi_demand_MIN_METADATA', 'meanAbsoluteError', {}),
-    'remote_sensing': ('big-earth-sample', 'f1Macro', {}),
-    'remote_sensing_mlp': ('locusts-nano', 'f1Macro', {'spatial_dim': 1})
+    'mi_ranking': ('185_baseball_MIN_METADATA', 'f1Macro', {}),
+    'remote_sensing': ('LL1_bigearth_landuse_detection', 'f1Macro', {'svc': True}),
+    'remote_sensing_mlp': ('LL1_bigearth_landuse_detection', 'f1Macro', {}),
+    'common': ('LL0_acled_reduced_MIN_METADATA', 'f1Macro', {})
 }
 
 # Subset of pipelines that are aimed at coverage of only the primitives that we intend to
-# submit the d3m repo.
+# submit to the d3m repo.
 SUBMISSION_SUBSET = set([
     'tabular',
     'audio',
@@ -73,7 +76,11 @@ SUBMISSION_SUBSET = set([
     'question_answer',
     'text',
     'vertex_nomination',
-    'semisupervised_tabular'
+    'remote_sensing',
+    'remote_sensing_mlp',
+    'timeseries_var',
+    'common',
+    'mi_ranking'
 ])
 
 def generate_hash(pipe_json):

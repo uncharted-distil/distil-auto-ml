@@ -2,6 +2,7 @@
 Hello - TaskManager translates between
 protobuf messages and DAG tasks for the worker.
 """
+from d3m.runtime import fit
 from api.utils import ValueType
 import json
 import logging
@@ -153,6 +154,13 @@ class TaskManager():
                                          .filter(models.Solutions.pipeline_id==models.Pipelines.id) \
                                          .first()
 
+        # extract the pipeline in case the score needs to kick off a fit
+        pipeline_json = pipeline_record.pipelines
+        fully_specified =  pipeline_record.fully_specified
+        # generate a fit solution id for the same reason
+        fit_solution_id = self._generate_id()
+
+
         # Fetch the search record and extract the problem
         search = self.session.query(models.Searches) \
                              .filter(models.Searches.id==pipeline_record.search_id) \
@@ -178,9 +186,12 @@ class TaskManager():
             task = models.Tasks(id=task_id,
                                 type="SCORE",
                                 solution_id=solution_id,
+                                fit_solution_id=fit_solution_id,
                                 dataset_uri=dataset_uri,
                                 score_config_id=conf_id,
-                                problem=search.problem)
+                                problem=search.problem,
+                                pipeline=pipeline_json,
+                                fully_specified=fully_specified)
             self.session.add(task)
             # Add configs and tasks to pool
             self.session.commit()
@@ -230,15 +241,18 @@ class TaskManager():
         # Generate request ID
         request_id = self._generate_id()
 
-        # Extract the associated solution ID and the dataset URI
-        solution_id, dataset_uri = self.validator.validate_fit_solution_request(message)
+        # Validate request is in required format, extract if it is
+        solution_id, dataset_uri, output_keys, output_types = self.validator.validate_fit_solution_request(message)
+
+        # serialize the output key list json for storage
+        output_keys_json = json.dumps(output_keys) if output_keys else None
+        output_types_json = json.dumps(output_types) if output_types else None
 
         # Fetch the pipeline record
         _, pipeline_record = self.session.query(models.Solutions, models.Pipelines) \
                                          .filter(models.Solutions.id==solution_id) \
                                          .filter(models.Solutions.pipeline_id==models.Pipelines.id) \
                                          .first()
-
 
         # Fetch the search record and extract the problem
         search = self.session.query(models.Searches) \
@@ -261,7 +275,9 @@ class TaskManager():
                             dataset_uri=dataset_uri,
                             pipeline=pipeline_json,
                             problem=search.problem,
-                            fully_specified = fully_specified)
+                            fully_specified=fully_specified,
+                            output_keys=output_keys_json,
+                            output_types=output_types_json)
         self.session.add(task)
         self.session.commit()
 
@@ -336,8 +352,8 @@ class TaskManager():
         fitted_solution_id, dataset_uri, output_keys, output_types = extracted_fields
 
         # serialize the output key list json for storage
-        output_keys_json = json.dumps(output_keys)
-        output_types_json = json.dumps(output_types)
+        output_keys_json = json.dumps(output_keys) if output_keys else None
+        output_types_json = json.dumps(output_types) if output_types else None
 
         # Get existing fit_solution.id
         fit_solution = self.session.query(models.FitSolution) \

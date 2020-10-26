@@ -1,4 +1,5 @@
 import json
+from processing.pipeline import load_data
 import time
 import pathlib
 import logging
@@ -32,7 +33,7 @@ def produce_task(logger, session, server, task):
 
         # call produce on a fitted pipeline
         fitted_runtime = server.get_fitted_runtime(task.fit_solution_id)
-        test_dataset = dataset.Dataset.load(task.dataset_uri)
+        test_dataset = load_data(task.dataset_uri)
         results = ex_pipeline.produce(fitted_runtime, test_dataset)
 
         # pull out the results the caller requested, ignore any others that were exposed
@@ -46,7 +47,8 @@ def produce_task(logger, session, server, task):
                 selected_output_type = output_type
                 break
         if not selected_output_type:
-            raise ValueError(f"could not write results in requested formats '{output_types}'")
+            logger.warn(f'no output type specified - defaulting to {ValueType.CSV_URI}')
+            selected_output_type = ValueType.CSV_URI
 
         for output_key in output_keys:
             if output_key in results.values:
@@ -92,10 +94,11 @@ def score_task(logger, session, server, task):
         else:
             raise TypeError("no problem definition available for scoring")
 
-        if task.fitted is False:
-            fit_task(logger, session, server, task)
-
+        # check for successfully completed fit, run if not
         fitted_runtime = server.get_fitted_runtime(task.solution_id)
+        if fitted_runtime is None:
+            fit_task(logger, session, server, task)
+            fitted_runtime = server.get_fitted_runtime(task.solution_id)
 
         scorer = Scorer(logger, task, score_config, fitted_runtime, target_idx)
         score_values = scorer.run()
@@ -133,14 +136,32 @@ def fit_task(logger, session, server, task):
         # it doesn't need to be serialized.
         run_as_standard = not task.fully_specified
 
-        train_dataset = dataset.Dataset.load(task.dataset_uri)
+        train_dataset = load_data(task.dataset_uri)
         fitted_runtime, result = ex_pipeline.fit(pipeline_obj, problem_obj, train_dataset, is_standard_pipeline=run_as_standard)
 
-        if task.output_keys:
-            output_keys = json.loads(task.output_keys)
-            for output_key in output_keys:
-                if output_key in results.values:
-                    result.values[output_key].to_csv(utils.make_preds_filename(task.request_id, output_key=output_key), index=False)
+        # pull out the results the caller requested, ignore any others that were exposed
+        output_keys = json.loads(task.output_keys) if task.output_keys else {}
+
+        # loop over the (ordered) list of requested output types until we find one that we support
+        output_types = json.loads(task.output_types) if task.output_types else {}
+
+        selected_output_type = None
+        for output_type in output_types:
+            if output_type in messages.ALLOWED_TYPES:
+                selected_output_type = output_type
+                break
+        if not selected_output_type:
+            logger.warn(f'no output type specified - defaulting to {ValueType.CSV_URI}')
+            selected_output_type = ValueType.CSV_URI
+
+        for output_key in output_keys:
+            if output_key in result.values:
+                if selected_output_type == ValueType.PARQUET_URI:
+                    preds_path = utils.make_preds_filename(task.request_id, output_key=output_key, output_type=selected_output_type)
+                    result.values[output_key].to_parquet(preds_path, index=False)
+                elif selected_output_type == ValueType.CSV_URI:
+                    preds_path = utils.make_preds_filename(task.request_id, output_key=output_key, output_type=selected_output_type)
+                    result.values[output_key].to_csv(preds_path, index=False)
 
         # fitted runtime needs to have the fitted pipeline ID we've generated
         fitted_runtime.pipeline.id = task.fit_solution_id
