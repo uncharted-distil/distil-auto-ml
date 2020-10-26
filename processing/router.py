@@ -275,8 +275,7 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
         return "remote_sensing_pretrained", {}
 
     elif is_remote_sensing(dataset_doc, problem):
-        binary = _problem.TaskKeyword.BINARY in problem["problem"]["task_keywords"]
-        return "remote_sensing", {"binary": binary}
+        return "remote_sensing", {}
 
 
     elif is_object_detection(problem):
