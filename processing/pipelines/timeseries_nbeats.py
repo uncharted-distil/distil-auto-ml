@@ -157,6 +157,10 @@ def create_pipeline(metric: str,
         data_reference=input_val.format(target_step)
     )
     step.add_output("produce")
+    # step.add_hyperparameter("epochs", ArgumentType.VALUE, 1)
+    # step.add_hyperparameter("steps_per_epoch", ArgumentType.VALUE, 1)
+    # step.add_hyperparameter("num_estimators", ArgumentType.VALUE, 1)
+    step.add_hyperparameter("prediction_length", ArgumentType.VALUE, 10)
     nbeats_pipeline.add_step(step)
     previous_step += 1
     tune_steps.append(previous_step)
