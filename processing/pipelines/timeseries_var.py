@@ -12,6 +12,7 @@ from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.primitives.time_series_forecasting.vector_autoregression import VAR
 
+
 def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
     previous_step = 0
     tune_steps = []
@@ -68,17 +69,20 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     previous_step += 1
     parse_step = previous_step
 
-    step = PrimitiveStep(primitive_description=TimeSeriesBinnerPrimitive.metadata.query(), resolver=resolver)
+    step = PrimitiveStep(
+        primitive_description=TimeSeriesBinnerPrimitive.metadata.query(),
+        resolver=resolver,
+    )
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(previous_step)
+        data_reference=input_val.format(previous_step),
     )
     step.add_output("produce")
     step.add_hyperparameter("grouping_key_col", ArgumentType.VALUE, 1)
     step.add_hyperparameter("time_col", ArgumentType.VALUE, 3)
     step.add_hyperparameter("value_cols", ArgumentType.VALUE, [4])
-    step.add_hyperparameter("binning_starting_value", ArgumentType.VALUE, 'min')
+    step.add_hyperparameter("binning_starting_value", ArgumentType.VALUE, "min")
     var_pipeline.add_step(step)
     previous_step += 1
     # parse_step = previous_step
@@ -144,12 +148,20 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
 
     # step 3 - Generate predictions output
     step = PrimitiveStep(
-        primitive_description=ConstructPredictionsPrimitive.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
-                      data_reference=input_val.format(previous_step))
-    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER,
-                      data_reference=input_val.format(parse_step))
-    step.add_output('produce')
+        primitive_description=ConstructPredictionsPrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(previous_step),
+    )
+    step.add_argument(
+        name="reference",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(parse_step),
+    )
+    step.add_output("produce")
     var_pipeline.add_step(step)
     previous_step += 1
 

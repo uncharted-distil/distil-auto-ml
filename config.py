@@ -17,10 +17,10 @@ PORT = os.getenv("PORT", "45042")
 LOG_FILENAME = os.getenv("LOG_FILENAME", "distil-auto-ml.log")
 
 # User agent to supply to TA3 Systems
-SERVER_USER_AGENT='qntfy_ta2'
+SERVER_USER_AGENT = "qntfy_ta2"
 
 # Primitives static file directory
-D3MSTATICDIR = os.getenv("D3MSTATICDIR", '/static')
+D3MSTATICDIR = os.getenv("D3MSTATICDIR", "/static")
 
 # Enable GPU pipelines - "auto" will try to detect, "true" and "false" will force
 GPU = os.getenv("GPU", "auto")
@@ -41,10 +41,10 @@ AUG_MAX_ROWS = int(os.getenv("AUG_MAX_ROWS", 50000))
 TIME_LIMIT = int(os.getenv("TIME_LIMIT", 600))
 
 # use untuned/internally tuned pipelines (faster) or external tuning (better results)
-HYPERPARAMETER_TUNING = os.getenv("HYPERPARAMETER_TUNING", 'True') == 'True'
+HYPERPARAMETER_TUNING = os.getenv("HYPERPARAMETER_TUNING", "True") == "True"
 
 # enable/disable confidence scores in pipelines that support them - d3m scoring tools currently don't support
-COMPUTE_CONFIDENCES = os.getenv("COMPUTE_CONFIDENCES", 'False') == 'True'
+COMPUTE_CONFIDENCES = os.getenv("COMPUTE_CONFIDENCES", "False") == "True"
 
 # controls parallelism within primitives - defaults to the number of CPUs
 N_JOBS = int(os.getenv("N_JOBS", -1))

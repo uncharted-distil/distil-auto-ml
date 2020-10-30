@@ -3,7 +3,9 @@ from typing import Optional
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
-from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
+from common_primitives.extract_columns_semantic_types import (
+    ExtractColumnsBySemanticTypesPrimitive,
+)
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
@@ -22,14 +24,17 @@ from sklearn_wrap import SKStandardScaler
 # CDB: Totally unoptimized.  Pipeline creation code could be simplified but has been left
 # in a naively implemented state for readability for now.
 
-def create_pipeline(metric: str,
-                    cat_mode: str = 'one_hot',
-                    max_one_hot: int = 16,
-                    scale: bool = False,
-                    num_clusters: int = 100,
-                    cluster_col_name = None,
-                    resolver: Optional[Resolver] = None,
-                    profiler: str = '') -> Pipeline:
+
+def create_pipeline(
+    metric: str,
+    cat_mode: str = "one_hot",
+    max_one_hot: int = 16,
+    scale: bool = False,
+    num_clusters: int = 100,
+    cluster_col_name=None,
+    resolver: Optional[Resolver] = None,
+    profiler: str = "",
+) -> Pipeline:
     previous_step = 0
     input_val = "steps.{}.produce"
 
@@ -49,20 +54,35 @@ def create_pipeline(metric: str,
     tabular_pipeline.add_step(step)
     previous_step = 0
 
-    if profiler == 'simon':
-        step = PrimitiveStep(primitive_description=Simon.metadata.query(), resolver=resolver)
-        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
-                          data_reference=input_val.format(previous_step))
-        step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
-        step.add_output('produce')
+    if profiler == "simon":
+        step = PrimitiveStep(
+            primitive_description=Simon.metadata.query(), resolver=resolver
+        )
+        step.add_argument(
+            name="inputs",
+            argument_type=ArgumentType.CONTAINER,
+            data_reference=input_val.format(previous_step),
+        )
+        step.add_hyperparameter(
+            name="overwrite", argument_type=ArgumentType.VALUE, data=True
+        )
+        step.add_output("produce")
         tabular_pipeline.add_step(step)
         previous_step += 1
-    elif profiler =='simple':
-        step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
-        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
-                          data_reference=input_val.format(previous_step))
-        step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
-        step.add_output('produce')
+    elif profiler == "simple":
+        step = PrimitiveStep(
+            primitive_description=SimpleProfilerPrimitive.metadata.query(),
+            resolver=resolver,
+        )
+        step.add_argument(
+            name="inputs",
+            argument_type=ArgumentType.CONTAINER,
+            data_reference=input_val.format(previous_step),
+        )
+        step.add_hyperparameter(
+            name="overwrite", argument_type=ArgumentType.VALUE, data=True
+        )
+        step.add_output("produce")
         tabular_pipeline.add_step(step)
         previous_step += 1
 

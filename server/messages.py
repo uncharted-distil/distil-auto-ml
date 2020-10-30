@@ -13,8 +13,8 @@ from d3m import index
 # List of value types the we support for returning data to the TA3
 ALLOWED_TYPES = set([api_utils.ValueType.CSV_URI, api_utils.ValueType.PARQUET_URI])
 
-class Messaging:
 
+class Messaging:
     def get_dataset_uri(self, msg):
         if len(msg.inputs) == 0:
             return False
@@ -39,45 +39,47 @@ class Messaging:
         scores = []
 
         if solution_id is not None:
-           scores = [core_pb2.SolutionSearchScore(
-                scoring_configuration=core_pb2.ScoringConfiguration(
-                    method='RANKING'
-                ),
-                scores=[core_pb2.Score(
-                    metric=problem_pb2.ProblemPerformanceMetric(
-                        metric='RANK',
+            scores = [
+                core_pb2.SolutionSearchScore(
+                    scoring_configuration=core_pb2.ScoringConfiguration(
+                        method="RANKING"
                     ),
-                    value=value_pb2.Value(
-                        raw=value_pb2.ValueRaw(
-                            int64=rank
+                    scores=[
+                        core_pb2.Score(
+                            metric=problem_pb2.ProblemPerformanceMetric(
+                                metric="RANK",
+                            ),
+                            value=value_pb2.Value(raw=value_pb2.ValueRaw(int64=rank)),
                         )
-                    )
-                )]
-            )]
+                    ],
+                )
+            ]
 
         m = core_pb2.GetSearchSolutionsResultsResponse(
             solution_id=solution_id,
             progress=progress_msg,
             internal_score=0.0,
-            scores = scores
+            scores=scores,
         )
         return m
 
     def search_solutions_response(self, search_id):
-        m = core_pb2.SearchSolutionsResponse(
-            search_id=search_id)
+        m = core_pb2.SearchSolutionsResponse(search_id=search_id)
         return m
 
     def score_solution_response(self, request_id):
-        return core_pb2.ScoreSolutionResponse(
-            request_id=request_id)
+        return core_pb2.ScoreSolutionResponse(request_id=request_id)
 
     def unpack_score_solution_request(self, request):
         # empty string returned if solution_id doesn't exist
         solution_id = request.solution_id
 
         # metric (need at least one)
-        metrics = [m.metric.lower() for m in request.performance_metrics if len(m.metric) is not 0]
+        metrics = [
+            m.metric.lower()
+            for m in request.performance_metrics
+            if len(m.metric) is not 0
+        ]
 
         # method required to be defined
         method = request.configuration.method.lower()
@@ -97,40 +99,46 @@ class Messaging:
         random_seed = request.configuration.random_seed
         stratified = request.configuration.stratified
 
-        r = (solution_id, dataset_uri, metrics,
-        method, folds, train_test_ratio,
-        shuffle, random_seed, stratified)
+        r = (
+            solution_id,
+            dataset_uri,
+            metrics,
+            method,
+            folds,
+            train_test_ratio,
+            shuffle,
+            random_seed,
+            stratified,
+        )
 
         return r
 
     def make_get_score_solution_results_response(self, scores, progess_msg):
-        m = core_pb2.GetScoreSolutionResultsResponse(scores=scores,
-                                                     progress=progess_msg)
+        m = core_pb2.GetScoreSolutionResultsResponse(
+            scores=scores, progress=progess_msg
+        )
         return m
 
     def make_score_message(self, metric, value):
         inner_metric = metric.upper()
-        metric = problem_pb2.ProblemPerformanceMetric(
-            metric=inner_metric
-        )
+        metric = problem_pb2.ProblemPerformanceMetric(metric=inner_metric)
         # TODO: obviously way more
-        raw = value_pb2.ValueRaw(
-            double=value)
-        val = value_pb2.Value(
-            raw=raw)
-        score = core_pb2.Score(
-            metric=metric,
-            value=val)
+        raw = value_pb2.ValueRaw(double=value)
+        val = value_pb2.Value(raw=raw)
+        score = core_pb2.Score(metric=metric, value=val)
         return score
 
     def make_hello_response_message(self):
         resp = core_pb2.HelloResponse(
             user_agent=config.SERVER_USER_AGENT,
-            version=core_pb2.DESCRIPTOR.GetOptions().Extensions[core_pb2.protocol_version])
-        resp.allowed_value_types.append('PARQUET_URI')
-        resp.allowed_value_types.append('CSV_URI')
-        resp.allowed_value_types.append('DATASET_URI')
-        resp.allowed_value_types.append('RAW')
+            version=core_pb2.DESCRIPTOR.GetOptions().Extensions[
+                core_pb2.protocol_version
+            ],
+        )
+        resp.allowed_value_types.append("PARQUET_URI")
+        resp.allowed_value_types.append("CSV_URI")
+        resp.allowed_value_types.append("DATASET_URI")
+        resp.allowed_value_types.append("RAW")
         return resp
 
     def get_solution_id(self, message):
@@ -151,15 +159,23 @@ class Messaging:
     def make_fit_solution_message(self, request_id):
         return core_pb2.FitSolutionResponse(request_id=request_id)
 
-    def make_get_fit_solution_results_response(self, fitted_solution_id, progess_msg, output_key_map=None):
+    def make_get_fit_solution_results_response(
+        self, fitted_solution_id, progess_msg, output_key_map=None
+    ):
         if output_key_map:
-            fb_output_map = { output_id:value_pb2.Value(csv_uri=csv_uri) for (output_id, csv_uri) in output_key_map.items() }
-            resp = core_pb2.GetFitSolutionResultsResponse(fitted_solution_id=fitted_solution_id,
-                                                        progress=progess_msg,
-                                                        exposed_outputs=fb_output_map)
+            fb_output_map = {
+                output_id: value_pb2.Value(csv_uri=csv_uri)
+                for (output_id, csv_uri) in output_key_map.items()
+            }
+            resp = core_pb2.GetFitSolutionResultsResponse(
+                fitted_solution_id=fitted_solution_id,
+                progress=progess_msg,
+                exposed_outputs=fb_output_map,
+            )
         else:
-            resp = core_pb2.GetFitSolutionResultsResponse(fitted_solution_id=fitted_solution_id,
-                                                        progress=progess_msg)
+            resp = core_pb2.GetFitSolutionResultsResponse(
+                fitted_solution_id=fitted_solution_id, progress=progess_msg
+            )
         return resp
 
     def get_output_keys(self, message):
@@ -197,22 +213,28 @@ class Messaging:
 
         pipeline_obj = pipeline.Pipeline.from_json(description)
 
-        allowed = [utils.ValueType.RAW,utils.ValueType.CSV_URI,
-                   utils.ValueType.DATASET_URI,
-                   utils.ValueType.PICKLE_BLOB,
-                   utils.ValueType.PICKLE_URI,
-                  ]
-        pipeline_description = utils.encode_pipeline_description(pipeline_obj, allowed, '.')
+        allowed = [
+            utils.ValueType.RAW,
+            utils.ValueType.CSV_URI,
+            utils.ValueType.DATASET_URI,
+            utils.ValueType.PICKLE_BLOB,
+            utils.ValueType.PICKLE_URI,
+        ]
+        pipeline_description = utils.encode_pipeline_description(
+            pipeline_obj, allowed, "."
+        )
 
-        msg = core_pb2.DescribeSolutionResponse(
-            pipeline=pipeline_description)
+        msg = core_pb2.DescribeSolutionResponse(pipeline=pipeline_description)
         return msg
 
     def make_get_produce_solution_results_response(self, output_key_map, progress_msg):
-        pb_output_map = { output_id:value_pb2.Value(csv_uri=csv_uri) for (output_id, csv_uri) in output_key_map.items() }
+        pb_output_map = {
+            output_id: value_pb2.Value(csv_uri=csv_uri)
+            for (output_id, csv_uri) in output_key_map.items()
+        }
         rsp = core_pb2.GetProduceSolutionResultsResponse(
-                exposed_outputs=pb_output_map,
-                progress=progress_msg)
+            exposed_outputs=pb_output_map, progress=progress_msg
+        )
         return rsp
 
     def get_request_id(self, message):
@@ -224,7 +246,9 @@ class Messaging:
     def dump_solution_template(self, template):
         return json_format.MessageToDict(template)
 
-    def make_progress_msg(self, progress_state, status_msg="", task_start=None, task_end=None):
+    def make_progress_msg(
+        self, progress_state, status_msg="", task_start=None, task_end=None
+    ):
         """Return a properly built Progress message.
 
         Args:
@@ -239,10 +263,11 @@ class Messaging:
             task_end (timestamp): UNUSED
         """
         progress_msg = core_pb2.Progress(
-                state=core_pb2.ProgressState.Value(progress_state),
-                status=status_msg,
-                start=task_start,
-                end=task_start)
+            state=core_pb2.ProgressState.Value(progress_state),
+            status=status_msg,
+            start=task_start,
+            end=task_start,
+        )
         return progress_msg
 
     def make_solution_export_response(self):
@@ -251,26 +276,22 @@ class Messaging:
 
     def make_save_fitted_solution_response(self, fitted_solution_uri):
         response_msg = core_pb2.SaveFittedSolutionResponse(
-                fitted_solution_uri=fitted_solution_uri
+            fitted_solution_uri=fitted_solution_uri
         )
         return response_msg
 
     def make_save_solution_response(self, solution_uri):
-        response_msg = core_pb2.SaveSolutionResponse(
-                solution_uri=solution_uri
-        )
+        response_msg = core_pb2.SaveSolutionResponse(solution_uri=solution_uri)
         return response_msg
 
     def make_load_fitted_solution_response(self, fitted_solution_id):
         response_msg = core_pb2.LoadFittedSolutionResponse(
-                fitted_solution_id=fitted_solution_id
+            fitted_solution_id=fitted_solution_id
         )
         return response_msg
 
     def make_load_solution_response(self, solution_id):
-        response_msg = core_pb2.LoadSolutionResponse(
-                solution_id=solution_id
-        )
+        response_msg = core_pb2.LoadSolutionResponse(solution_id=solution_id)
         return response_msg
 
     def get_rank(self, msg):
@@ -278,11 +299,14 @@ class Messaging:
 
     def make_list_primitives_response(self):
         resp = core_pb2.ListPrimitivesResponse()
-        primitives = [ primitive_pb2.Primitive(
-            id=prim_data.metadata.query()["id"],
-            version=prim_data.metadata.query()["version"],
-            python_path=prim_data.metadata.query()["name"],
-            digest = prim_data.metadata.query()["digest"])
-            for prim_data in index.get_loaded_primitives()]
+        primitives = [
+            primitive_pb2.Primitive(
+                id=prim_data.metadata.query()["id"],
+                version=prim_data.metadata.query()["version"],
+                python_path=prim_data.metadata.query()["name"],
+                digest=prim_data.metadata.query()["digest"],
+            )
+            for prim_data in index.get_loaded_primitives()
+        ]
         resp.primitives.extend(primitives)
         return resp

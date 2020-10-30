@@ -7,7 +7,9 @@ from distil.primitives.load_single_graph import DistilSingleGraphLoaderPrimitive
 from distil.primitives.load_edgelist import DistilEdgeListLoaderPrimitive
 
 
-def create_pipeline(metric: str, resolver: Optional[Resolver] = None, is_edgelist: bool=False) -> Pipeline:
+def create_pipeline(
+    metric: str, resolver: Optional[Resolver] = None, is_edgelist: bool = False
+) -> Pipeline:
 
     # create the basic pipeline
     vertex_nomination_pipeline = Pipeline()

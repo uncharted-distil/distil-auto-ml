@@ -55,7 +55,9 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         argument_type=ArgumentType.CONTAINER,
         data_reference=input_val.format(previous_step),
     )
-    step.add_hyperparameter("parse_categorical_target_columns", ArgumentType.VALUE, True)
+    step.add_hyperparameter(
+        "parse_categorical_target_columns", ArgumentType.VALUE, True
+    )
     step.add_output("produce")
     mi_ranking_pipeline.add_step(step)
     previous_step += 1

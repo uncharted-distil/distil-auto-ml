@@ -9,13 +9,15 @@ import logging
 class RequestValidator:
     def __init__(self):
         self.msg = Messaging()
-        self.logger = logging.getLogger('distil.TaskManager')
+        self.logger = logging.getLogger("distil.TaskManager")
 
     def _validate_solution_id_exists(self, solution_id, session, request):
         solution_id = str(solution_id)
-        solution_id_record = session.query(models.Solutions) \
-                                    .filter(models.Solutions.id==solution_id) \
-                                    .first()
+        solution_id_record = (
+            session.query(models.Solutions)
+            .filter(models.Solutions.id == solution_id)
+            .first()
+        )
 
         if solution_id_record is None:
             raise ValueError("Solution ID does not exist: {}".format(request))
@@ -25,9 +27,11 @@ class RequestValidator:
     def _validate_request_exists(self, request, session):
         request_id = self.msg.get_request_id(request)
 
-        request_record = session.query(models.Requests) \
-                                .filter(models.Requests.id==request_id) \
-                                .first()
+        request_record = (
+            session.query(models.Requests)
+            .filter(models.Requests.id == request_id)
+            .first()
+        )
 
         if request_record is None:
             raise ValueError("Request ID does not exist: {}".format(request))
@@ -35,19 +39,22 @@ class RequestValidator:
         return request_id
 
     def validate_fitted_solution_id_exists(self, soln_id, session, request):
-        fit_solution_id_record = session.query(models.FitSolution) \
-                                    .filter(models.FitSolution.id==soln_id) \
-                                    .first()
+        fit_solution_id_record = (
+            session.query(models.FitSolution)
+            .filter(models.FitSolution.id == soln_id)
+            .first()
+        )
 
-        solution_id_record = session.query(models.Solutions) \
-                                    .filter(models.Solutions.id==soln_id) \
-                                    .first()
+        solution_id_record = (
+            session.query(models.Solutions)
+            .filter(models.Solutions.id == soln_id)
+            .first()
+        )
 
         if fit_solution_id_record is None and solution_id_record is None:
             raise ValueError("Provided ID does not exist: {}".format(request))
 
         return fitted_solution_id_record
-
 
     def validate_search_solutions_request(self, request):
         dataset_uri = self.msg.get_dataset_uri(request)
@@ -66,8 +73,8 @@ class RequestValidator:
         placeholder_present = False
 
         if template_dict:
-            step_types = [list(s.keys()).pop() for s in template_dict['steps']]
-            if 'placeholder' in step_types:
+            step_types = [list(s.keys()).pop() for s in template_dict["steps"]]
+            if "placeholder" in step_types:
                 placeholder_present = True
             # Placeholder doesn't have to be last primitive in step list, it just has to be the
             # the single output from the pipeline DAG.  Assumption below doesn't hold in that case.
@@ -78,7 +85,11 @@ class RequestValidator:
             pass
         # This is not ok
         if not problem_type and placeholder_present:
-            raise ValueError("Must pass a problem_type with placeholder in template: {}".format(request))
+            raise ValueError(
+                "Must pass a problem_type with placeholder in template: {}".format(
+                    request
+                )
+            )
         # Also not ok
         if not problem_type and not template_dict:
             raise ValueError("Must pass a problem_type: {}".format(request))
@@ -92,13 +103,24 @@ class RequestValidator:
         if not solution_id:
             raise ValueError("Must pass a solution_id: {}".format(request))
         if not metrics:
-            raise ValueError("Must pass at least one scoring metric: {}".format(request))
+            raise ValueError(
+                "Must pass at least one scoring metric: {}".format(request)
+            )
         if not method:
-            raise ValueError("Must pass scoring configuration with evaluation method: {}".format(request))
+            raise ValueError(
+                "Must pass scoring configuration with evaluation method: {}".format(
+                    request
+                )
+            )
         return r
 
     def validate_fit_solution_request(self, request):
-        solution_id, dataset_uri, output_keys, output_types = self.msg.unpack_fit_solution_request(request)
+        (
+            solution_id,
+            dataset_uri,
+            output_keys,
+            output_types,
+        ) = self.msg.unpack_fit_solution_request(request)
         if not solution_id:
             raise ValueError("Must pass a solution_id: {}".format(request))
         dataset_uri = self.msg.get_dataset_uri(request)
@@ -109,7 +131,12 @@ class RequestValidator:
         return solution_id, dataset_uri, output_keys, output_types
 
     def validate_produce_solution_request(self, request):
-        fitted_solution_id, dataset_uri, output_keys, output_types = self.msg.unpack_produce_solution_request(request)
+        (
+            fitted_solution_id,
+            dataset_uri,
+            output_keys,
+            output_types,
+        ) = self.msg.unpack_produce_solution_request(request)
         if not fitted_solution_id:
             raise ValueError("Must pass a solution_id: {}".format(request))
         if not dataset_uri:
@@ -123,9 +150,11 @@ class RequestValidator:
     def validate_get_search_solutions_results_request(self, request, session):
         search_id = str(self.msg.get_search_id(request))
 
-        search = session.query(models.Searches) \
-                        .filter(models.Searches.id==search_id) \
-                        .first()
+        search = (
+            session.query(models.Searches)
+            .filter(models.Searches.id == search_id)
+            .first()
+        )
 
         if search is None:
             raise ValueError("Search ID doesn't exist: {}".format(request))
@@ -146,7 +175,9 @@ class RequestValidator:
             raise ValueError("Must pass a solution_id: {}".format(request))
         # default value of gRPC double field is 0
         if rank < 0:
-            raise ValueError("Must specify a rank and rank must be >=0: {}".format(request))
+            raise ValueError(
+                "Must specify a rank and rank must be >=0: {}".format(request)
+            )
 
         return solution_id, rank
 

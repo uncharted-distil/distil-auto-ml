@@ -157,11 +157,22 @@ def create_pipeline(
     target_step = previous_step
 
     # step 6 - generates a text classification model.
-    step = PrimitiveStep(primitive_description=TextClassifierPrimitive.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(attibute_step))
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
-    step.add_output('produce')
-    step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
+    step = PrimitiveStep(
+        primitive_description=TextClassifierPrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(attibute_step),
+    )
+    step.add_argument(
+        name="outputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(target_step),
+    )
+    step.add_output("produce")
+    step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
     text_pipeline.add_step(step)
     previous_step += 1
 

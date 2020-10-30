@@ -78,6 +78,7 @@ import copy
 
 logger = logging.getLogger(__name__)
 
+
 def create(
     dataset_doc_path: str,
     problem: dict,
@@ -114,7 +115,7 @@ def create(
 
     # flag whether or not we need confidences based on env var setting + metric request
     compute_confidences = False
-    if config.COMPUTE_CONFIDENCES or metric.startswith('rocAuc'):
+    if config.COMPUTE_CONFIDENCES or metric.startswith("rocAuc"):
         compute_confidences = True
 
     # determine type of pipeline required for dataset
@@ -163,7 +164,7 @@ def create(
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
                     compute_confidences=compute_confidences,
-                    n_jobs=n_jobs
+                    n_jobs=n_jobs,
                 )
             )
             pipelines.append(
@@ -176,7 +177,7 @@ def create(
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
                     compute_confidences=compute_confidences,
-                    n_jobs=n_jobs
+                    n_jobs=n_jobs,
                 )
             )
             pipelines.append(
@@ -189,7 +190,7 @@ def create(
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
                     compute_confidences=compute_confidences,
-                    n_jobs=n_jobs
+                    n_jobs=n_jobs,
                 )
             )
 
@@ -203,7 +204,7 @@ def create(
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
                     compute_confidences=compute_confidences,
-                    n_jobs=n_jobs
+                    n_jobs=n_jobs,
                 )
             )
         else:
@@ -217,7 +218,7 @@ def create(
                         use_boost=True,
                         max_one_hot=8,
                         compute_confidences=compute_confidences,
-                        n_jobs=n_jobs
+                        n_jobs=n_jobs,
                     )
                 )
             pipelines.append(
@@ -230,7 +231,7 @@ def create(
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
                     compute_confidences=compute_confidences,
-                    n_jobs=n_jobs
+                    n_jobs=n_jobs,
                 )
             )
     elif pipeline_type == "graph_matching":
@@ -260,27 +261,34 @@ def create(
         if max_models > 1:
             pipelines.append(
                 text_sent2vec.create_pipeline(
-                    metric=metric, resolver=resolver, **pipeline_info
+                    metric=metric, n_jobs=n_jobs, resolver=resolver, **pipeline_info
                 )
             )
     elif pipeline_type == "image":
         pipelines.append(
-            image.create_pipeline(metric=metric,  n_jobs=n_jobs, resolver=resolver, **pipeline_info)
+            image.create_pipeline(
+                metric=metric, n_jobs=n_jobs, resolver=resolver, **pipeline_info
+            )
         )
     elif pipeline_type == "remote_sensing":
         pipelines.append(
             remote_sensing.create_pipeline(
-                metric=metric, resolver=resolver, grid_search=True, n_jobs=n_jobs,
-                batch_size=config.REMOTE_SENSING_BATCH_SIZE, **pipeline_info
+                metric=metric,
+                resolver=resolver,
+                grid_search=True,
+                n_jobs=n_jobs,
+                batch_size=config.REMOTE_SENSING_BATCH_SIZE,
+                **pipeline_info,
             )
         )
     elif pipeline_type == "remote_sensing_mlp":
         pipelines.append(
             remote_sensing_mlp.create_pipeline(
-                metric=metric, resolver=resolver,
+                metric=metric,
+                resolver=resolver,
                 batch_size=config.REMOTE_SENSING_BATCH_SIZE,
                 n_jobs=n_jobs,
-                **pipeline_info
+                **pipeline_info,
             )
         )
     elif pipeline_type == "remote_sensing_pretrained":
@@ -290,7 +298,7 @@ def create(
                 resolver=resolver,
                 use_linear_svc=True,
                 n_jobs=n_jobs,
-                **pipeline_info
+                **pipeline_info,
             )
         )
         if max_models > 1:
@@ -300,7 +308,7 @@ def create(
                     resolver=resolver,
                     use_linear_svc=False,
                     n_jobs=n_jobs,
-                    **pipeline_info
+                    **pipeline_info,
                 )
             )
     elif pipeline_type == "object_detection":
@@ -317,7 +325,7 @@ def create(
         if gpu:
             pipelines.append(
                 collaborative_filtering.create_pipeline(
-                    metric=metric, resolver=resolver, **pipeline_info
+                    metric=metric, n_jobs=n_jobs, resolver=resolver, **pipeline_info
                 )
             )
         pipelines.append(tabular.create_pipeline(metric=metric, resolver=resolver))
@@ -372,6 +380,7 @@ def create(
         pipelines.append(
             semisupervised_tabular.create_pipeline(
                 metric=metric,
+                n_jobs=n_jobs,
                 resolver=resolver,
                 exclude_column=exclude_column,
                 profiler="simon",
@@ -410,12 +419,11 @@ def create(
         # ]
         pipelines = pipelines_prepend
 
-
     tuned_pipelines = []
     scores = []
     for i, pipeline in enumerate(pipelines):
         # tune the pipeline if tuning info was generated, and tuning is enabled
-        if len(pipeline[1]) > 0  and tune_pipeline:
+        if len(pipeline[1]) > 0 and tune_pipeline:
             try:
                 pipeline = hyperparam_tune(
                     pipeline,
@@ -501,6 +509,7 @@ def produce_pipeline(
         raise result.error
     return output, result
 
+
 def load_data(dataset_doc_path: str) -> Dataset:
     # Add the parquet datset loader to the loaders to try - order matters, and
     # we want to ensure it run before the D3M dataset loader.  We have to do this
@@ -514,6 +523,7 @@ def load_data(dataset_doc_path: str) -> Dataset:
 
     # Load dataset in the same way the d3m runtime will
     return dataset.Dataset.load(dataset_doc_path)
+
 
 def is_fully_specified(prepend: pipeline.Pipeline) -> bool:
     # if there's a pipeline and it doesn't have a placeholder then its fully specified
@@ -592,6 +602,7 @@ def _use_gpu() -> bool:
         use_gpu = False
     logger.info(f"GPU enabled pipelines {use_gpu}")
     return use_gpu
+
 
 def get_pipeline_hyperparams(pipeline, tune_steps):
     parameters = []
@@ -737,7 +748,8 @@ def get_pipeline_hyperparams(pipeline, tune_steps):
                     default_hyperparam = default_hyperparam["data"]
                 parameters.append(
                     sherpa.Choice(
-                        f"step___{current_step}___{name}", [default_hyperparam],
+                        f"step___{current_step}___{name}",
+                        [default_hyperparam],
                     )
                 )
                 defaults.update({f"step___{current_step}___{name}": default_hyperparam})
@@ -782,7 +794,7 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
     performance_metric_ref = problem["problem"]["performance_metrics"][0]
     lower_is_better = metric_map[performance_metric_ref["metric"]]
     params, defaults = get_pipeline_hyperparams(pipeline, tune_steps)
-    #alg = sherpa.algorithms.GPyOpt(initial_data_points=defaults, max_num_trials=128)
+    # alg = sherpa.algorithms.GPyOpt(initial_data_points=defaults, max_num_trials=128)
     alg = sherpa.algorithms.LocalSearch(seed_configuration=defaults[0])
     alg.next_trial = None
     scheduler = sherpa.schedulers.LocalScheduler()
@@ -790,10 +802,12 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
 
     def run_sherpa_optimize(fun, **kwargs):
         fun(**kwargs)
+
     pipeline_id = pipeline.id
     if pipeline_id == "":
         # when running from distil the id gets set to ''. We need an id for storage
         import uuid
+
         pipeline_id = uuid.uuid4()
     p = Process(
         target=run_sherpa_optimize,
@@ -919,12 +933,16 @@ def hyperparam_tune(pipeline, problem, dataset, timeout=600):
                                         else x.strip()
                                         for x in value
                                     )
-                            elif (
-                                step.primitive
-                                == index.get_primitive('d3m.primitives.operator.dataset_map.DataFrameCommon')
+                            elif step.primitive == index.get_primitive(
+                                "d3m.primitives.operator.dataset_map.DataFrameCommon"
                             ):
                                 # reset hyperparams to base json representation.
-                                step.hyperparams = {'primitive': {'type': ArgumentType.PRIMITIVE, 'data': step.index-1}}
+                                step.hyperparams = {
+                                    "primitive": {
+                                        "type": ArgumentType.PRIMITIVE,
+                                        "data": step.index - 1,
+                                    }
+                                }
 
                             step.add_hyperparameter(
                                 name=name, argument_type=ArgumentType.VALUE, data=value

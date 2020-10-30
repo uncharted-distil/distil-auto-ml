@@ -27,9 +27,10 @@ from server import messages
 # Configure output dir
 pathlib.Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
+
 def produce_task(logger, session, server, task):
     try:
-        logger.info('Starting produce task ID {}'.format(task.id))
+        logger.info("Starting produce task ID {}".format(task.id))
 
         # call produce on a fitted pipeline
         fitted_runtime = server.get_fitted_runtime(task.fit_solution_id)
@@ -47,20 +48,30 @@ def produce_task(logger, session, server, task):
                 selected_output_type = output_type
                 break
         if not selected_output_type:
-            logger.warn(f'no output type specified - defaulting to {ValueType.CSV_URI}')
+            logger.warn(f"no output type specified - defaulting to {ValueType.CSV_URI}")
             selected_output_type = ValueType.CSV_URI
 
         for output_key in output_keys:
             if output_key in results.values:
                 if selected_output_type == ValueType.PARQUET_URI:
-                    preds_path = utils.make_preds_filename(task.request_id, output_key=output_key, output_type=selected_output_type)
+                    preds_path = utils.make_preds_filename(
+                        task.request_id,
+                        output_key=output_key,
+                        output_type=selected_output_type,
+                    )
                     results.values[output_key].to_parquet(preds_path, index=False)
                 elif selected_output_type == ValueType.CSV_URI:
-                    preds_path = utils.make_preds_filename(task.request_id, output_key=output_key, output_type=selected_output_type)
+                    preds_path = utils.make_preds_filename(
+                        task.request_id,
+                        output_key=output_key,
+                        output_type=selected_output_type,
+                    )
                     results.values[output_key].to_csv(preds_path, index=False)
         session.commit()
     except Exception as e:
-        logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
+        logger.warn(
+            "Exception running task ID {}: {}".format(task.id, e), exc_info=True
+        )
         task.error = True
         task.error_message = str(e)
     finally:
@@ -70,27 +81,38 @@ def produce_task(logger, session, server, task):
         task.ended_at = datetime.datetime.utcnow()
         session.commit()
 
+
 def score_task(logger, session, server, task):
     try:
-        logger.info('Starting score task ID {}'.format(task.id))
+        logger.info("Starting score task ID {}".format(task.id))
         task.started_at = datetime.datetime.utcnow()
-        score_config = session.query(models.ScoreConfig) \
-                              .filter(models.ScoreConfig.id==task.score_config_id) \
-                              .first()
+        score_config = (
+            session.query(models.ScoreConfig)
+            .filter(models.ScoreConfig.id == task.score_config_id)
+            .first()
+        )
 
         # reconstruct the problem object from the saved json if present and extract the target index
-        problem_obj = problem.Problem.from_json_structure(json.loads(task.problem)) if task.problem else None
+        problem_obj = (
+            problem.Problem.from_json_structure(json.loads(task.problem))
+            if task.problem
+            else None
+        )
         target_idx = -1
         if problem_obj != None:
-            inputs = problem_obj['inputs']
+            inputs = problem_obj["inputs"]
             if len(inputs) > 1:
-                logger.warn(f'found {len(inputs)} inputs - using first and ignoring others')
+                logger.warn(
+                    f"found {len(inputs)} inputs - using first and ignoring others"
+                )
 
-            targets = inputs[0]['targets']
+            targets = inputs[0]["targets"]
             if len(targets) > 1:
-                logger.warn(f'found {len(targets)} targets - using first and ignoring others')
+                logger.warn(
+                    f"found {len(targets)} targets - using first and ignoring others"
+                )
 
-            target_idx = targets[0]['column_index']
+            target_idx = targets[0]["column_index"]
         else:
             raise TypeError("no problem definition available for scoring")
 
@@ -106,11 +128,14 @@ def score_task(logger, session, server, task):
             score = models.Scores(
                 solution_id=task.solution_id,
                 score_config_id=score_config.id,
-                value=score_value)
+                value=score_value,
+            )
             session.add(score)
             session.commit()
     except Exception as e:
-        logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
+        logger.warn(
+            "Exception running task ID {}: {}".format(task.id, e), exc_info=True
+        )
         task.error = True
         task.error_message = str(e)
     finally:
@@ -120,24 +145,38 @@ def score_task(logger, session, server, task):
         task.ended_at = datetime.datetime.utcnow()
         session.commit()
 
+
 def fit_task(logger, session, server, task):
     try:
-        logger.info('Starting distil task ID {}'.format(task.id))
+        logger.info("Starting distil task ID {}".format(task.id))
         task.started_at = datetime.datetime.utcnow()
 
         # reconstruct the problem object from the saved json if present
-        problem_obj = problem.Problem.from_json_structure(json.loads(task.problem)) if task.problem else None
+        problem_obj = (
+            problem.Problem.from_json_structure(json.loads(task.problem))
+            if task.problem
+            else None
+        )
 
         # fetch the pipeline from the DB
-        resolver = pipeline.Resolver(load_all_primitives=False) # lazy load
-        pipeline_obj = pipeline.Pipeline.from_json(task.pipeline, resolver=resolver) if task.pipeline else None
+        resolver = pipeline.Resolver(load_all_primitives=False)  # lazy load
+        pipeline_obj = (
+            pipeline.Pipeline.from_json(task.pipeline, resolver=resolver)
+            if task.pipeline
+            else None
+        )
 
         # Check to see if this is a fully specified pipeline.  If so, we'll run it as a non-standard since
         # it doesn't need to be serialized.
         run_as_standard = not task.fully_specified
 
         train_dataset = load_data(task.dataset_uri)
-        fitted_runtime, result = ex_pipeline.fit(pipeline_obj, problem_obj, train_dataset, is_standard_pipeline=run_as_standard)
+        fitted_runtime, result = ex_pipeline.fit(
+            pipeline_obj,
+            problem_obj,
+            train_dataset,
+            is_standard_pipeline=run_as_standard,
+        )
 
         # pull out the results the caller requested, ignore any others that were exposed
         output_keys = json.loads(task.output_keys) if task.output_keys else {}
@@ -151,16 +190,24 @@ def fit_task(logger, session, server, task):
                 selected_output_type = output_type
                 break
         if not selected_output_type:
-            logger.warn(f'no output type specified - defaulting to {ValueType.CSV_URI}')
+            logger.warn(f"no output type specified - defaulting to {ValueType.CSV_URI}")
             selected_output_type = ValueType.CSV_URI
 
         for output_key in output_keys:
             if output_key in result.values:
                 if selected_output_type == ValueType.PARQUET_URI:
-                    preds_path = utils.make_preds_filename(task.request_id, output_key=output_key, output_type=selected_output_type)
+                    preds_path = utils.make_preds_filename(
+                        task.request_id,
+                        output_key=output_key,
+                        output_type=selected_output_type,
+                    )
                     result.values[output_key].to_parquet(preds_path, index=False)
                 elif selected_output_type == ValueType.CSV_URI:
-                    preds_path = utils.make_preds_filename(task.request_id, output_key=output_key, output_type=selected_output_type)
+                    preds_path = utils.make_preds_filename(
+                        task.request_id,
+                        output_key=output_key,
+                        output_type=selected_output_type,
+                    )
                     result.values[output_key].to_csv(preds_path, index=False)
 
         # fitted runtime needs to have the fitted pipeline ID we've generated
@@ -180,12 +227,14 @@ def fit_task(logger, session, server, task):
             # rows (an empty result), or no dataframe at all (another possible way to express an empty result).
             # In this case, we'll set the run results to None which is properly handled downstream.
             pipeline_run_yaml = None
-            logger.warn('Could not parse result')
+            logger.warn("Could not parse result")
 
         task.pipeline_run = pipeline_run_yaml
 
     except Exception as e:
-        logger.warn('Exception running task ID {}: {}'.format(task.id, e), exc_info=True)
+        logger.warn(
+            "Exception running task ID {}: {}".format(task.id, e), exc_info=True
+        )
         task.error = True
         task.error_message = str(e)
     finally:
@@ -196,44 +245,62 @@ def fit_task(logger, session, server, task):
         task.ended_at = datetime.datetime.utcnow()
         session.commit()
 
+
 def search_task(logger, session, search):
 
     try:
-        logger.info('Starting distil search ID {}'.format(search.id))
+        logger.info("Starting distil search ID {}".format(search.id))
         search.started_at = datetime.datetime.utcnow()
 
         # Generate search ID
         search_id = search.id
 
-        resolver = pipeline.Resolver(load_all_primitives=False) # lazy load
+        resolver = pipeline.Resolver(load_all_primitives=False)  # lazy load
         search_template_obj = None
         if search.search_template is not None:
-            search_template_obj = pipeline.Pipeline.from_json(search.search_template, resolver=resolver)
+            search_template_obj = pipeline.Pipeline.from_json(
+                search.search_template, resolver=resolver
+            )
 
         # flag to run fully specified pipelines as non-standard for extra flexibiltiy
         fully_specified = ex_pipeline.is_fully_specified(search_template_obj)
 
         # load the problem supplied by the search request into a d3m Problem type if one is provided
-        problem_obj = problem.Problem.from_json_structure(json.loads(search.problem)) if search.problem else None
+        problem_obj = (
+            problem.Problem.from_json_structure(json.loads(search.problem))
+            if search.problem
+            else None
+        )
 
         # based on our problem type and data type, create a pipeline
-        pipeline_objs, dataset, ranks = ex_pipeline.create(search.dataset_uri, problem_obj, search.time_limit, search.max_models, search_template_obj, resolver=resolver)
+        pipeline_objs, dataset, ranks = ex_pipeline.create(
+            search.dataset_uri,
+            problem_obj,
+            search.time_limit,
+            search.max_models,
+            search_template_obj,
+            resolver=resolver,
+        )
         for i, pipeline_obj in enumerate(pipeline_objs):
             pipeline_json = pipeline_obj.to_json(nest_subpipelines=True)
 
             # save the pipeline to the DB
-            solution_pipeline = models.Pipelines(id=str(uuid.uuid4()),
-                                                 search_id=search.id,
-                                                 pipelines=pipeline_json,
-                                                 fully_specified=fully_specified,
-                                                 ended=True,
-                                                 error=False,
-                                                 rank=ranks[i])
+            solution_pipeline = models.Pipelines(
+                id=str(uuid.uuid4()),
+                search_id=search.id,
+                pipelines=pipeline_json,
+                fully_specified=fully_specified,
+                ended=True,
+                error=False,
+                rank=ranks[i],
+            )
             session.add(solution_pipeline)
         session.commit()
 
     except Exception as e:
-        logger.warn('Exception running search ID {}: {}'.format(search.id, e), exc_info=True)
+        logger.warn(
+            "Exception running search ID {}: {}".format(search.id, e), exc_info=True
+        )
         search.error = True
         search.error_message = str(e)
         # TODO error pipeline entry out.
@@ -251,24 +318,28 @@ def job_loop(logger, session, server):
 
     # check for searches first and create pipelines
     try:
-        search = session.query(models.Searches) \
-                      .order_by(models.Searches.created_at.asc()) \
-                      .filter(models.Searches.ended == False) \
-                      .first()
+        search = (
+            session.query(models.Searches)
+            .order_by(models.Searches.created_at.asc())
+            .filter(models.Searches.ended == False)
+            .first()
+        )
     except Exception as e:
-        logger.warn('Exception getting task: {}'.format(e), exc_info=True)
+        logger.warn("Exception getting task: {}".format(e), exc_info=True)
 
     if search:
         search_task(logger, session, search)
 
     # look for tasks to run
     try:
-        task = session.query(models.Tasks) \
-                      .order_by(models.Tasks.created_at.asc()) \
-                      .filter(models.Tasks.ended == False) \
-                      .first()
+        task = (
+            session.query(models.Tasks)
+            .order_by(models.Tasks.created_at.asc())
+            .filter(models.Tasks.ended == False)
+            .first()
+        )
     except Exception as e:
-        logger.warn('Exception getting task: {}'.format(e), exc_info=True)
+        logger.warn("Exception getting task: {}".format(e), exc_info=True)
     # If there is work to be done...
     if task:
         if task.type == "FIT":
@@ -278,6 +349,7 @@ def job_loop(logger, session, server):
         elif task.type == "PRODUCE":
             produce_task(logger, session, server, task)
 
+
 def main(once=False):
     # override config vals D3M values
     export.override_config()
@@ -285,16 +357,16 @@ def main(once=False):
     # Set up logging
     logging_level = logging.DEBUG if config.DEBUG else logging.INFO
     system_version = utils.get_worker_version()
-    logger = utils.setup_logging(logging_level,
-                                 log_file=config.LOG_FILENAME,
-                                 system_version=system_version)
+    logger = utils.setup_logging(
+        logging_level, log_file=config.LOG_FILENAME, system_version=system_version
+    )
     logger.info("System version {}".format(system_version))
     logging.basicConfig(level=logging_level)
-    logger.info(f'Logging level to {logging_level}')
+    logger.info(f"Logging level to {logging_level}")
 
-    logger.info(f'Baseline time out {config.TIME_LIMIT}')
-    logger.info(f'Full hyperparameter tuning enabled {config.HYPERPARAMETER_TUNING}')
-    logger.info(f'GPU support {config.GPU}')
+    logger.info(f"Baseline time out {config.TIME_LIMIT}")
+    logger.info(f"Full hyperparameter tuning enabled {config.HYPERPARAMETER_TUNING}")
+    logger.info(f"GPU support {config.GPU}")
 
     # Get DB access
     session = models.start_session(config.DB_LOCATION)
@@ -310,5 +382,5 @@ def main(once=False):
         time.sleep(1)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -43,7 +43,10 @@ def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
         len(
             set(task_keywords)
             & set(
-                [_problem.TaskKeyword.SEMISUPERVISED, _problem.TaskKeyword.REMOTE_SENSING]
+                [
+                    _problem.TaskKeyword.SEMISUPERVISED,
+                    _problem.TaskKeyword.REMOTE_SENSING,
+                ]
             )
         )
         != 0
@@ -142,8 +145,10 @@ def is_remote_sensing_pretrained(dataset_doc: dict, problem: dict) -> bool:
     )
     return (
         "image" not in get_resource_types(dataset_doc)
-        and classification and remote_sensing
+        and classification
+        and remote_sensing
     )
+
 
 def is_remote_sensing(dataset_doc: dict, problem: dict) -> bool:
     classification = (
@@ -277,7 +282,6 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
     elif is_remote_sensing(dataset_doc, problem):
         return "remote_sensing", {}
 
-
     elif is_object_detection(problem):
         return "object_detection", {}
 
@@ -298,7 +302,10 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
             ]
         ) == {"real"}
 
-        return "clustering", {"n_clusters": n_clusters, "all_float": all_float,}
+        return "clustering", {
+            "n_clusters": n_clusters,
+            "all_float": all_float,
+        }
 
     elif is_timeseries_classification(dataset_doc, problem):
         return (
@@ -338,7 +345,9 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
             _problem.TaskKeyword.COMMUNITY_DETECTION
             in problem["problem"]["task_keywords"]
         )
-        return "community_detection", {"overlapping": False,}
+        return "community_detection", {
+            "overlapping": False,
+        }
     elif is_semisupervised_tabular(problem):
         # return 'table', {'semi': True}
         return "semisupervised_tabular", {}
