@@ -25,9 +25,7 @@ logging.basicConfig(level=logging.DEBUG)
 # a common primitive, apply the type-specific primitive to the sub-set, and then merge the changes
 # (replace or join) back into the original data.
 def create_pipeline(metric: str,
-                    cat_mode: str = 'one_hot',
-                    max_one_hot: int = 16,
-                    scale: bool = False,
+                    n_jobs: int = -1,
                     min_meta: bool = False,
                     resolver: Optional[Resolver] = None) -> Pipeline:
 
@@ -115,6 +113,7 @@ def create_pipeline(metric: str,
     step.add_output('produce')
     step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
     step.add_hyperparameter('grid_search', ArgumentType.VALUE, True)
+    step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
     text_pipeline.add_step(step)
     previous_step += 1
     tune_steps.append(previous_step)

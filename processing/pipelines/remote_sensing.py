@@ -32,6 +32,7 @@ def create_pipeline(metric: str,
                     grid_search: bool = False,
                     batch_size: int = 128,
                     svc: bool = False,
+                    n_jobs: int = -1,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
     # create the basic pipeline
@@ -57,6 +58,7 @@ def create_pipeline(metric: str,
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
+    step.add_hyperparameter('n_jobs', ArgumentType.VALUE, n_jobs)
     image_pipeline.add_step(step)
     previous_step += 1
     image_step = previous_step
@@ -130,6 +132,7 @@ def create_pipeline(metric: str,
         step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
         step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(target_step))
         step.add_output('produce')
+        step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
         step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
         step.add_hyperparameter('grid_search', ArgumentType.VALUE, grid_search)
 

@@ -92,6 +92,9 @@ def create(
     # Optionally enable external hyperparameter tuning.
     tune_pipeline = config.HYPERPARAMETER_TUNING
 
+    # Get the joblib job limit
+    n_jobs = config.N_JOBS
+
     # If there isn't a placeholder this is a fully specified pipeline.
     if prepend and not [True for s in prepend.steps if isinstance(s, PlaceholderStep)]:
         return ([prepend], None, [1.0])
@@ -159,7 +162,8 @@ def create(
                     use_boost=True,
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
-                    compute_confidences=compute_confidences
+                    compute_confidences=compute_confidences,
+                    n_jobs=n_jobs
                 )
             )
             pipelines.append(
@@ -171,7 +175,8 @@ def create(
                     use_boost=False,
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
-                    compute_confidences=compute_confidences
+                    compute_confidences=compute_confidences,
+                    n_jobs=n_jobs
                 )
             )
             pipelines.append(
@@ -183,7 +188,8 @@ def create(
                     use_boost=False,
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
-                    compute_confidences=compute_confidences
+                    compute_confidences=compute_confidences,
+                    n_jobs=n_jobs
                 )
             )
 
@@ -196,7 +202,8 @@ def create(
                     use_boost=True,
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
-                    compute_confidences=compute_confidences
+                    compute_confidences=compute_confidences,
+                    n_jobs=n_jobs
                 )
             )
         else:
@@ -209,7 +216,8 @@ def create(
                         profiler="none",
                         use_boost=True,
                         max_one_hot=8,
-                        compute_confidences=compute_confidences
+                        compute_confidences=compute_confidences,
+                        n_jobs=n_jobs
                     )
                 )
             pipelines.append(
@@ -221,7 +229,8 @@ def create(
                     use_boost=False,
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
-                    compute_confidences=compute_confidences
+                    compute_confidences=compute_confidences,
+                    n_jobs=n_jobs
                 )
             )
     elif pipeline_type == "graph_matching":
@@ -256,12 +265,12 @@ def create(
             )
     elif pipeline_type == "image":
         pipelines.append(
-            image.create_pipeline(metric=metric, resolver=resolver, **pipeline_info)
+            image.create_pipeline(metric=metric,  n_jobs=n_jobs, resolver=resolver, **pipeline_info)
         )
     elif pipeline_type == "remote_sensing":
         pipelines.append(
             remote_sensing.create_pipeline(
-                metric=metric, resolver=resolver, grid_search=True,
+                metric=metric, resolver=resolver, grid_search=True, n_jobs=n_jobs,
                 batch_size=config.REMOTE_SENSING_BATCH_SIZE, **pipeline_info
             )
         )
@@ -269,7 +278,9 @@ def create(
         pipelines.append(
             remote_sensing_mlp.create_pipeline(
                 metric=metric, resolver=resolver,
-                batch_size=config.REMOTE_SENSING_BATCH_SIZE, **pipeline_info
+                batch_size=config.REMOTE_SENSING_BATCH_SIZE,
+                n_jobs=n_jobs,
+                **pipeline_info
             )
         )
     elif pipeline_type == "remote_sensing_pretrained":
@@ -278,6 +289,7 @@ def create(
                 metric=metric,
                 resolver=resolver,
                 use_linear_svc=True,
+                n_jobs=n_jobs,
                 **pipeline_info
             )
         )
@@ -287,6 +299,7 @@ def create(
                     metric=metric,
                     resolver=resolver,
                     use_linear_svc=False,
+                    n_jobs=n_jobs,
                     **pipeline_info
                 )
             )

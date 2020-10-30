@@ -9,6 +9,7 @@ from d3m.primitives.data_cleaning.column_type_profiler import Simon
 
 def create_pipeline(
     metric: str,
+    n_jobs: int = -1,
     resolver: Optional[Resolver] = None,
     exclude_column=None,
     profiler="simple",
@@ -185,6 +186,9 @@ def create_pipeline(
         argument_type=ArgumentType.CONTAINER,
         data_reference=input_val.format(target_step),
     )
+    step_7.add_hyperparameter("metric", ArgumentType.VALUE, metric)
+    step_7.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
+    step_7.add_hyperparameter("grid_search", ArgumentType.VALUE, True)
     step_7.add_output("produce")
     pipeline_description.add_step(step_7)
     previous_step += 1

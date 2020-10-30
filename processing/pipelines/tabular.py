@@ -35,6 +35,7 @@ def create_pipeline(metric: str,
                     use_boost: bool = True,
                     grid_search = False,
                     compute_confidences = False,
+                    n_jobs: int = -1,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
     tune_steps = []
@@ -320,11 +321,13 @@ def create_pipeline(metric: str,
                 primitive_description=XGBoostGBTreeRegressorPrimitive.metadata.query(),
                 resolver=resolver,
             )
+            step.add_hyperparameter('n_jobs', ArgumentType.VALUE, n_jobs)
         else:
             step = PrimitiveStep(
                 primitive_description=XGBoostGBTreeClassifierPrimitive.metadata.query(),
                 resolver=resolver,
             )
+            step.add_hyperparameter('n_jobs', ArgumentType.VALUE, n_jobs)
     else:
         step = PrimitiveStep(
             primitive_description=EnsembleForestPrimitive.metadata.query(),
@@ -333,6 +336,7 @@ def create_pipeline(metric: str,
         step.add_hyperparameter('grid_search', ArgumentType.VALUE, grid_search)
         step.add_hyperparameter('small_dataset_fits', ArgumentType.VALUE, 1)
         step.add_hyperparameter('compute_confidences', ArgumentType.VALUE, compute_confidences)
+        step.add_hyperparameter('n_jobs', ArgumentType.VALUE, n_jobs)
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,

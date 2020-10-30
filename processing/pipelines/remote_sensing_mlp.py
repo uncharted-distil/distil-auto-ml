@@ -29,6 +29,7 @@ from distil.primitives.satellite_image_loader import (
 def create_pipeline(metric: str,
                     min_meta: bool = False,
                     batch_size: int = 128,
+                    n_jobs: int = -1,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
     # create the basic pipeline
@@ -55,6 +56,7 @@ def create_pipeline(metric: str,
     step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
     step.add_output('produce')
     step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
+    step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
     image_pipeline.add_step(step)
     previous_step += 1
     image_step = previous_step

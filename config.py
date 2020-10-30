@@ -45,3 +45,6 @@ HYPERPARAMETER_TUNING = os.getenv("HYPERPARAMETER_TUNING", 'True') == 'True'
 
 # enable/disable confidence scores in pipelines that support them - d3m scoring tools currently don't support
 COMPUTE_CONFIDENCES = os.getenv("COMPUTE_CONFIDENCES", 'False') == 'True'
+
+# controls parallelism within primitives - defaults to the number of CPUs
+N_JOBS = int(os.getenv("N_JOBS", -1))

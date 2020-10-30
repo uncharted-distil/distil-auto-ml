@@ -21,6 +21,7 @@ from distil.primitives.image_transfer import ImageTransferPrimitive
 def create_pipeline(metric: str,
                     min_meta: bool = False,
                     sample: bool = False,
+                    n_jobs: int = -1,
                     resolver: Optional[Resolver] = None) -> Pipeline:
     input_val = 'steps.{}.produce'
     # create the basic pipeline
@@ -171,6 +172,7 @@ def create_pipeline(metric: str,
         data_reference=input_val.format(target_step),
     )
     step.add_output("produce")
+    step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
     step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
     image_pipeline.add_step(step)
     previous_step += 1

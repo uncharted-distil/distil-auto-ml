@@ -19,9 +19,7 @@ from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 # (replace or join) back into the original data.
 def create_pipeline(
     metric: str,
-    cat_mode: str = "one_hot",
-    max_one_hot: int = 16,
-    scale: bool = False,
+    n_jobs: int = -1,
     resolver: Optional[Resolver] = None,
 ) -> Pipeline:
     previous_step = 0
@@ -40,6 +38,7 @@ def create_pipeline(
     step.add_argument(
         name="inputs", argument_type=ArgumentType.CONTAINER, data_reference="inputs.0"
     )
+    step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
     step.add_output("produce")
     step.add_output("produce_collection")
     # step.add_hyperparameter('sample', ArgumentType.VALUE, 0.1)
@@ -111,6 +110,7 @@ def create_pipeline(
     )
     step.add_output("produce")
     step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
+    step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
     audio_pipeline.add_step(step)
     tune_steps.append(4)
 
