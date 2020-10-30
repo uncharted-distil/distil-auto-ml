@@ -23,11 +23,14 @@ RUN apt-get install -y liblzo2-dev
 ARG CACHEBUSTER=0
 RUN pip3 install -e git+https://github.com/uncharted-distil/distil-fuzzy-join.git@d171c9dc29d699dba10c1fdd5f00db8bbdd37f7d#egg=DistilFuzzyJoin
 
+# Update to latest common primitives version
+RUN pip3 install -e git+https://gitlab.com/datadrivendiscovery/common-primitives.git@50ee0f94b1f9d45f3077f7d8aae2b6cb5cde1f95#egg=CommonPrimitives
+
 # Update as needed when new versions not built into base image
 RUN rm -rf /src/distil-primitives
 RUN rm -rf /app/src/distilprimitives
-RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git@cbc2761fd4cc0e67b14dddebeaed2d9b873c141c#egg=DistilPrimitives
-RUN pip3 install -e git+https://github.com/kungfuai/d3m-primitives.git@66591120ff04cd62d4b52239b9ba9fd3c9a91b7e#egg=kf-d3m-primitives
+RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git@7bde08e46509ee6afd37d5ce0c39616aa17bf0cb#egg=DistilPrimitives
+RUN pip3 install -e git+https://github.com/kungfuai/d3m-primitives.git@653c335c6182110d4becb1025374de946f960bcc#egg=kf-d3m-primitives
 
 # manually install python-lzo, since it is installed via d3m build process and can't be included in the setup.py
 RUN pip3 install python-lzo==1.12
