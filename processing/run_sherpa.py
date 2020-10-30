@@ -16,7 +16,9 @@ from d3m.metrics import class_map
 from sklearn.model_selection import train_test_split
 import numpy as np
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 def fit(
     pipeline: pipeline.Pipeline,
@@ -122,8 +124,15 @@ def main(client, trial):
                 step_params[step].update({name.split("___")[2]: param})
         for i, step in enumerate(trial_pipeline.steps):
             if str(i) in step_params:
-                if step.primitive == index.get_primitive('d3m.primitives.operator.dataset_map.DataFrameCommon'):
-                    step.hyperparams = {'primitive': {'type': ArgumentType.PRIMITIVE, 'data': step.index - 1}}
+                if step.primitive == index.get_primitive(
+                    "d3m.primitives.operator.dataset_map.DataFrameCommon"
+                ):
+                    step.hyperparams = {
+                        "primitive": {
+                            "type": ArgumentType.PRIMITIVE,
+                            "data": step.index - 1,
+                        }
+                    }
                 elif step_params[str(i)] != {}:
                     step.hyperparams = {}
                     if i > 0 and i < len(trial_pipeline.steps):
@@ -153,7 +162,7 @@ def main(client, trial):
         ]  # todo why are these different?
         # make sure that true_Data and predictions are of the same type.
         print(true_data)
-        if 'confidence' in predictions.columns:
+        if "confidence" in predictions.columns:
             label_col = predictions.columns[-2]
         else:
             label_col = predictions.columns[-1]

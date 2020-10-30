@@ -3,7 +3,9 @@ from typing import Optional
 from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
-from common_primitives.extract_columns_semantic_types import ExtractColumnsBySemanticTypesPrimitive
+from common_primitives.extract_columns_semantic_types import (
+    ExtractColumnsBySemanticTypesPrimitive,
+)
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
 from common_primitives.xgboost_gbtree import XGBoostGBTreeClassifierPrimitive
 from common_primitives.xgboost_regressor import XGBoostGBTreeRegressorPrimitive
@@ -22,22 +24,26 @@ from distil.primitives.replace_singletons import ReplaceSingletonsPrimitive
 from distil.primitives.text_encoder import TextEncoderPrimitive
 from sklearn_wrap import SKMissingIndicator, SKImputer
 from sklearn_wrap import SKStandardScaler
-from dsbox.datapreprocessing.cleaner.iterative_regression import IterativeRegressionImputation
+from dsbox.datapreprocessing.cleaner.iterative_regression import (
+    IterativeRegressionImputation,
+)
 
 
-def create_pipeline(metric: str,
-                    semi: bool = False,
-                    cat_mode: str = 'one_hot',
-                    max_one_hot: int = 16,
-                    scale: bool = False,
-                    include_one_hot = True,
-                    profiler = 'none',
-                    use_boost: bool = True,
-                    grid_search = False,
-                    compute_confidences = False,
-                    n_jobs: int = -1,
-                    resolver: Optional[Resolver] = None) -> Pipeline:
-    input_val = 'steps.{}.produce'
+def create_pipeline(
+    metric: str,
+    semi: bool = False,
+    cat_mode: str = "one_hot",
+    max_one_hot: int = 16,
+    scale: bool = False,
+    include_one_hot=True,
+    profiler="none",
+    use_boost: bool = True,
+    grid_search=False,
+    compute_confidences=False,
+    n_jobs: int = -1,
+    resolver: Optional[Resolver] = None,
+) -> Pipeline:
+    input_val = "steps.{}.produce"
     tune_steps = []
 
     if not include_one_hot:
@@ -59,20 +65,37 @@ def create_pipeline(metric: str,
     tabular_pipeline.add_step(step)
     previous_step = 0
 
-    if profiler == 'simon':
-        step = PrimitiveStep(primitive_description=Simon.metadata.query(), resolver=resolver)
-        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
-                          data_reference=input_val.format(previous_step))
-        step.add_hyperparameter(name='overwrite', argument_type=ArgumentType.VALUE, data=True)
-        step.add_hyperparameter(name='multi_label_classification', argument_type=ArgumentType.VALUE, data=False)
-        step.add_output('produce')
+    if profiler == "simon":
+        step = PrimitiveStep(
+            primitive_description=Simon.metadata.query(), resolver=resolver
+        )
+        step.add_argument(
+            name="inputs",
+            argument_type=ArgumentType.CONTAINER,
+            data_reference=input_val.format(previous_step),
+        )
+        step.add_hyperparameter(
+            name="overwrite", argument_type=ArgumentType.VALUE, data=True
+        )
+        step.add_hyperparameter(
+            name="multi_label_classification",
+            argument_type=ArgumentType.VALUE,
+            data=False,
+        )
+        step.add_output("produce")
         tabular_pipeline.add_step(step)
         previous_step += 1
-    elif profiler =='simple':
-        step = PrimitiveStep(primitive_description=SimpleProfilerPrimitive.metadata.query(), resolver=resolver)
-        step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
-                          data_reference=input_val.format(previous_step))
-        step.add_output('produce')
+    elif profiler == "simple":
+        step = PrimitiveStep(
+            primitive_description=SimpleProfilerPrimitive.metadata.query(),
+            resolver=resolver,
+        )
+        step.add_argument(
+            name="inputs",
+            argument_type=ArgumentType.CONTAINER,
+            data_reference=input_val.format(previous_step),
+        )
+        step.add_output("produce")
         tabular_pipeline.add_step(step)
         previous_step += 1
 
@@ -255,9 +278,16 @@ def create_pipeline(metric: str,
     # Adds SK learn simple imputer
     # step = PrimitiveStep(primitive_description=SKImputer.SKImputer.metadata.query())
     # use dsbox imputer since sklearn has issues with mismatch datasets
-    step = PrimitiveStep(primitive_description=IterativeRegressionImputation.metadata.query(),resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step))
-    step.add_output('produce')
+    step = PrimitiveStep(
+        primitive_description=IterativeRegressionImputation.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(previous_step),
+    )
+    step.add_output("produce")
     # step.add_hyperparameter('use_semantic_types', ArgumentType.VALUE, True)
     # step.add_hyperparameter('error_on_no_input', ArgumentType.VALUE, False)
     # step.add_hyperparameter('return_result', ArgumentType.VALUE, 'replace')
@@ -321,22 +351,24 @@ def create_pipeline(metric: str,
                 primitive_description=XGBoostGBTreeRegressorPrimitive.metadata.query(),
                 resolver=resolver,
             )
-            step.add_hyperparameter('n_jobs', ArgumentType.VALUE, n_jobs)
+            step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
         else:
             step = PrimitiveStep(
                 primitive_description=XGBoostGBTreeClassifierPrimitive.metadata.query(),
                 resolver=resolver,
             )
-            step.add_hyperparameter('n_jobs', ArgumentType.VALUE, n_jobs)
+            step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
     else:
         step = PrimitiveStep(
             primitive_description=EnsembleForestPrimitive.metadata.query(),
             resolver=resolver,
         )
-        step.add_hyperparameter('grid_search', ArgumentType.VALUE, grid_search)
-        step.add_hyperparameter('small_dataset_fits', ArgumentType.VALUE, 1)
-        step.add_hyperparameter('compute_confidences', ArgumentType.VALUE, compute_confidences)
-        step.add_hyperparameter('n_jobs', ArgumentType.VALUE, n_jobs)
+        step.add_hyperparameter("grid_search", ArgumentType.VALUE, grid_search)
+        step.add_hyperparameter("small_dataset_fits", ArgumentType.VALUE, 1)
+        step.add_hyperparameter(
+            "compute_confidences", ArgumentType.VALUE, compute_confidences
+        )
+        step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
@@ -349,7 +381,7 @@ def create_pipeline(metric: str,
     )
     step.add_output("produce")
     if not use_boost:
-        step.add_hyperparameter('metric', ArgumentType.VALUE, metric)
+        step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
 
     tabular_pipeline.add_step(step)
     previous_step += 1

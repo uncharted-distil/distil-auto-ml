@@ -72,7 +72,11 @@ def create_pipeline(
         data_reference=input_val.format(previous_step),
     )
     step.add_output("produce")
-    semantic_types = ("http://schema.org/Integer", "http://schema.org/Float", "https://metadata.datadrivendiscovery.org/types/FloatVector")
+    semantic_types = (
+        "http://schema.org/Integer",
+        "http://schema.org/Float",
+        "https://metadata.datadrivendiscovery.org/types/FloatVector",
+    )
     step.add_hyperparameter("parsing_semantics", ArgumentType.VALUE, semantic_types)
     rs_pretrained_pipeline.add_step(step)
     previous_step += 1

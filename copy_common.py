@@ -16,24 +16,24 @@ json_source = ""
 run_source = ""
 
 # find the pipeline / run for common
-json_common = glob.glob('./pipelines/common__*.json')
+json_common = glob.glob("./pipelines/common__*.json")
 if len(json_common) > 0:
-    print(f'Found {json_common[0]}')
+    print(f"Found {json_common[0]}")
     json_source = json_common[0]
 else:
-    print(f'Pipeline not found - exiting')
+    print(f"Pipeline not found - exiting")
     exit(1)
 
-run_common = glob.glob('./pipelines/common__*.gz')
+run_common = glob.glob("./pipelines/common__*.gz")
 if len(run_common) > 0:
-    print(f'Found {run_common[0]}')
+    print(f"Found {run_common[0]}")
     run_source = run_common[0]
 
 json_symlink_source = ""
 run_symlink_source = ""
 
 for idx, primitive_path in enumerate(primitives):
-    print(f'Processing {primitive_path}')
+    print(f"Processing {primitive_path}")
 
     json_target = os.path.join("../common-primitives/pipelines", primitive_path)
     json_target_filename = os.path.basename(json_source).replace("common__", "")
@@ -43,7 +43,7 @@ for idx, primitive_path in enumerate(primitives):
         shutil.copyfile(json_source, json_target_path)
         json_symlink_source = os.path.join("..", primitive_path, json_target_filename)
     elif not os.path.exists(json_target_path):
-            os.symlink(json_symlink_source, json_target_path)
+        os.symlink(json_symlink_source, json_target_path)
 
     if len(run_source) > 0:
         run_target = os.path.join("../common-primitives/pipeline_runs", primitive_path)
@@ -55,5 +55,3 @@ for idx, primitive_path in enumerate(primitives):
             run_symlink_source = os.path.join("..", primitive_path, run_target_filename)
         elif not os.path.exists(run_target_path):
             os.symlink(run_symlink_source, run_target_path)
-
-

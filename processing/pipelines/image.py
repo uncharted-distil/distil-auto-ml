@@ -18,12 +18,15 @@ from d3m.primitives.data_preprocessing.dataset_sample import (
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.image_transfer import ImageTransferPrimitive
 
-def create_pipeline(metric: str,
-                    min_meta: bool = False,
-                    sample: bool = False,
-                    n_jobs: int = -1,
-                    resolver: Optional[Resolver] = None) -> Pipeline:
-    input_val = 'steps.{}.produce'
+
+def create_pipeline(
+    metric: str,
+    min_meta: bool = False,
+    sample: bool = False,
+    n_jobs: int = -1,
+    resolver: Optional[Resolver] = None,
+) -> Pipeline:
+    input_val = "steps.{}.produce"
     # create the basic pipeline
     image_pipeline = Pipeline()
     image_pipeline.add_input(name="inputs")

@@ -16,6 +16,7 @@ from server.task_manager import TaskManager
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
+
 def _unary_unary_interceptor(servicer, method_name, context, request):
     """TaskManager wrapper for simple RPC single request and response methods.
 
@@ -28,14 +29,20 @@ def _unary_unary_interceptor(servicer, method_name, context, request):
         func = getattr(manager, method_name)
         result = func(request)
     except ValueError as e:
-        servicer.logger.error("Request not properly formatted, aborting gRPC call: {}".format(e), exc_info=True)
+        servicer.logger.error(
+            "Request not properly formatted, aborting gRPC call: {}".format(e),
+            exc_info=True,
+        )
         context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(e))
     except Exception as e:
-        servicer.logger.exception("Unexpected error occured, aborting gRPC call: {}".format(e))
+        servicer.logger.exception(
+            "Unexpected error occured, aborting gRPC call: {}".format(e)
+        )
         context.abort(grpc.StatusCode.INTERNAL, "Internal server error occurred")
     finally:
         manager.close()
     return result
+
 
 def _unary_stream_interceptor(servicer, method_name, context, request):
     """TaskManager wrapper for response-streaming RPC methods.
@@ -57,13 +64,19 @@ def _unary_stream_interceptor(servicer, method_name, context, request):
                 # yield in_progress message?
                 time.sleep(3)
     except ValueError as e:
-        servicer.logger.error("Request not properly formatted, aborting gRPC call: {}".format(e), exc_info=True)
+        servicer.logger.error(
+            "Request not properly formatted, aborting gRPC call: {}".format(e),
+            exc_info=True,
+        )
         context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(e))
     except Exception as e:
-        servicer.logger.exception("Unexpected error occured, aborting gRPC call: {}".format(e))
+        servicer.logger.exception(
+            "Unexpected error occured, aborting gRPC call: {}".format(e)
+        )
         context.abort(grpc.StatusCode.INTERNAL, "Internal server error occurred")
     finally:
         manager.close()
+
 
 class ServerServicer(core_pb2_grpc.CoreServicer):
     """
@@ -77,8 +90,8 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
     fitted_runtimes: Dict[str, runtime.Runtime] = {}
 
     def __init__(self):
-        self.logger = logging.getLogger('distil.server.ServerServicer')
-        self.logger.info('Initialized Distil ServerServicer')
+        self.logger = logging.getLogger("distil.server.ServerServicer")
+        self.logger.info("Initialized Distil ServerServicer")
         self.msg = Messaging()
 
     def SearchSolutions(self, request, context):
@@ -86,7 +99,7 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
         Creates 'tasks' to be run by main loop.
         """
         self.logger.debug("SearchSolutions: {}".format(request))
-        search_id = _unary_unary_interceptor(self, 'SearchSolutions', context, request)
+        search_id = _unary_unary_interceptor(self, "SearchSolutions", context, request)
         return self.msg.search_solutions_response(search_id)
 
     def GetSearchSolutionsResults(self, request, context):
@@ -95,7 +108,9 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
         * calling this _moves_ valid tasks into ValidSolutions
         """
         self.logger.debug("GetSearchSolutionsResults: {}".format(request))
-        yield from _unary_stream_interceptor(self, 'GetSearchSolutionsResults', context, request)
+        yield from _unary_stream_interceptor(
+            self, "GetSearchSolutionsResults", context, request
+        )
 
     def EndSearchSolutions(self, request, context):
         # WONTFIX
@@ -107,60 +122,74 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
 
     def DescribeSolution(self, request, context):
         self.logger.debug("DescribeSolution: {}".format(request))
-        solution_description = _unary_unary_interceptor(self, 'DescribeSolution', context, request)
+        solution_description = _unary_unary_interceptor(
+            self, "DescribeSolution", context, request
+        )
         return self.msg.make_describe_solution_response(solution_description)
 
     def ScoreSolution(self, request, context):
         self.logger.debug("ScoreSolution: {}".format(request))
-        score_request_id = _unary_unary_interceptor(self, 'ScoreSolution', context, request)
+        score_request_id = _unary_unary_interceptor(
+            self, "ScoreSolution", context, request
+        )
         return self.msg.score_solution_response(score_request_id)
 
     def GetScoreSolutionResults(self, request, context):
         self.logger.debug("GetScoreSolutionResults: {}".format(request))
-        yield from _unary_stream_interceptor(self, 'GetScoreSolutionResults', context, request)
+        yield from _unary_stream_interceptor(
+            self, "GetScoreSolutionResults", context, request
+        )
 
     def FitSolution(self, request, context):
         self.logger.debug("FitSolution: {}".format(request))
-        request_id = _unary_unary_interceptor(self, 'FitSolution', context, request)
+        request_id = _unary_unary_interceptor(self, "FitSolution", context, request)
         return self.msg.make_fit_solution_message(request_id)
 
     def GetFitSolutionResults(self, request, context):
         self.logger.debug("GetFitSolutionResults: {}".format(request))
-        yield from _unary_stream_interceptor(self, 'GetFitSolutionResults', context, request)
+        yield from _unary_stream_interceptor(
+            self, "GetFitSolutionResults", context, request
+        )
 
     def ProduceSolution(self, request, context):
         self.logger.debug("ProduceSolution: {}".format(request))
-        request_id = _unary_unary_interceptor(self, 'ProduceSolution', context, request)
+        request_id = _unary_unary_interceptor(self, "ProduceSolution", context, request)
         return self.msg.make_produce_solution_response(request_id)
 
     def GetProduceSolutionResults(self, request, context):
         self.logger.debug("GetProduceSolutionResults: {}".format(request))
-        yield from _unary_stream_interceptor(self, 'GetProduceSolutionResults', context, request)
+        yield from _unary_stream_interceptor(
+            self, "GetProduceSolutionResults", context, request
+        )
 
     def SolutionExport(self, request, context):
         self.logger.debug("SolutionExport: {}".format(request))
         # TaskManager.SolutionExport returns nothing because SolutionExportResponse is empty
-        _ = _unary_unary_interceptor(self, 'SolutionExport', context, request)
+        _ = _unary_unary_interceptor(self, "SolutionExport", context, request)
         return self.msg.make_solution_export_response()
 
     def SaveSolution(self, request, context):
         self.logger.debug("SaveSolution: {}".format(request))
-        solution_uri = _unary_unary_interceptor(self, 'SaveSolution', context, request)
+        solution_uri = _unary_unary_interceptor(self, "SaveSolution", context, request)
         return self.msg.make_save_solution_response(solution_uri)
 
     def SaveFittedSolution(self, request, context):
         self.logger.debug("SaveFittedSolution: {}".format(request))
-        fitted_solution_uri = _unary_unary_interceptor(self, 'SaveFittedSolution', context, request)
+        fitted_solution_uri = _unary_unary_interceptor(
+            self, "SaveFittedSolution", context, request
+        )
         return self.msg.make_save_fitted_solution_response(fitted_solution_uri)
 
     def LoadSolution(self, request, context):
         self.logger.debug("LoadSolution: {}".format(request))
-        solution_id = _unary_unary_interceptor(self, 'LoadSolution', context, request)
+        solution_id = _unary_unary_interceptor(self, "LoadSolution", context, request)
         return self.msg.make_load_solution_response(solution_id)
 
     def LoadFittedSolution(self, request, context):
         self.logger.debug("LoadFittedSolution: {}".format(request))
-        fitted_solution_id = _unary_unary_interceptor(self, 'LoadFittedSolution', context, request)
+        fitted_solution_id = _unary_unary_interceptor(
+            self, "LoadFittedSolution", context, request
+        )
         return self.msg.make_load_fitted_solution_response(fitted_solution_id)
 
     def ListPrimitives(self, request, context):
@@ -177,12 +206,13 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
         return self.fitted_runtimes.get(solution_id, None)
 
 
-class Server():
-
+class Server:
     def __init__(self):
-        self.logger = logging.getLogger('distil.server.Server')
-        self.logger.info('Initializing distil gRPC server')
-        self.server_thread = pool.ThreadPool(processes=1,)
+        self.logger = logging.getLogger("distil.server.Server")
+        self.logger.info("Initializing distil gRPC server")
+        self.server_thread = pool.ThreadPool(
+            processes=1,
+        )
 
     def create_server(self, port):
         self.servicer = ServerServicer()
@@ -190,9 +220,8 @@ class Server():
         # thread safe, and while it did suffice to put a read lock around calls to it, it
         # limiting to a single thread will have almost no performance impact and is cleaner.
         self.server = grpc.server(futures.ThreadPoolExecutor(max_workers=1))
-        core_pb2_grpc.add_CoreServicer_to_server(
-            self.servicer, self.server)
-        address = '[::]:{}'.format(port)
+        core_pb2_grpc.add_CoreServicer_to_server(self.servicer, self.server)
+        address = "[::]:{}".format(port)
         self.server.add_insecure_port(address)
         self.logger.info("Starting server at {}".format(address))
         self.server.start()
@@ -202,7 +231,7 @@ class Server():
 
     def start(self, port):
         self.server_thread.apply_async(self.create_server, (port,))
-        self.logger.info('Started gRPC server, listening for requests')
+        self.logger.info("Started gRPC server, listening for requests")
 
     def add_fitted_runtime(self, solution_id, runtime):
         self.servicer.add_fitted_runtime(solution_id, runtime)

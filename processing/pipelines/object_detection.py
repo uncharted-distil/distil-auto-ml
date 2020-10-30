@@ -48,13 +48,23 @@ def create_pipeline(
     objdetect_pipeline.add_step(step)
 
     # step 4 - extract objects
-    step = PrimitiveStep(primitive_description=ObjectDetectionRN.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
-    step.add_argument(name='outputs', argument_type=ArgumentType.CONTAINER, data_reference='steps.1.produce')
-    step.add_hyperparameter('n_epochs', ArgumentType.VALUE, 30)
-    step.add_hyperparameter('n_steps', ArgumentType.VALUE, n_steps)
-    step.add_hyperparameter('batch_size', ArgumentType.VALUE, 8)
-    step.add_output('produce')
+    step = PrimitiveStep(
+        primitive_description=ObjectDetectionRN.metadata.query(), resolver=resolver
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference="steps.1.produce",
+    )
+    step.add_argument(
+        name="outputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference="steps.1.produce",
+    )
+    step.add_hyperparameter("n_epochs", ArgumentType.VALUE, 30)
+    step.add_hyperparameter("n_steps", ArgumentType.VALUE, n_steps)
+    step.add_hyperparameter("batch_size", ArgumentType.VALUE, 8)
+    step.add_output("produce")
     objdetect_pipeline.add_step(step)
     # tune_steps.append(2)
 

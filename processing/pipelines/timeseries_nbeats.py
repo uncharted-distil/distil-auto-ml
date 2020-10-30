@@ -15,16 +15,15 @@ from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.pipeline import Resolver
 
 
-def create_pipeline(metric: str,
-                    grouping_compose: bool = True,
-                    resolver: Optional[Resolver] = None) -> Pipeline:
+def create_pipeline(
+    metric: str, grouping_compose: bool = True, resolver: Optional[Resolver] = None
+) -> Pipeline:
     previous_step = 0
     tune_steps = []
     input_val = "steps.{}.produce"
 
     nbeats_pipeline = Pipeline()
     nbeats_pipeline.add_input(name="inputs")
-
 
     # step 0 - flatten the timeseries if necessary
     step = PrimitiveStep(
@@ -43,7 +42,9 @@ def create_pipeline(metric: str,
         resolver=resolver,
     )
     step.add_argument(
-        name="inputs", argument_type=ArgumentType.CONTAINER, data_reference=input_val.format(previous_step)
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(previous_step),
     )
     step.add_output("produce")
     nbeats_pipeline.add_step(step)
@@ -116,8 +117,10 @@ def create_pipeline(metric: str,
     step.add_hyperparameter(
         name="semantic_types",
         argument_type=ArgumentType.VALUE,
-        data=["https://metadata.datadrivendiscovery.org/types/Attribute",
-            "https://metadata.datadrivendiscovery.org/types/GroupingKey"],
+        data=[
+            "https://metadata.datadrivendiscovery.org/types/Attribute",
+            "https://metadata.datadrivendiscovery.org/types/GroupingKey",
+        ],
     )
     step.add_output("produce")
     nbeats_pipeline.add_step(step)
@@ -145,16 +148,18 @@ def create_pipeline(metric: str,
     target_step = previous_step
 
     # step 5
-    step = PrimitiveStep(primitive_description=NBEATS.metadata.query(), resolver=resolver)
+    step = PrimitiveStep(
+        primitive_description=NBEATS.metadata.query(), resolver=resolver
+    )
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(attribute_step)
+        data_reference=input_val.format(attribute_step),
     )
     step.add_argument(
         name="outputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(target_step)
+        data_reference=input_val.format(target_step),
     )
     step.add_output("produce")
     # step.add_hyperparameter("epochs", ArgumentType.VALUE, 1)
@@ -167,12 +172,20 @@ def create_pipeline(metric: str,
 
     # step 6
     step = PrimitiveStep(
-        primitive_description=ConstructPredictionsPrimitive.metadata.query(), resolver=resolver)
-    step.add_argument(name='inputs', argument_type=ArgumentType.CONTAINER,
-                      data_reference=input_val.format(previous_step))
-    step.add_argument(name='reference', argument_type=ArgumentType.CONTAINER,
-                      data_reference=input_val.format(parse_step))
-    step.add_output('produce')
+        primitive_description=ConstructPredictionsPrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(previous_step),
+    )
+    step.add_argument(
+        name="reference",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(parse_step),
+    )
+    step.add_output("produce")
     nbeats_pipeline.add_step(step)
     previous_step += 1
 
