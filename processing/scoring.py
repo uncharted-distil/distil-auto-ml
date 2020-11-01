@@ -163,22 +163,34 @@ class Scorer:
         result_df = results.values["outputs.0"]
 
         # d3m predictions format columns are [d3mIndex, prediction, weight (optional)] - get the predictions
-        # into index sorted order
-        result_df = result_df.set_index(result_df["d3mIndex"])
-        result_df.index = result_df.index.map(int)
+        # into index sorted order by d3mIndex, confidence (if present)
+        result_df["d3mIndex"] = pd.to_numeric(result_df["d3mIndex"])
+        if len(result_df.columns) > 2:
+            confidence_column = result_df.columns[2]
+            result_df[confidence_column] = pd.to_numeric(result_df[confidence_column])
+            result_df.sort_values(
+                by=[result_df.columns[0], result_df.columns[2]],
+                ascending=[True, False],
+                inplace=True,
+            )
+        else:
+            result_df.sort_values(by=[result_df.columns[0]], inplace=True)
 
-        # put the ground truth into a single col dataframe with the d3mIndex
-        # as the index - it won't be typed so we forst it to the type used in the
-        # predictions
+        # take one label in case this is a multi index - previous sort should guarantee
+        # the top label is taken if confidences were assigned
+        result_df.drop_duplicates(inplace=True, subset="d3mIndex")
+
+        # put the ground truth into a single col dataframe
         true_df = self.inputs["learningData"]
-        true_df = true_df.astype({"d3mIndex": result_df["d3mIndex"].dtype})
+        true_df["d3mIndex"] = pd.to_numeric(true_df["d3mIndex"])
 
-        # in case its a multindex, we'll only take one row for each unique index,
-        # and sort to make sure its in the same order as teh result series
+        # take one label in the case this is a multi index
         true_df.drop_duplicates(inplace=True, subset="d3mIndex")
-        true_df = true_df.set_index(pd.to_numeric(true_df["d3mIndex"]))
+        true_df.sort_values(by=[result_df.columns[0]], inplace=True)
 
-        # only take the d3m indices that exist for results (filtering, etc.)
+        # only take the d3m indices that exist for results
+        true_df = true_df.set_index(true_df["d3mIndex"])
+        result_df = result_df.set_index(result_df["d3mIndex"])
         true_df = true_df.loc[result_df.index]
 
         result_series = result_df.iloc[:, 1]
