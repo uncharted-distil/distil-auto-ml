@@ -34,6 +34,7 @@ def create_pipeline(
     batch_size: int = 128,
     svc: bool = False,
     n_jobs: int = -1,
+    compute_confidences: bool = True,
     resolver: Optional[Resolver] = None,
 ) -> Pipeline:
     input_val = "steps.{}.produce"
@@ -212,6 +213,9 @@ def create_pipeline(
         step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
         step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
         step.add_hyperparameter("grid_search", ArgumentType.VALUE, grid_search)
+        step.add_hyperparameter(
+            "compute_confidences", ArgumentType.VALUE, compute_confidences
+        )
 
     image_pipeline.add_step(step)
     previous_step += 1

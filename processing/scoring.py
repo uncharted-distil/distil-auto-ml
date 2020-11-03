@@ -9,6 +9,11 @@ from sklearn.preprocessing import LabelBinarizer
 
 
 class Scorer:
+
+    D3M_INDEX_IDX = 0
+    PREDICTION_IDX = 1
+    CONFIDENCE_IDX = 2
+
     def __init__(self, logger, task, score_config, fitted_pipeline, target_idx):
         self.logger = logger
         self.solution_id = task.solution_id
@@ -61,14 +66,14 @@ class Scorer:
             # (not in problem schema or data schema)
             labels_list = labels_series.unique().tolist()
             # since problem / data schema don't list positive label, we'll do a quick heuristic
-            if set(labels_list).equals(set("0", "1")):
+            if set(labels_list) == set(["0", "1"]):
                 return "1"
             else:
                 # grab first label arbitrarily bc as of now, no good way to determine what is positive label
                 return labels_list[0]
         return False
 
-    def _binarize(self, true, preds, pos_label):
+    def _binarize(self, true, labels):
         lb = LabelBinarizer()
         binary_true = lb.fit_transform(true)
         binary_preds = lb.transform(preds)
@@ -96,19 +101,20 @@ class Scorer:
             return metrics.recall_score(true, preds, pos_label=pos_label)
         return metrics.recall_score(true, preds)
 
-    def _roc_score(self, true, preds, average=None):
-        pos_label = self._get_pos_label()
-        binary_true, binary_preds = self._binarize(true, preds, pos_label)
+    def _roc_score(self, true, confidences, average=None):
+        # need to binarize labels in the multi
         if average is not None:
-            return metrics.roc_auc_score(binary_true, binary_preds, average=average)
-        return metrics.roc_auc_score(binary_true, binary_preds)
+            return metrics.roc_auc_score(
+                true, confidences, average=average, multi_class="ovr"
+            )
+        return metrics.roc_auc_score(true, confidences)
 
     def _rmse_avg(self, true, preds):
         return np.average(
             metrics.mean_squared_error(true, preds, multioutput="raw_values") ** 0.5
         )
 
-    def _score(self, metric, true, preds):
+    def _score(self, metric, true, preds, confidences=None):
         if metric == "f1_micro":
             score = metrics.f1_score(true, preds, average="micro")
         elif metric == "f1_macro":
@@ -116,11 +122,11 @@ class Scorer:
         elif metric == "f1":
             score = self._f1(true, preds)
         elif metric == "roc_auc":
-            score = self._roc_score(true, preds)
+            score = self._roc_score(true, confidences)
         elif metric == "roc_auc_micro":
-            score = self._roc_score(true, preds, average="micro")
+            score = self._roc_score(true, confidences, average="micro")
         elif metric == "roc_auc_macro":
-            score = self._roc_score(true, preds, average="macro")
+            score = self._roc_score(true, confidences, average="macro")
         elif metric == "accuracy":
             score = metrics.accuracy_score(true, preds)
         elif metric == "precision":
@@ -158,50 +164,85 @@ class Scorer:
         # and `outputs.1` contains the predictions.
         if len(results.values) > 1:
             self.logger.warning(
-                "Pipleine produced > 1 outputs. Scoring first output only."
+                "Pipeline produced > 1 outputs. Scoring first output only."
             )
         result_df = results.values["outputs.0"]
 
-        # d3m predictions format columns are [d3mIndex, prediction, weight (optional)] - get the predictions
-        # into index sorted order by d3mIndex, confidence (if present)
-        result_df["d3mIndex"] = pd.to_numeric(result_df["d3mIndex"])
-        if len(result_df.columns) > 2:
-            confidence_column = result_df.columns[2]
-            result_df[confidence_column] = pd.to_numeric(result_df[confidence_column])
+        # get column names for convenience
+        d3m_index_col = result_df.columns[Scorer.D3M_INDEX_IDX]
+        confidence_col = (
+            result_df.columns[Scorer.CONFIDENCE_IDX]
+            if len(result_df.columns) > 2
+            else None
+        )
+        prediction_col = result_df.columns[Scorer.PREDICTION_IDX]
+
+        # when a confidence column is present, we need to make sure the data is formatted such that it
+        # can be passed to the sklearn scoring functions
+        confidence_matrix = None
+        if confidence_col:
+            # Results returned by pipelines are formatted as [d3mIndex, prediction, confidence (optional)]
+            # where results with confidences for binary problems have unique d3mIndex values for each row.
+            # Muliclass problems with confidences use a multi-index approach, where the labels of each
+            # prediction are assigned the same d3mIndex.
+            if not result_df[d3m_index_col].is_unique:
+                # Convert into a n_classes x n_sample matrix, where we take each row that shares a d3mIndex
+                # convert them into rows of the matrix.  This is the required format for downstream
+                # scoring functions.
+                confidence_matrix = np.stack(
+                    result_df.groupby(d3m_index_col)[confidence_col]
+                    .apply(np.array)
+                    .values
+                )
+
+            # Get the predictions into sorted order by d3mIndex, confidence.
+            result_df[d3m_index_col] = pd.to_numeric(result_df[d3m_index_col])
+            result_df[confidence_col] = pd.to_numeric(result_df[confidence_col])
             result_df.sort_values(
-                by=[result_df.columns[0], result_df.columns[2]],
+                by=[d3m_index_col, confidence_col],
                 ascending=[True, False],
                 inplace=True,
             )
         else:
-            result_df.sort_values(by=[result_df.columns[0]], inplace=True)
+            # no confidences, just ensure that the result is sorted by D3M index to ensure consistency
+            # with the ground truth.
+            result_df.sort_values(by=[d3m_index_col], inplace=True)
 
         # take one label in case this is a multi index - previous sort should guarantee
-        # the top label is taken if confidences were assigned
-        result_df.drop_duplicates(inplace=True, subset="d3mIndex")
+        # the top label is taken if confidences were assigned.  This is the required format
+        # for metrics that just score on the label.
+        result_df.drop_duplicates(inplace=True, subset=d3m_index_col)
 
         # put the ground truth into a single col dataframe
         true_df = self.inputs["learningData"]
-        true_df["d3mIndex"] = pd.to_numeric(true_df["d3mIndex"])
+        true_df[d3m_index_col] = pd.to_numeric(true_df[d3m_index_col])
 
         # take one label in the case this is a multi index
-        true_df.drop_duplicates(inplace=True, subset="d3mIndex")
-        true_df.sort_values(by=[result_df.columns[0]], inplace=True)
+        true_df.drop_duplicates(inplace=True, subset=d3m_index_col)
+        true_df.sort_values(by=[d3m_index_col], inplace=True)
 
         # only take the d3m indices that exist for results
-        true_df = true_df.set_index(true_df["d3mIndex"])
-        result_df = result_df.set_index(result_df["d3mIndex"])
+        true_df = true_df.set_index(true_df[d3m_index_col])
+        result_df = result_df.set_index(result_df[d3m_index_col])
         true_df = true_df.loc[result_df.index]
 
-        result_series = result_df.iloc[:, 1]
+        result_series = result_df[prediction_col]
         result_series.fillna(value=0, inplace=True)
         true_series = true_df.iloc[:, self.target_idx]
+
         # force the truth value to the same type as the predicted value
         true_series = true_series.astype(result_series.dtype)
-        # compute the score
-        score = self._score(self.metric, true_series, result_series)
 
-        return [score]
+        # if we have a confidence matrix, use that to score, otherwise use the the contents
+        # of the confidence column if defined
+        confidence = None
+        if confidence_col:
+            if confidence_matrix is not None:
+                confidence = confidence_matrix
+            else:
+                confidence = pd.to_numeric(result_df.iloc[:, confidence_col])
+
+        return [self._score(self.metric, true_series, result_series, confidence)]
 
     def ranking(self):
         # rank is always 1 when requested since the system only generates a single solution

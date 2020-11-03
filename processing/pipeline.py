@@ -277,10 +277,24 @@ def create(
                 resolver=resolver,
                 grid_search=True,
                 n_jobs=n_jobs,
+                svc=True,
+                compute_confidences=compute_confidences,
                 batch_size=config.REMOTE_SENSING_BATCH_SIZE,
                 **pipeline_info,
             )
         )
+        if max_models > 1:
+            pipelines.append(
+                remote_sensing.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    grid_search=True,
+                    n_jobs=n_jobs,
+                    compute_confidences=compute_confidences,
+                    batch_size=config.REMOTE_SENSING_BATCH_SIZE,
+                    **pipeline_info,
+                )
+            )
     elif pipeline_type == "remote_sensing_mlp":
         pipelines.append(
             remote_sensing_mlp.create_pipeline(
