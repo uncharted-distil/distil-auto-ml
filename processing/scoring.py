@@ -1,11 +1,14 @@
 import copy
-
+import logging
 import numpy as np
 import pandas as pd
 from d3m.container import dataset
 from processing import pipeline
 from sklearn import metrics
+from processing import metrics as processing_metrics
 from sklearn.preprocessing import LabelBinarizer
+
+logger = logging.getLogger(__name__)
 
 
 class Scorer:
@@ -177,6 +180,9 @@ class Scorer:
         )
         prediction_col = result_df.columns[Scorer.PREDICTION_IDX]
 
+        # check if this is a multiclass problem
+        is_multiclass = not result_df[d3m_index_col].is_unique
+
         # when a confidence column is present, we need to make sure the data is formatted such that it
         # can be passed to the sklearn scoring functions
         confidence_matrix = None
@@ -185,7 +191,7 @@ class Scorer:
             # where results with confidences for binary problems have unique d3mIndex values for each row.
             # Muliclass problems with confidences use a multi-index approach, where the labels of each
             # prediction are assigned the same d3mIndex.
-            if not result_df[d3m_index_col].is_unique:
+            if is_multiclass:
                 # Convert into a n_classes x n_sample matrix, where we take each row that shares a d3mIndex
                 # convert them into rows of the matrix.  This is the required format for downstream
                 # scoring functions.
@@ -240,9 +246,33 @@ class Scorer:
             if confidence_matrix is not None:
                 confidence = confidence_matrix
             else:
-                confidence = pd.to_numeric(result_df.iloc[:, confidence_col])
+                confidence = pd.to_numeric(result_df[confidence_col])
 
-        return [self._score(self.metric, true_series, result_series, confidence)]
+        # final validation of metrics
+        metric = processing_metrics.translate_metric(self.metric)
+        if metric in processing_metrics.confidence_metrics:
+            # requested a metric that requires confidences but none available
+            if confidence is None:
+                logger.warn(
+                    f"cannot generate {metric} score - no confidence information available"
+                )
+                metric = "f1_macro"
+            elif (
+                is_multiclass
+                and metric in processing_metrics.binary_classification_metrics
+            ):
+                # log a warning that we can't process the requested metric
+                logger.warn(
+                    f"cannot generate {metric} score - can't apply binary metric to multiclass targets"
+                )
+                if metric in processing_metrics.confidence_metrics:
+                    metric = "roc_auc_macro"
+                else:
+                    metric = "f1_macro"
+        else:
+            metric = self.metric
+
+        return [self._score(metric, true_series, result_series, confidence)]
 
     def ranking(self):
         # rank is always 1 when requested since the system only generates a single solution

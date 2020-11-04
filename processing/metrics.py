@@ -44,7 +44,41 @@ metrics = {
     "rocAuc": lambda act, pred: roc_auc.score(act, pred),
 }
 
-classification_metrics = set(["f1Macro", "f1Micro", "f1", "accuracy"])
+classification_metrics = set(
+    [
+        "f1Macro",
+        "f1Micro",
+        "f1",  # binary
+        "accuracy",
+        "rocAuc",  # weighted
+        "rocAucMicro",
+        "rocAucMacro",
+    ]
+)
+
+confidence_metrics = set(["rocAuc", "rocAucMacro", "rocAucMicro"])
+
+binary_classification_metrics = set(
+    [
+        "f1Macro",
+        "f1Micro",
+        "f1",  # binary
+        "accuracy",
+        "rocAuc",  # weighted
+        "rocAucMacro",
+        "rocAucMicro",
+    ]
+)
+
+multiclass_classification_metrics = set(
+    [
+        "f1Macro",
+        "f1Micro",
+        "accuracy",
+        "rocAuc",  # weighted
+        "rocAucMacro",
+    ]
+)
 
 regression_metrics = set(
     [
@@ -62,28 +96,36 @@ clustering_metrics = set(
     ]
 )
 
+d3m_lookup = {
+    "f1Macro": "f1_macro",
+    "f1Micro": "f1_micro",
+    "f1": "f1",
+    "accuracy": "accuracy",
+    "rSquared": "r_squared",
+    "meanSquaredError": "mean_squared_error",
+    "rootMeanSquaredError": "root_mean_squared_error",
+    "rootMeanSquaredErrorAvg": "root_mean_squared_error_avg",
+    "meanAbsoluteError": "mean_absolute_error",
+    "normalizedMutualInformation": "normalized_mutual_information",
+    "objectDetectionAP": "object_detection_average_precision",
+    "meanReciprocalRank": "mean_reciprocal_rank",
+    "hitsAtK": "hits_at_k",
+    "rocAucMacro": "roc_auc_macro",
+    "rocAucMicro": "roc_auc_micro",
+    "rocAuc": "roc_auc",
+}
+
+inverse_d3m_lookup = {v: k for k, v in d3m_lookup.items()}
+
 
 def translate_d3m_metric(metric):
-    lookup = {
-        "f1Macro": "f1_macro",
-        "f1Micro": "f1_micro",
-        "f1": "f1",
-        "accuracy": "accuracy",
-        "rSquared": "r_squared",
-        "meanSquaredError": "mean_squared_error",
-        "rootMeanSquaredError": "root_mean_squared_error",
-        "rootMeanSquaredErrorAvg": "root_mean_squared_error_avg",
-        "meanAbsoluteError": "mean_absolute_error",
-        "normalizedMutualInformation": "normalized_mutual_information",
-        "objectDetectionAP": "object_detection_average_precision",
-        "meanReciprocalRank": "mean_reciprocal_rank",
-        "hitsAtK": "hits_at_k",
-        "rocAucMacro": "roc_auc_macro",
-        "rocAucMicro": "roc_auc_macro",
-        "rocAuc": "roc_auc",
-    }
-    assert metric in lookup, "%s not in lookup" % metric
-    return lookup[metric]
+    assert metric in d3m_lookup, "%s not in lookup" % metric
+    return d3m_lookup[metric]
+
+
+def translate_metric(d3m_metric):
+    assert d3m_metric in inverse_d3m_lookup, "%s not in lookup" % d3m_metric
+    return inverse_d3m_lookup[d3m_metric]
 
 
 def translate_proto_metric(proto_metric):
