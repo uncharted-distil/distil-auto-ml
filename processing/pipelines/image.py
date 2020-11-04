@@ -177,6 +177,7 @@ def create_pipeline(
     step.add_output("produce")
     step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
     step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
+    step.add_hyperparameter("compute_confidences", ArgumentType.VALUE, True)
     image_pipeline.add_step(step)
     previous_step += 1
     tune_steps.append(previous_step)

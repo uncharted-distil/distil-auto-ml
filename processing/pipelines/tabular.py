@@ -13,7 +13,11 @@ from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.primitives.clustering.hdbscan import Hdbscan
 from d3m.primitives.data_cleaning.column_type_profiler import Simon
-from distil.modeling.metrics import regression_metrics
+from processing.metrics import (
+    regression_metrics,
+    classification_metrics,
+    confidence_metrics,
+)
 from distil.primitives.binary_encoder import BinaryEncoderPrimitive
 from distil.primitives.categorical_imputer import CategoricalImputerPrimitive
 from distil.primitives.enrich_dates import EnrichDatesPrimitive
@@ -39,7 +43,6 @@ def create_pipeline(
     profiler="none",
     use_boost: bool = True,
     grid_search=False,
-    compute_confidences=False,
     n_jobs: int = -1,
     resolver: Optional[Resolver] = None,
 ) -> Pipeline:
@@ -352,12 +355,15 @@ def create_pipeline(
                 resolver=resolver,
             )
             step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
-        else:
+        elif metric in classification_metrics and metric not in confidence_metrics:
+            # xgboost classifier doesn't support probability generation so no support for confidence-based metrics
             step = PrimitiveStep(
                 primitive_description=XGBoostGBTreeClassifierPrimitive.metadata.query(),
                 resolver=resolver,
             )
             step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
+        else:
+            return None
     else:
         step = PrimitiveStep(
             primitive_description=EnsembleForestPrimitive.metadata.query(),
@@ -365,9 +371,7 @@ def create_pipeline(
         )
         step.add_hyperparameter("grid_search", ArgumentType.VALUE, grid_search)
         step.add_hyperparameter("small_dataset_fits", ArgumentType.VALUE, 1)
-        step.add_hyperparameter(
-            "compute_confidences", ArgumentType.VALUE, compute_confidences
-        )
+        step.add_hyperparameter("compute_confidences", ArgumentType.VALUE, True)
         step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
     step.add_argument(
         name="inputs",
