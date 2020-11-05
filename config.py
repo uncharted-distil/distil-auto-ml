@@ -43,8 +43,5 @@ TIME_LIMIT = int(os.getenv("TIME_LIMIT", 600))
 # use untuned/internally tuned pipelines (faster) or external tuning (better results)
 HYPERPARAMETER_TUNING = os.getenv("HYPERPARAMETER_TUNING", "True") == "True"
 
-# enable/disable confidence scores in pipelines that support them - d3m scoring tools currently don't support
-COMPUTE_CONFIDENCES = os.getenv("COMPUTE_CONFIDENCES", "False") == "True"
-
 # controls parallelism within primitives - defaults to the number of CPUs
 N_JOBS = int(os.getenv("N_JOBS", -1))

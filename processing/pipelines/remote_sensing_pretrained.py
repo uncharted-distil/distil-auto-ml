@@ -199,6 +199,8 @@ def create_pipeline(
             argument_type=ArgumentType.CONTAINER,
             data_reference=input_val.format(target_step),
         )
+        step.add_hyperparameter("normalize", ArgumentType.VALUE, False)
+        step.add_hyperparameter("rank_confidences", ArgumentType.VALUE, False)
         step.add_output("produce")
         rs_pretrained_pipeline.add_step(step)
         previous_step += 1
@@ -211,6 +213,9 @@ def create_pipeline(
         )
         step.add_hyperparameter("grid_search", ArgumentType.VALUE, False)
         step.add_hyperparameter("small_dataset_fits", ArgumentType.VALUE, 1)
+        step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
+        step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
+        step.add_hyperparameter("compute_confidences", ArgumentType.VALUE, True)
         step.add_argument(
             name="inputs",
             argument_type=ArgumentType.CONTAINER,
@@ -222,8 +227,6 @@ def create_pipeline(
             data_reference=input_val.format(target_step),
         )
         step.add_output("produce")
-        step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
-        step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
         rs_pretrained_pipeline.add_step(step)
         previous_step += 1
         tune_steps.append(previous_step)

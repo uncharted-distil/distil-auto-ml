@@ -212,6 +212,7 @@ def create_pipeline(
         step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
         step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
         step.add_hyperparameter("grid_search", ArgumentType.VALUE, grid_search)
+        step.add_hyperparameter("compute_confidences", ArgumentType.VALUE, True)
 
     image_pipeline.add_step(step)
     previous_step += 1

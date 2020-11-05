@@ -40,6 +40,7 @@ from d3m.metadata.pipeline import (
     Resolver,
 )
 from d3m.metadata.problem import PerformanceMetricBase, PerformanceMetric
+from processing.scoring import Scorer
 from processing import metrics
 from processing import router
 from processing.pipelines import (
@@ -113,11 +114,6 @@ def create(
     metric = metrics.translate_proto_metric(protobuf_metric)
     logger.info(f"Optimizing on metric {metric}")
 
-    # flag whether or not we need confidences based on env var setting + metric request
-    compute_confidences = False
-    if config.COMPUTE_CONFIDENCES or metric.startswith("rocAuc"):
-        compute_confidences = True
-
     # determine type of pipeline required for dataset
     pipeline_type, pipeline_info = router.get_routing_info(dataset_doc, problem, metric)
     logger.info(f"Identified problem type as {pipeline_type}")
@@ -163,7 +159,6 @@ def create(
                     use_boost=True,
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
-                    compute_confidences=compute_confidences,
                     n_jobs=n_jobs,
                 )
             )
@@ -176,7 +171,6 @@ def create(
                     use_boost=False,
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
-                    compute_confidences=compute_confidences,
                     n_jobs=n_jobs,
                 )
             )
@@ -189,7 +183,6 @@ def create(
                     use_boost=False,
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
-                    compute_confidences=compute_confidences,
                     n_jobs=n_jobs,
                 )
             )
@@ -203,7 +196,6 @@ def create(
                     use_boost=True,
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
-                    compute_confidences=compute_confidences,
                     n_jobs=n_jobs,
                 )
             )
@@ -217,7 +209,6 @@ def create(
                         profiler="none",
                         use_boost=True,
                         max_one_hot=8,
-                        compute_confidences=compute_confidences,
                         n_jobs=n_jobs,
                     )
                 )
@@ -230,7 +221,6 @@ def create(
                     use_boost=False,
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
-                    compute_confidences=compute_confidences,
                     n_jobs=n_jobs,
                 )
             )
@@ -277,10 +267,22 @@ def create(
                 resolver=resolver,
                 grid_search=True,
                 n_jobs=n_jobs,
+                svc=True,
                 batch_size=config.REMOTE_SENSING_BATCH_SIZE,
                 **pipeline_info,
             )
         )
+        if max_models > 1:
+            pipelines.append(
+                remote_sensing.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    grid_search=True,
+                    n_jobs=n_jobs,
+                    batch_size=config.REMOTE_SENSING_BATCH_SIZE,
+                    **pipeline_info,
+                )
+            )
     elif pipeline_type == "remote_sensing_mlp":
         pipelines.append(
             remote_sensing_mlp.create_pipeline(
@@ -403,6 +405,9 @@ def create(
     else:
         logger.error(f"Pipeline type [{pipeline_type}] is not yet supported.")
         return None, train_dataset, []
+
+    # strip out any create steps that may have created null pipelines
+    pipelines = [p for p in pipelines if p]
 
     # prepend to the base pipeline
     if prepend is not None:
