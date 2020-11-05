@@ -123,12 +123,13 @@ def score_task(logger, session, server, task):
             fitted_runtime = server.get_fitted_runtime(task.solution_id)
 
         scorer = Scorer(logger, task, score_config, fitted_runtime, target_idx)
-        score_values = scorer.run()
+        score_values, metric_used = scorer.run()
         for score_value in score_values:
             score = models.Scores(
                 solution_id=task.solution_id,
                 score_config_id=score_config.id,
                 value=score_value,
+                metric_used=metric_used,
             )
             session.add(score)
             session.commit()

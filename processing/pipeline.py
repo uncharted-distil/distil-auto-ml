@@ -262,29 +262,6 @@ def create(
         )
     elif pipeline_type == "remote_sensing":
         pipelines.append(
-            remote_sensing.create_pipeline(
-                metric=metric,
-                resolver=resolver,
-                grid_search=True,
-                n_jobs=n_jobs,
-                svc=True,
-                batch_size=config.REMOTE_SENSING_BATCH_SIZE,
-                **pipeline_info,
-            )
-        )
-        if max_models > 1:
-            pipelines.append(
-                remote_sensing.create_pipeline(
-                    metric=metric,
-                    resolver=resolver,
-                    grid_search=True,
-                    n_jobs=n_jobs,
-                    batch_size=config.REMOTE_SENSING_BATCH_SIZE,
-                    **pipeline_info,
-                )
-            )
-    elif pipeline_type == "remote_sensing_mlp":
-        pipelines.append(
             remote_sensing_mlp.create_pipeline(
                 metric=metric,
                 resolver=resolver,
@@ -293,6 +270,17 @@ def create(
                 **pipeline_info,
             )
         )
+        if max_models > 1:
+            pipelines.append(
+                remote_sensing.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    n_jobs=n_jobs,
+                    svc=True,
+                    batch_size=config.REMOTE_SENSING_BATCH_SIZE,
+                    **pipeline_info,
+                )
+            )
     elif pipeline_type == "remote_sensing_pretrained":
         pipelines.append(
             remote_sensing_pretrained.create_pipeline(
