@@ -1,5 +1,4 @@
 from typing import Optional
-
 from distil.primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
@@ -192,6 +191,7 @@ def create_pipeline(
             data_reference=input_val.format(target_step),
         )
         step.add_output("produce")
+        step.add_hyperparameter("scaling", ArgumentType.VALUE, "unit_norm")
     else:
         # use random forest
         step = PrimitiveStep(
