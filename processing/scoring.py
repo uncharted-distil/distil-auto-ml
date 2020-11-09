@@ -78,16 +78,6 @@ class Scorer:
                 return labels_list[0]
         return False
 
-    def _binarize(self, true, labels):
-        lb = LabelBinarizer()
-        binary_true = lb.fit_transform(true)
-        binary_preds = lb.transform(preds)
-
-        # make sure labels are aligned correctly
-        if pos_label and lb.classes_[0] == pos_label:
-            return 1 - binary_true, 1 - binary_preds
-        return binary_true, binary_preds
-
     def _f1(self, true, preds):
         pos_label = self._get_pos_label(true)
         if pos_label:
@@ -107,7 +97,6 @@ class Scorer:
         return metrics.recall_score(true, preds)
 
     def _roc_score(self, true, confidences, average=None):
-        # need to binarize labels in the multi
         if average is not None:
             return metrics.roc_auc_score(
                 true, confidences, average=average, multi_class="ovr"
@@ -200,13 +189,20 @@ class Scorer:
             # with the ground truth.
             result_df.sort_values(by=[d3m_index_col], inplace=True)
 
+        # extract the ground truth from the inputs
+        true_df = self.inputs["learningData"]
+
+        # check so if our labels are binary since this is what some of the sklearn primitives use as
+        # binary/multiclass criteria
+        binary_labels = len(true_df[prediction_col].unique()) <= 2
+
         # extract confidence information into the format that the scoring
         # funcdtions require (1 or 2 dimension ndarray)
         confidences = self.extract_confidences(
             result_df,
             multiclass_probabilities,
+            binary_labels,
             d3m_index_col,
-            prediction_col,
             confidence_col,
         )
 
@@ -215,11 +211,9 @@ class Scorer:
         # for metrics that just score on the label.
         result_df.drop_duplicates(inplace=True, subset=d3m_index_col)
 
-        # put the ground truth into a single col dataframe
-        true_df = self.inputs["learningData"]
-        true_df[d3m_index_col] = pd.to_numeric(true_df[d3m_index_col])
-
         # take one label in the case this is a multi index
+        # put the ground truth into a single col dataframe
+        true_df[d3m_index_col] = pd.to_numeric(true_df[d3m_index_col])
         true_df.drop_duplicates(inplace=True, subset=d3m_index_col)
         true_df.sort_values(by=[d3m_index_col], inplace=True)
 
@@ -297,8 +291,8 @@ class Scorer:
         self,
         result_df: pd.DataFrame,
         multiclass_probabilities: bool,
+        binary_labels: bool,
         d3m_index_col: int,
-        prediction_col: int,
         confidence_col: int,
     ) -> np.ndarray:
         confidence = None
@@ -310,7 +304,7 @@ class Scorer:
                     .apply(np.array)
                     .values
                 )
-            elif len(result_df[prediction_col].unique()) <= 2:
+            elif binary_labels:
                 # single probabilities - this is only allowed with binary labels
                 confidence = pd.to_numeric(result_df[confidence_col]).values
             else:
