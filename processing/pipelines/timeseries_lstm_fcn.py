@@ -10,7 +10,9 @@ from common_primitives.simple_profiler import SimpleProfilerPrimitive
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep
 from d3m.metadata.pipeline import Resolver
-from d3m.primitives.data_transformation.data_cleaning import DistilTimeSeriesFormatter
+from d3m.primitives.data_transformation.time_series_formatter import (
+    DistilTimeSeriesFormatter,
+)
 from d3m.primitives.time_series_classification.convolutional_neural_net import LSTM_FCN
 
 
