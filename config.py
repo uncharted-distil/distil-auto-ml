@@ -45,3 +45,6 @@ HYPERPARAMETER_TUNING = os.getenv("HYPERPARAMETER_TUNING", "True") == "True"
 
 # controls parallelism within primitives - defaults to the number of CPUs
 N_JOBS = int(os.getenv("N_JOBS", -1))
+
+# enable use of mlp classifier + gradcam visualization
+MLP_CLASSIFIER = os.getenv("MLP_CLASSIFIER", "True") == "True"

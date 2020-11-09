@@ -165,6 +165,8 @@ class Scores(Base):
     solution_id = Column(String, ForeignKey("solutions.id"))
     fit_solution_id = Column(String, ForeignKey("fit_solution.id"))
     score_config_id = Column(Integer, ForeignKey("score_config.id"))
+    # metric that was actually applied - can differ from  requested
+    metric_used = Column(String)
     value = Column(Float)
 
 

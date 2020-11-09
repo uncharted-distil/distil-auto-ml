@@ -256,13 +256,8 @@ class TaskManager:
             if scores:
                 score_msgs = []
                 for m in scores:
-                    config = (
-                        self.session.query(models.ScoreConfig)
-                        .filter(models.ScoreConfig.id == m.score_config_id)
-                        .first()
-                    )
                     score_msgs.append(
-                        self.msg.make_score_message(config.metric, m.value)
+                        self.msg.make_score_message(m.metric_used, m.value)
                     )
 
                 progress_msg = self.msg.make_progress_msg("COMPLETED")

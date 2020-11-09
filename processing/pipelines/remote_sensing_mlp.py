@@ -20,6 +20,8 @@ from distil.primitives.label_encoder import SKLabelEncoder
 from distil.primitives.satellite_image_loader import (
     DataFrameSatelliteImageLoaderPrimitive,
 )
+import config
+import os
 
 # Overall implementation relies on passing the entire dataset through the pipeline, with the primitives
 # identifying columns to operate on based on type.  Alternative implementation (that better lines up with
@@ -37,7 +39,6 @@ def create_pipeline(
     # create the basic pipeline
     image_pipeline = Pipeline()
     image_pipeline.add_input(name="inputs")
-    tune_steps = []
 
     # step 0 - denormalize dataframe (N.B.: injects semantic type information)
     step = PrimitiveStep(
@@ -154,20 +155,6 @@ def create_pipeline(
     step.add_hyperparameter("semantic_types", ArgumentType.VALUE, target_types)
     image_pipeline.add_step(step)
     previous_step += 1
-
-    # step 6 - encode targets
-    step = PrimitiveStep(
-        primitive_description=SKLabelEncoder.metadata.query(), resolver=resolver
-    )
-    step.add_argument(
-        name="inputs",
-        argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(previous_step),
-    )
-    step.add_output("produce")
-    step.add_hyperparameter("return_result", ArgumentType.VALUE, "replace")
-    image_pipeline.add_step(step)
-    previous_step += 1
     target_step = previous_step
 
     # step 7 - featurize imagery
@@ -200,7 +187,13 @@ def create_pipeline(
         argument_type=ArgumentType.CONTAINER,
         data_reference=input_val.format(target_step),
     )
-    step.add_hyperparameter("all_confidences", ArgumentType.VALUE, False)
+    step.add_hyperparameter("all_confidences", ArgumentType.VALUE, True)
+    step.add_hyperparameter(
+        "weights_filepath",
+        ArgumentType.VALUE,
+        os.path.join(config.OUTPUT_DIR, "mlp_classifier.pth"),
+    )
+    step.add_hyperparameter("image_dim", ArgumentType.VALUE, 120)
     step.add_output("produce")
     image_pipeline.add_step(step)
     previous_step += 1
@@ -230,4 +223,4 @@ def create_pipeline(
         name="output", data_reference=input_val.format(previous_step)
     )
 
-    return image_pipeline, tune_steps
+    return image_pipeline, []

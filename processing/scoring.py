@@ -1,5 +1,7 @@
 import copy
 import logging
+from typing import Tuple
+from d3m.metadata.hyperparams import List
 import numpy as np
 import pandas as pd
 from d3m.container import dataset
@@ -76,16 +78,6 @@ class Scorer:
                 return labels_list[0]
         return False
 
-    def _binarize(self, true, labels):
-        lb = LabelBinarizer()
-        binary_true = lb.fit_transform(true)
-        binary_preds = lb.transform(preds)
-
-        # make sure labels are aligned correctly
-        if pos_label and lb.classes_[0] == pos_label:
-            return 1 - binary_true, 1 - binary_preds
-        return binary_true, binary_preds
-
     def _f1(self, true, preds):
         pos_label = self._get_pos_label(true)
         if pos_label:
@@ -105,7 +97,6 @@ class Scorer:
         return metrics.recall_score(true, preds)
 
     def _roc_score(self, true, confidences, average=None):
-        # need to binarize labels in the multi
         if average is not None:
             return metrics.roc_auc_score(
                 true, confidences, average=average, multi_class="ovr"
@@ -157,7 +148,7 @@ class Scorer:
             raise ValueError("Cannot score metric {}".format(metric))
         return score
 
-    def hold_out_score(self):
+    def hold_out_score(self) -> Tuple[List[str], str]:
         # produce predictions from the fitted model and extract to single col dataframe
         # with the d3mIndex as the index
         _in = copy.deepcopy(self.inputs)
@@ -180,27 +171,11 @@ class Scorer:
         )
         prediction_col = result_df.columns[Scorer.PREDICTION_IDX]
 
-        # check if this is a multiclass problem
-        is_multiclass = not result_df[d3m_index_col].is_unique
+        # check to see if this is problem with multiclass confidence results returned
+        multiclass_probabilities = not result_df[d3m_index_col].is_unique
 
-        # when a confidence column is present, we need to make sure the data is formatted such that it
-        # can be passed to the sklearn scoring functions
-        confidence_matrix = None
+        # ensure results are sorted by index
         if confidence_col:
-            # Results returned by pipelines are formatted as [d3mIndex, prediction, confidence (optional)]
-            # where results with confidences for binary problems have unique d3mIndex values for each row.
-            # Muliclass problems with confidences use a multi-index approach, where the labels of each
-            # prediction are assigned the same d3mIndex.
-            if is_multiclass:
-                # Convert into a n_classes x n_sample matrix, where we take each row that shares a d3mIndex
-                # convert them into rows of the matrix.  This is the required format for downstream
-                # scoring functions.
-                confidence_matrix = np.stack(
-                    result_df.groupby(d3m_index_col)[confidence_col]
-                    .apply(np.array)
-                    .values
-                )
-
             # Get the predictions into sorted order by d3mIndex, confidence.
             result_df[d3m_index_col] = pd.to_numeric(result_df[d3m_index_col])
             result_df[confidence_col] = pd.to_numeric(result_df[confidence_col])
@@ -214,22 +189,38 @@ class Scorer:
             # with the ground truth.
             result_df.sort_values(by=[d3m_index_col], inplace=True)
 
+        # extract the ground truth from the inputs
+        true_df = self.inputs["learningData"]
+
+        # check so if our labels are binary since this is what some of the sklearn primitives use as
+        # binary/multiclass criteria
+        binary_labels = len(true_df[prediction_col].unique()) <= 2
+
+        # extract confidence information into the format that the scoring
+        # funcdtions require (1 or 2 dimension ndarray)
+        confidences = self.extract_confidences(
+            result_df,
+            multiclass_probabilities,
+            binary_labels,
+            d3m_index_col,
+            confidence_col,
+        )
+
         # take one label in case this is a multi index - previous sort should guarantee
         # the top label is taken if confidences were assigned.  This is the required format
         # for metrics that just score on the label.
         result_df.drop_duplicates(inplace=True, subset=d3m_index_col)
 
-        # put the ground truth into a single col dataframe
-        true_df = self.inputs["learningData"]
-        true_df[d3m_index_col] = pd.to_numeric(true_df[d3m_index_col])
-
         # take one label in the case this is a multi index
+        # put the ground truth into a single col dataframe
+        true_df[d3m_index_col] = pd.to_numeric(true_df[d3m_index_col])
         true_df.drop_duplicates(inplace=True, subset=d3m_index_col)
         true_df.sort_values(by=[d3m_index_col], inplace=True)
 
         # only take the d3m indices that exist for results
         true_df = true_df.set_index(true_df[d3m_index_col])
         result_df = result_df.set_index(result_df[d3m_index_col])
+        result_df.index.rename("index", inplace=True)
         true_df = true_df.loc[result_df.index]
 
         result_series = result_df[prediction_col]
@@ -239,40 +230,31 @@ class Scorer:
         # force the truth value to the same type as the predicted value
         true_series = true_series.astype(result_series.dtype)
 
-        # if we have a confidence matrix, use that to score, otherwise use the the contents
-        # of the confidence column if defined
-        confidence = None
-        if confidence_col:
-            if confidence_matrix is not None:
-                confidence = confidence_matrix
-            else:
-                confidence = pd.to_numeric(result_df[confidence_col])
-
-        # final validation of metrics
+        # validate metric against labels and probabilities that were returned
         metric = processing_metrics.translate_metric(self.metric)
         if metric in processing_metrics.confidence_metrics:
-            # requested a metric that requires confidences but none available
-            if confidence is None:
+            if confidences is None:
+                # requested a metric that requires confidences but none available
                 logger.warn(
                     f"cannot generate {metric} score - no confidence information available"
                 )
-                metric = "f1_macro"
+                metric = "f1Macro"
             elif (
-                is_multiclass
-                and metric in processing_metrics.binary_classification_metrics
+                multiclass_probabilities
+                and metric not in processing_metrics.multiclass_classification_metrics
             ):
-                # log a warning that we can't process the requested metric
+                # log a warning that we can't process the requested metric and assign a default
                 logger.warn(
-                    f"cannot generate {metric} score - can't apply binary metric to multiclass targets"
+                    f"cannot generate {metric} score - can't apply metric to multiclass targets"
                 )
                 if metric in processing_metrics.confidence_metrics:
-                    metric = "roc_auc_macro"
+                    metric = "rocAucMacro"
                 else:
-                    metric = "f1_macro"
-        else:
-            metric = self.metric
+                    metric = "f1Macro"
+        metric = processing_metrics.translate_d3m_metric(metric)
 
-        return [self._score(metric, true_series, result_series, confidence)]
+        # return the score and the metric that was actually applied
+        return ([self._score(metric, true_series, result_series, confidences)], metric)
 
     def ranking(self):
         # rank is always 1 when requested since the system only generates a single solution
@@ -280,7 +262,7 @@ class Scorer:
             score = [1]
         else:
             raise ValueError(f"Cannot rank metric {self.metric}")
-        return score
+        return (score, self.metric)
 
     """
     def k_fold_score(self,):
@@ -304,3 +286,28 @@ class Scorer:
 
         return fold_scores
     """
+
+    def extract_confidences(
+        self,
+        result_df: pd.DataFrame,
+        multiclass_probabilities: bool,
+        binary_labels: bool,
+        d3m_index_col: int,
+        confidence_col: int,
+    ) -> np.ndarray:
+        confidence = None
+        if confidence_col is not None:
+            if multiclass_probabilities:
+                # if there are multiple probabilities extract them into a matrix
+                confidence = np.stack(
+                    result_df.groupby(d3m_index_col)[confidence_col]
+                    .apply(np.array)
+                    .values
+                )
+            elif binary_labels:
+                # single probabilities - this is only allowed with binary labels
+                confidence = pd.to_numeric(result_df[confidence_col]).values
+            else:
+                logger.warn(f"multiclass problem with scalar probability values")
+
+        return confidence

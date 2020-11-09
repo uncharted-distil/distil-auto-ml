@@ -199,7 +199,7 @@ def create_pipeline(
             argument_type=ArgumentType.CONTAINER,
             data_reference=input_val.format(target_step),
         )
-        step.add_hyperparameter("normalize", ArgumentType.VALUE, False)
+        step.add_hyperparameter("scaling", ArgumentType.VALUE, "unit_norm")
         step.add_hyperparameter("rank_confidences", ArgumentType.VALUE, False)
         step.add_output("produce")
         rs_pretrained_pipeline.add_step(step)

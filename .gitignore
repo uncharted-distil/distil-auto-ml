@@ -21,3 +21,4 @@ sherpa_temp
 *.pkl
 deepar_weights
 distil-auto-ml.log
+model_weights.pth
