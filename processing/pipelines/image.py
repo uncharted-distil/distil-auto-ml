@@ -12,7 +12,7 @@ from common_primitives.simple_profiler import SimpleProfilerPrimitive
 from d3m import utils
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
-from d3m.primitives.data_preprocessing.dataset_sample import (
+from d3m.primitives.data_transformation.dataset_sample import (
     Common as DatasetSamplePrimitive,
 )
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
