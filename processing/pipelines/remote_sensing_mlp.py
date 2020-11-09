@@ -20,6 +20,8 @@ from distil.primitives.label_encoder import SKLabelEncoder
 from distil.primitives.satellite_image_loader import (
     DataFrameSatelliteImageLoaderPrimitive,
 )
+import config
+import os
 
 # Overall implementation relies on passing the entire dataset through the pipeline, with the primitives
 # identifying columns to operate on based on type.  Alternative implementation (that better lines up with
@@ -186,6 +188,12 @@ def create_pipeline(
         data_reference=input_val.format(target_step),
     )
     step.add_hyperparameter("all_confidences", ArgumentType.VALUE, True)
+    step.add_hyperparameter(
+        "weights_filepath",
+        ArgumentType.VALUE,
+        os.path.join(config.OUTPUT_DIR, "mlp_classifier.pth"),
+    )
+    step.add_hyperparameter("image_dim", ArgumentType.VALUE, 120)
     step.add_output("produce")
     image_pipeline.add_step(step)
     previous_step += 1
