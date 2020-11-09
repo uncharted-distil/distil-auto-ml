@@ -5,10 +5,10 @@ import os
 import shutil
 
 primitives = [
-    "data_preprocessing.datetime_range_filter.Common",
-    "data_preprocessing.numeric_range_filter.Common",
-    "data_preprocessing.regex_filter.Common",
-    "data_preprocessing.term_filter.Common",
+    "data_transformation.datetime_range_filter.Common",
+    "data_transformation.numeric_range_filter.Common",
+    "data_transformation.regex_filter.Common",
+    "data_transformation.term_filter.Common",
     "data_transformation.datetime_field_compose.Common",
 ]
 
