@@ -342,14 +342,18 @@ def job_loop(logger, session, server):
         )
     except Exception as e:
         logger.warn("Exception getting task: {}".format(e), exc_info=True)
+
     # If there is work to be done...
-    if task:
-        if task.type == "FIT":
-            fit_task(logger, session, server, task)
-        elif task.type == "SCORE":
-            score_task(logger, session, server, task)
-        elif task.type == "PRODUCE":
-            produce_task(logger, session, server, task)
+    try:
+        if task:
+            if task.type == "FIT":
+                fit_task(logger, session, server, task)
+            elif task.type == "SCORE":
+                score_task(logger, session, server, task)
+            elif task.type == "PRODUCE":
+                produce_task(logger, session, server, task)
+    except Exception as e:
+        logger.warn("Exception running task: {}".format(e), exc_info=True)
 
 
 def main(once=False):
