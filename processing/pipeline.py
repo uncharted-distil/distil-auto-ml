@@ -62,7 +62,7 @@ from processing.pipelines import (
     audio,
     vertex_nomination,
     # vertex_nomination_jhu,
-    vertex_classification,
+    # vertex_classification,
     community_detection,
     timeseries_kanine,
     timeseries_var,
@@ -328,11 +328,13 @@ def create(
         #     vertex_nomination_jhu.create_pipeline(metric, resolver, **pipeline_info)
         # )
     elif pipeline_type == "vertex_classification":
-        # force using vertex classification
-        # TODO - should determine the graph data format
-        pipelines.append(
-            vertex_classification.create_pipeline(metric=metric, resolver=resolver)
-        )
+        # This relies on a primitive that is no longer in the d3m primitive set.  Should be
+        # updated to use JHU primitives.
+        # pipelines.append(
+        #     vertex_classification.create_pipeline(metric=metric, resolver=resolver)
+        # )
+        logger.error(f"Pipeline type [{pipeline_type}] is temporarily unsupported.")
+        return None, train_dataset, []
     elif pipeline_type == "link_prediction":
         pipelines.append(
             link_prediction.create_pipeline(
@@ -485,10 +487,15 @@ def fit(
 
 
 def produce(
-    fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset, outputs_to_expose: typing.Iterable[str] = None
+    fitted_pipeline: runtime.Runtime,
+    input_dataset: container.Dataset,
+    outputs_to_expose: typing.Iterable[str] = None,
 ) -> runtime.Result:
     _, result = runtime.produce(
-        fitted_pipeline, [input_dataset], expose_produced_outputs=True, outputs_to_expose=outputs_to_expose
+        fitted_pipeline,
+        [input_dataset],
+        expose_produced_outputs=True,
+        outputs_to_expose=outputs_to_expose,
     )
     if result.has_error():
         raise result.error
