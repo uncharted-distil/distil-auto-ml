@@ -32,13 +32,13 @@ def produce_task(logger, session, server, task):
     try:
         logger.info("Starting produce task ID {}".format(task.id))
 
+        # pull out the results the caller requested, ignore any others that were exposed
+        output_keys = json.loads(task.output_keys)
+
         # call produce on a fitted pipeline
         fitted_runtime = server.get_fitted_runtime(task.fit_solution_id)
         test_dataset = load_data(task.dataset_uri)
-        results = ex_pipeline.produce(fitted_runtime, test_dataset)
-
-        # pull out the results the caller requested, ignore any others that were exposed
-        output_keys = json.loads(task.output_keys)
+        results = ex_pipeline.produce(fitted_runtime, test_dataset, outputs_to_expose=output_keys)
 
         # loop over the (ordered) list of requested output types until we find one that we support
         output_types = json.loads(task.output_types)
@@ -167,6 +167,9 @@ def fit_task(logger, session, server, task):
             else None
         )
 
+        # pull out the results the caller requested, ignore any others that were exposed
+        output_keys = json.loads(task.output_keys) if task.output_keys else {}
+
         # Check to see if this is a fully specified pipeline.  If so, we'll run it as a non-standard since
         # it doesn't need to be serialized.
         run_as_standard = not task.fully_specified
@@ -177,10 +180,8 @@ def fit_task(logger, session, server, task):
             problem_obj,
             train_dataset,
             is_standard_pipeline=run_as_standard,
+            outputs_to_expose=output_keys,
         )
-
-        # pull out the results the caller requested, ignore any others that were exposed
-        output_keys = json.loads(task.output_keys) if task.output_keys else {}
 
         # loop over the (ordered) list of requested output types until we find one that we support
         output_types = json.loads(task.output_types) if task.output_types else {}

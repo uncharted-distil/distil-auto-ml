@@ -459,6 +459,7 @@ def fit(
     problem: problem.Problem,
     input_dataset: container.Dataset,
     is_standard_pipeline=True,
+    outputs_to_expose: typing.Iterable[str] = None,
 ) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
     hyperparams = None
     random_seed = 0
@@ -474,6 +475,7 @@ def fit(
         context=metadata_base.Context.TESTING,
         runtime_environment=pipeline_run.RuntimeEnvironment(),
         is_standard_pipeline=is_standard_pipeline,
+        outputs_to_expose=outputs_to_expose,
     )
 
     if result.has_error():
@@ -483,10 +485,10 @@ def fit(
 
 
 def produce(
-    fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset
+    fitted_pipeline: runtime.Runtime, input_dataset: container.Dataset, outputs_to_expose: typing.Iterable[str] = None
 ) -> runtime.Result:
     _, result = runtime.produce(
-        fitted_pipeline, [input_dataset], expose_produced_outputs=True
+        fitted_pipeline, [input_dataset], expose_produced_outputs=True, outputs_to_expose=outputs_to_expose
     )
     if result.has_error():
         raise result.error
