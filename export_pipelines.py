@@ -99,6 +99,7 @@ PIPE_TO_DATASET = {
     "remote_sensing": ("LL1_bigearth_landuse_detection", "f1Macro", {"svc": True}),
     "remote_sensing_mlp": ("LL1_bigearth_landuse_detection", "f1Macro", {}),
     "common": ("LL0_acled_reduced_MIN_METADATA", "f1Macro", {}),
+    "image_retrieval": ("LL1_bigearth_landuse_detection", "f1Macro", {"gem_p": 1}),
 }
 
 # Subset of pipelines that are aimed at coverage of only the primitives that we intend to
