@@ -9,6 +9,7 @@ from typing import Dict
 from api import core_pb2, core_pb2_grpc
 
 from d3m import runtime
+from d3m import container
 
 from server.messages import Messaging
 from server.task_manager import TaskManager
@@ -88,6 +89,7 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
     # fitted runtimes should be stored to disk, but that can't happen
     # until we can guarantee that all primitives can be pickled.
     fitted_runtimes: Dict[str, runtime.Runtime] = {}
+    loaded_datasets: Dict[str, container.Dataset] = {}
 
     def __init__(self):
         self.logger = logging.getLogger("distil.server.ServerServicer")
@@ -205,6 +207,12 @@ class ServerServicer(core_pb2_grpc.CoreServicer):
     def get_fitted_runtime(self, solution_id):
         return self.fitted_runtimes.get(solution_id, None)
 
+    def add_loaded_dataset(self, data_id, dataset):
+        self.loaded_datasets[data_id] = dataset
+
+    def get_loaded_dataset(self, data_id):
+        return self.loaded_datasets.get(data_id, None)
+
 
 class Server:
     def __init__(self):
@@ -238,3 +246,9 @@ class Server:
 
     def get_fitted_runtime(self, solution_id):
         return self.servicer.get_fitted_runtime(solution_id)
+
+    def add_loaded_dataset(self, data_id, dataset):
+        self.servicer.add_loaded_dataset(data_id, dataset)
+
+    def get_loaded_dataset(self, data_id):
+        return self.servicer.get_loaded_dataset(data_id)
