@@ -32,13 +32,17 @@ def produce_task(logger, session, server, task):
     try:
         logger.info("Starting produce task ID {}".format(task.id))
 
-        # call produce on a fitted pipeline
-        fitted_runtime = server.get_fitted_runtime(task.fit_solution_id)
-        test_dataset = load_data(task.dataset_uri)
-        results = ex_pipeline.produce(fitted_runtime, test_dataset)
-
         # pull out the results the caller requested, ignore any others that were exposed
         output_keys = json.loads(task.output_keys)
+
+        # call produce on a fitted pipeline
+        fitted_runtime = server.get_fitted_runtime(task.fit_solution_id)
+        test_dataset = server.get_loaded_dataset(task.dataset_uri)
+        if test_dataset is None:
+            test_dataset = load_data(task.dataset_uri)
+        results = ex_pipeline.produce(
+            fitted_runtime, test_dataset, outputs_to_expose=output_keys
+        )
 
         # loop over the (ordered) list of requested output types until we find one that we support
         output_types = json.loads(task.output_types)
@@ -167,20 +171,23 @@ def fit_task(logger, session, server, task):
             else None
         )
 
+        # pull out the results the caller requested, ignore any others that were exposed
+        output_keys = json.loads(task.output_keys) if task.output_keys else {}
+
         # Check to see if this is a fully specified pipeline.  If so, we'll run it as a non-standard since
         # it doesn't need to be serialized.
         run_as_standard = not task.fully_specified
 
-        train_dataset = load_data(task.dataset_uri)
+        train_dataset = server.get_loaded_dataset(task.dataset_uri)
+        if train_dataset is None:
+            train_dataset = load_data(task.dataset_uri)
         fitted_runtime, result = ex_pipeline.fit(
             pipeline_obj,
             problem_obj,
             train_dataset,
             is_standard_pipeline=run_as_standard,
+            outputs_to_expose=output_keys,
         )
-
-        # pull out the results the caller requested, ignore any others that were exposed
-        output_keys = json.loads(task.output_keys) if task.output_keys else {}
 
         # loop over the (ordered) list of requested output types until we find one that we support
         output_types = json.loads(task.output_types) if task.output_types else {}
@@ -247,7 +254,7 @@ def fit_task(logger, session, server, task):
         session.commit()
 
 
-def search_task(logger, session, search):
+def search_task(logger, session, server, search):
 
     try:
         logger.info("Starting distil search ID {}".format(search.id))
@@ -282,6 +289,7 @@ def search_task(logger, session, search):
             search_template_obj,
             resolver=resolver,
         )
+        server.add_loaded_dataset(search.dataset_uri, dataset)
         for i, pipeline_obj in enumerate(pipeline_objs):
             pipeline_json = pipeline_obj.to_json(nest_subpipelines=True)
 
@@ -329,7 +337,7 @@ def job_loop(logger, session, server):
         logger.warn("Exception getting task: {}".format(e), exc_info=True)
 
     if search:
-        search_task(logger, session, search)
+        search_task(logger, session, server, search)
 
     # look for tasks to run
     try:
@@ -341,14 +349,18 @@ def job_loop(logger, session, server):
         )
     except Exception as e:
         logger.warn("Exception getting task: {}".format(e), exc_info=True)
+
     # If there is work to be done...
-    if task:
-        if task.type == "FIT":
-            fit_task(logger, session, server, task)
-        elif task.type == "SCORE":
-            score_task(logger, session, server, task)
-        elif task.type == "PRODUCE":
-            produce_task(logger, session, server, task)
+    try:
+        if task:
+            if task.type == "FIT":
+                fit_task(logger, session, server, task)
+            elif task.type == "SCORE":
+                score_task(logger, session, server, task)
+            elif task.type == "PRODUCE":
+                produce_task(logger, session, server, task)
+    except Exception as e:
+        logger.warn("Exception running task: {}".format(e), exc_info=True)
 
 
 def main(once=False):

@@ -159,16 +159,8 @@ class TaskManager:
             stratified,
         ) = self.validator.validate_score_solution_request(request)
 
-        # TODO: if it has been scored already in the same manner,
-        # return the request_id from that first time
-        score_request_id = self._generate_id()
+        request_id = self._generate_id()
         solution_id = request.solution_id
-        # Create mapping between score_request and solution_id
-        _request = models.Requests(
-            id=score_request_id, solution_id=solution_id, type="SCORE"
-        )
-        self.session.add(_request)
-        self.session.commit()
 
         # Fetch the pipeline record
         _, pipeline_record = (
@@ -191,46 +183,59 @@ class TaskManager:
             .first()
         )
 
-        # Attempt to create a scoring_config
-        # Add a SCORE task per metric in the request
-        for metric in metrics:
-            conf_id = self._generate_id()
-            conf = models.ScoreConfig(
-                id=conf_id,
-                metric=metric,
-                method=method,
-                num_folds=folds,
-                # TODO: train_test_ratio is currently unused by SolutionScorer
-                # remove it or fix it
-                train_test_ratio=train_test_ratio,
-                shuffle=shuffle,
-                random_seed=random_seed,
-                stratified=stratified,
-            )
-            self.session.add(conf)
-            task_id = self._generate_id()
-            task = models.Tasks(
-                id=task_id,
-                type="SCORE",
-                solution_id=solution_id,
-                fit_solution_id=fit_solution_id,
-                dataset_uri=dataset_uri,
-                score_config_id=conf_id,
-                problem=search.problem,
-                pipeline=pipeline_json,
-                fully_specified=fully_specified,
-            )
-            self.session.add(task)
-            # Add configs and tasks to pool
-            self.session.commit()
+        # score using the first supplied metric - things currently aren't set up to properly
+        # handle multiple metrics downstream
+        if len(metrics) > 1:
+            self.logger.warn(f"only support scoring on one metric - using {metrics[0]}")
+        metric = metrics[0]
+        conf_id = self._generate_id()
+        conf = models.ScoreConfig(
+            id=conf_id,
+            metric=metric,
+            method=method,
+            num_folds=folds,
+            # TODO: train_test_ratio is currently unused by SolutionScorer
+            # remove it or fix it
+            train_test_ratio=train_test_ratio,
+            shuffle=shuffle,
+            random_seed=random_seed,
+            stratified=stratified,
+        )
+        self.session.add(conf)
+        task_id = self._generate_id()
+        task = models.Tasks(
+            id=task_id,
+            type="SCORE",
+            request_id=request_id,
+            solution_id=solution_id,
+            fit_solution_id=fit_solution_id,
+            dataset_uri=dataset_uri,
+            score_config_id=conf_id,
+            problem=search.problem,
+            pipeline=pipeline_json,
+            fully_specified=fully_specified,
+        )
+        self.session.add(task)
+        self.session.commit()
 
-        return score_request_id
+        # make a record for the request and commit to the database
+        request_record = models.Requests(
+            id=request_id,
+            task_id=task.id,
+            type="SCORE",
+            solution_id=solution_id,
+        )
+        self.session.add(request_record)
+        self.session.commit()
+
+        return request_id
 
     def GetScoreSolutionResults(self, message):
         request_id = self.validator.validate_get_score_solution_results_request(
             message, self.session
         )
-        seen_ids = []
+
+        start = time.time()
 
         solution_id = (
             self.session.query(models.Requests)
@@ -240,36 +245,69 @@ class TaskManager:
         )
 
         while True:
-            # get all scores associated with the solution_id from the db
-            scores = (
-                self.session.query(models.Scores)
-                .filter(models.Scores.solution_id == solution_id)
-                .all()
+            task = (
+                self.session.query(models.Tasks)
+                .filter(models.Tasks.request_id == request_id)
+                .first()
             )
 
-            # Refresh what we need to
-            if scores:
-                for s in scores:
-                    self.session.refresh(s)
+            # refresh emits an immediate SELECT to the database to reload all attributes on task
+            # this allows us to get the updates written to the db when the task is completed
+            self.session.refresh(task)
 
-            # TODO: make this a proper list of scores
-            if scores:
-                score_msgs = []
-                for m in scores:
-                    score_msgs.append(
-                        self.msg.make_score_message(m.metric_used, m.value)
+            task_complete = task.ended
+            if not task_complete:
+                self.logger.debug("SCORING task not complete, waiting")
+                if time.time() - start > config.PROGRESS_INTERVAL:
+                    start = time.time()
+                    progress_msg = self.msg.make_progress_msg("RUNNING")
+                    yield self.msg.make_get_score_solution_results_response(
+                        None, progress_msg
                     )
+                else:
+                    yield False
+            if task_complete:
+                # check if the task has an error
+                if task.error:
+                    # return error to ta3
+                    progress_msg = self.msg.make_progress_msg(
+                        "ERRORED", task.error_message
+                    )
+                    yield self.msg.make_get_score_solution_results_response(
+                        None, progress_msg
+                    )
+                    break
 
-                progress_msg = self.msg.make_progress_msg("COMPLETED")
-
-                yield self.msg.make_get_score_solution_results_response(
-                    score_msgs, progress_msg
+                # get all scores associated with the solution_id from the db
+                scores = (
+                    self.session.query(models.Scores)
+                    .filter(models.Scores.solution_id == solution_id)
+                    .all()
                 )
-                break
-            else:
-                # Force re-query next time
-                self.session.expire_all()
-                yield False
+
+                # Refresh what we need to
+                if scores:
+                    for s in scores:
+                        self.session.refresh(s)
+
+                # TODO: make this a proper list of scores
+                if scores:
+                    score_msgs = []
+                    for m in scores:
+                        score_msgs.append(
+                            self.msg.make_score_message(m.metric_used, m.value)
+                        )
+
+                    progress_msg = self.msg.make_progress_msg("COMPLETED")
+
+                    yield self.msg.make_get_score_solution_results_response(
+                        score_msgs, progress_msg
+                    )
+                    break
+                else:
+                    # Force re-query next time
+                    self.session.expire_all()
+                    yield False
 
     def FitSolution(self, message):
         # Generate request ID
@@ -366,7 +404,14 @@ class TaskManager:
             if task_complete:
                 # check if the task has an error
                 if task.error:
-                    raise RuntimeError("FitSolution task didn't complete successfully")
+                    # return error to ta3
+                    progress_msg = self.msg.make_progress_msg(
+                        "ERRORED", task.error_message
+                    )
+                    yield self.msg.make_get_fit_solution_results_response(
+                        None, progress_msg
+                    )
+                    break
 
                 # make a record of the fit itself
                 fit_solution = models.FitSolution(
@@ -386,9 +431,15 @@ class TaskManager:
                             task.request_id, output_key=task_key
                         )
                         if not preds_path.exists() and not preds_path.is_file():
-                            raise FileNotFoundError(
-                                "Predictions file {} doesn't exist".format(preds_path)
+                            # return error to ta3
+                            progress_msg = self.msg.make_progress_msg(
+                                "ERRORED",
+                                f"predictions file {preds_path} does not exist",
                             )
+                            yield self.msg.make_get_fit_solution_results_response(
+                                task.fit_solution_id, progress_msg, {}
+                            )
+                            break
 
                         preds_uri = pathlib.Path(preds_path).absolute().as_uri()
                         output_key_map[task_key] = preds_uri
@@ -419,9 +470,10 @@ class TaskManager:
         )
 
         if fit_solution is None:
-            raise ValueError(
+            self.logger.error(
                 "Fitted solution id {} doesn't exist".format(fitted_solution_id)
             )
+            return ""
 
         # add a produce task to the tasks table
         task_id = self._generate_id()
@@ -455,6 +507,8 @@ class TaskManager:
             message, self.session
         )
 
+        start = time.time()
+
         while True:
             task = (
                 self.session.query(models.Tasks)
@@ -468,13 +522,27 @@ class TaskManager:
             task_complete = task.ended
             if not task_complete:
                 self.logger.debug("PRODUCE task not complete, waiting")
+                if time.time() - start > config.PROGRESS_INTERVAL:
+                    start = time.time()
+                    progress_msg = self.msg.make_progress_msg("RUNNING")
+                    yield self.msg.make_get_produce_solution_results_response(
+                        {}, progress_msg
+                    )
+                else:
+                    yield False
                 yield False
             if task_complete:
                 # check if the task has an error
                 if task.error:
-                    raise RuntimeError(
-                        "ProduceSolution task didn't complete successfully"
+                    # return error to ta3
+                    progress_msg = self.msg.make_progress_msg(
+                        "ERRORED",
+                        task.error_message,
                     )
+                    yield self.msg.make_get_produce_solution_results_response(
+                        {}, progress_msg
+                    )
+                    break
 
                 # build a map of (output_key, URI)
                 task_keys = json.loads(task.output_keys)
@@ -497,9 +565,14 @@ class TaskManager:
                         output_type=selected_output_type,
                     )
                     if not preds_path.exists() and not preds_path.is_file():
-                        raise FileNotFoundError(
-                            "Predictions file {} doesn't exist".format(preds_path)
+                        # return error to ta3
+                        progress_msg = self.msg.make_progress_msg(
+                            "ERRORED", f"Predictions file {preds_path} does not exist"
                         )
+                        yield self.msg.make_get_produce_solution_results_response(
+                            {}, progress_msg
+                        )
+                        break
 
                     preds_uri = pathlib.Path(preds_path).absolute().as_uri()
                     output_key_map[task_key] = preds_uri

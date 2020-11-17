@@ -192,6 +192,7 @@ def create_pipeline(
         )
         step.add_output("produce")
         step.add_hyperparameter("scaling", ArgumentType.VALUE, "unit_norm")
+        step.add_hyperparameter("rank_confidences", ArgumentType.VALUE, False)
     else:
         # use random forest
         step = PrimitiveStep(

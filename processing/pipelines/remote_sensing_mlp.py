@@ -193,7 +193,8 @@ def create_pipeline(
         ArgumentType.VALUE,
         os.path.join(config.OUTPUT_DIR, "mlp_classifier.pth"),
     )
-    step.add_hyperparameter("image_dim", ArgumentType.VALUE, 120)
+    # always return a 4x4 explanation matrix
+    step.add_hyperparameter("image_dim", ArgumentType.VALUE, 4)
     step.add_output("produce")
     image_pipeline.add_step(step)
     previous_step += 1

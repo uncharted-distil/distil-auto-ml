@@ -1,4 +1,4 @@
-FROM registry.gitlab.com/datadrivendiscovery/images/primitives:ubuntu-bionic-python36-v2020.5.18-20200630-050709
+FROM registry.gitlab.com/datadrivendiscovery/images/primitives:ubuntu-bionic-python36-stable-20201102-215424
 
 ENV PYTHONPATH=$PYTHONPATH:/app
 ENV DEBIAN_FRONTEND=noninteractive
@@ -20,17 +20,20 @@ RUN mkdir ./sherpa_temp
 RUN apt-get install -y zlib1g-dev
 RUN apt-get install -y liblzo2-dev
 
-ARG CACHEBUSTER=0
-RUN pip3 install -e git+https://github.com/uncharted-distil/distil-fuzzy-join.git@d171c9dc29d699dba10c1fdd5f00db8bbdd37f7d#egg=DistilFuzzyJoin
 
-# Update to latest common primitives version
-RUN pip3 install -e git+https://gitlab.com/datadrivendiscovery/common-primitives.git@50ee0f94b1f9d45f3077f7d8aae2b6cb5cde1f95#egg=CommonPrimitives
+ARG CACHEBUSTER=0
+
+# Update to latest d3m and common primitives versions - can remove when final image is produced
+RUN pip3 install -e git+https://gitlab.com/datadrivendiscovery/d3m.git@c3e41c5d80c8ec1cd2099a3916783367c7cccc23#egg=D3M
+RUN pip3 install -e git+https://gitlab.com/datadrivendiscovery/common-primitives.git@59188125857835edb10002e6a666ae2dfed702a5#egg=CommonPrimitives
+
+RUN pip3 install -e git+https://github.com/uncharted-distil/distil-fuzzy-join.git@d171c9dc29d699dba10c1fdd5f00db8bbdd37f7d#egg=DistilFuzzyJoin
 
 # Update as needed when new versions not built into base image
 RUN rm -rf /src/distil-primitives
 RUN rm -rf /app/src/distilprimitives
-RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git@7bde08e46509ee6afd37d5ce0c39616aa17bf0cb#egg=DistilPrimitives
-RUN pip3 install -e git+https://github.com/kungfuai/d3m-primitives.git@653c335c6182110d4becb1025374de946f960bcc#egg=kf-d3m-primitives
+RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git@d7a0815648f672e9fec9adfdd2e7325e068d6972#egg=DistilPrimitives
+RUN pip3 install -e git+https://github.com/kungfuai/d3m-primitives.git@50a9c46c1e8a11d1567897a75830d76837ac4be9#egg=kf-d3m-primitives
 
 # manually install python-lzo, since it is installed via d3m build process and can't be included in the setup.py
 RUN pip3 install python-lzo==1.12
