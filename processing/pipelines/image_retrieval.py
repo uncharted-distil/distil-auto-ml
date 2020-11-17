@@ -6,6 +6,7 @@ from common_primitives.denormalize import DenormalizePrimitive
 from common_primitives.extract_columns_semantic_types import (
     ExtractColumnsBySemanticTypesPrimitive,
 )
+from common_primitives.add_semantic_types import AddSemanticTypesPrimitive
 
 from d3m import utils
 from d3m.metadata.base import ArgumentType
@@ -24,6 +25,7 @@ def create_pipeline(
     min_meta: bool = False,
     batch_size: int = 256,
     gem_p: int = 1,
+    reduce_dimension: int = 32,
     n_jobs: int = -1,
     resolver: Optional[Resolver] = None,
 ) -> Pipeline:
@@ -31,6 +33,7 @@ def create_pipeline(
     # create the basic pipeline
     image_pipeline = Pipeline()
     image_pipeline.add_input(name="inputs")
+    image_pipeline.add_input(name="annotations")
 
     # step 0 - denormalize dataframe (N.B.: injects semantic type information)
     step = PrimitiveStep(
@@ -134,18 +137,18 @@ def create_pipeline(
     remote_step = previous_step
 
     # step 6
-    # step = PrimitiveStep(
-    #     primitive_description=DatasetToDataFramePrimitive.metadata.query(),
-    #     resolver=resolver,
-    # )
-    # step.add_argument(
-    #     name="inputs",
-    #     argument_type=ArgumentType.CONTAINER,
-    #     data_reference="inputs.1",  # input_val.format(image_step),
-    # )
-    # step.add_output("produce")
-    # image_pipeline.add_step(step)
-    # previous_step += 1
+    step = PrimitiveStep(
+        primitive_description=DatasetToDataFramePrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference="inputs.1",
+    )
+    step.add_output("produce")
+    image_pipeline.add_step(step)
+    previous_step += 1
 
     # step 7
     step = PrimitiveStep(
@@ -160,10 +163,35 @@ def create_pipeline(
     step.add_argument(
         name="outputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(df_step),
+        data_reference=input_val.format(previous_step),
     )
     step.add_output("produce")
     step.add_hyperparameter(name="gem_p", argument_type=ArgumentType.VALUE, data=gem_p)
+    step.add_hyperparameter(
+        name="reduce_dimension", argument_type=ArgumentType.VALUE, data=reduce_dimension
+    )
+    image_pipeline.add_step(step)
+    previous_step += 1
+
+    step = PrimitiveStep(
+        primitive_description=AddSemanticTypesPrimitive.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(previous_step),
+    )
+    step.add_output("produce")
+    step.add_hyperparameter("columns", ArgumentType.VALUE, [1])
+    step.add_hyperparameter(
+        "semantic_types",
+        ArgumentType.VALUE,
+        [
+            "https://metadata.datadrivendiscovery.org/types/PredictedTarget",
+            "https://metadata.datadrivendiscovery.org/types/Score",
+        ],
+    )
     image_pipeline.add_step(step)
     previous_step += 1
 
