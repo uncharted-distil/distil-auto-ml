@@ -68,7 +68,6 @@ PIPE_TO_DATASET = {
         "rootMeanSquaredError",
         {},
     ),
-    "timeseries_classification": ("LL1_50words_MIN_METADATA", "f1Macro", {}),
     "timeseries_kanine": ("LL1_50words_MIN_METADATA", "f1Macro", {}),
     "timeseries_var": (
         "LL1_736_population_spawn_simpler_MIN_METADATA",
@@ -117,8 +116,8 @@ SUBMISSION_SUBSET = set(
         "text",
         "vertex_nomination",
         "remote_sensing",
-        "remote_sensing_mlp",
-        "timeseries_var",
+        "timeseries_var",  # covers timeseries binning
+        "timeseries_kanine",  # covers timeseries formatter
         "common",
         "mi_ranking",
     ]
