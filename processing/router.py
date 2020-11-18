@@ -27,9 +27,7 @@ def get_resource_types(dataset_doc: dict) -> Sequence[str]:
 def is_tabular(dataset_doc: dict, problem_desc: dict) -> bool:
     resource_types = get_resource_types(dataset_doc)
     task_keywords = problem_desc["problem"]["task_keywords"]
-    if "data_augmentation" in problem_desc:
-        return False
-    elif (
+    if (
         len(
             set(task_keywords)
             & set(
@@ -213,21 +211,6 @@ def is_semisupervised_tabular(problem: dict) -> bool:
     return _problem.TaskKeyword.SEMISUPERVISED in problem["problem"]["task_keywords"]
 
 
-def is_data_augmentation_tabular(dataset_doc: dict, problem: dict) -> bool:
-    is_data_aug = True if "data_augmentation" in problem else False
-    is_classification_regression = (
-        len(
-            set(problem["problem"]["task_keywords"])
-            & set(
-                [_problem.TaskKeyword.REGRESSION, _problem.TaskKeyword.CLASSIFICATION]
-            )
-        )
-        > 0
-    )
-    is_tabular = ["table"] == get_resource_types(dataset_doc)
-    return is_data_aug and is_classification_regression and is_tabular
-
-
 # --
 # Routing
 
@@ -351,9 +334,6 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
     elif is_semisupervised_tabular(problem):
         # return 'table', {'semi': True}
         return "semisupervised_tabular", {}
-
-    elif is_data_augmentation_tabular(dataset_doc, problem):
-        return "data_augmentation_tabular", problem["data_augmentation"]
 
     else:
         raise Exception("!! router failed on problem")

@@ -74,7 +74,6 @@ PIPE_TO_DATASET = {
         "meanAbsoluteError",
         {},
     ),
-    "timeseries_deepar": ("56_sunspots_MIN_METADATA", "meanAbsoluteError", {}),
     "timeseries_nbeats": (
         "LL1_terra_canopy_height_long_form_s4_80_MIN_METADATA",
         "meanAbsoluteError",
@@ -89,11 +88,6 @@ PIPE_TO_DATASET = {
     "vertex_classification": ("LL1_VTXC_1369_synthetic_MIN_METADATA", "f1Macro", {}),
     "semisupervised_tabular": ("SEMI_1040_sylva_prior_MIN_METADATA", "f1Macro", {}),
     "timeseries_lstm_fcn": ("LL1_50words_MIN_METADATA", "f1Macro", {}),
-    "data_augmentation_tabular": (
-        "DA_ny_taxi_demand_MIN_METADATA",
-        "meanAbsoluteError",
-        {},
-    ),
     "mi_ranking": ("185_baseball_MIN_METADATA", "f1Macro", {}),
     "remote_sensing": ("LL1_bigearth_landuse_detection", "f1Macro", {"svc": True}),
     "remote_sensing_mlp": ("LL1_bigearth_landuse_detection", "f1Macro", {}),

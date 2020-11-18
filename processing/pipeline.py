@@ -75,8 +75,6 @@ import signal
 import psutil
 import copy
 
-# data_augmentation_tabular)
-
 logger = logging.getLogger(__name__)
 
 
@@ -385,12 +383,6 @@ def create(
                 resolver=resolver,
                 exclude_column=exclude_column,
                 profiler="simple",
-            )
-        )
-    elif pipeline_type == "data_augmentation_tabular":
-        pipelines.append(
-            data_augmentation_tabular.create_pipeline(
-                metric, dataset=train_dataset, keywords=pipeline_info, resolver=resolver
             )
         )
     else:
