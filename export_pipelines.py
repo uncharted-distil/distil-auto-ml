@@ -32,9 +32,14 @@ META_DIR = "pipelines"
 # and metric for pipeline config.  This is intended to cover the full set of pipelines.
 PIPE_TO_DATASET = {
     "tabular": (
-        "LL0_acled_reduced_MIN_METADATA",
+        "185_baseball_MIN_METADATA",
         "f1Macro",
-        {"profiler": "simple", "use_boost": False, "grid_search": True},
+        {
+            "profiler": "simple",
+            "use_boost": False,
+            "grid_search": True,
+            "compute_confidences": False,
+        },
     ),
     "audio": ("31_urbansound_MIN_METADATA", "accuracy", {}),
     "clustering": (
