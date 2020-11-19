@@ -116,7 +116,7 @@ def create_pipeline(
     step.add_hyperparameter("parsing_semantics", ArgumentType.VALUE, semantic_types)
     image_pipeline.add_step(step)
     previous_step += 1
-    # parse_step = previous_step
+    parse_step = previous_step
 
     step = PrimitiveStep(
         primitive_description=VectorBoundsFilterPrimitive.metadata.query(),
@@ -137,7 +137,7 @@ def create_pipeline(
     step.add_hyperparameter("maxs", ArgumentType.VALUE, [40, 45])
     image_pipeline.add_step(step)
     previous_step += 1
-    filter_step = previous_step
+    # filter_step = previous_step
 
     # step 4 - extract attributes
     # Extract attributes
@@ -148,7 +148,7 @@ def create_pipeline(
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(previous_step),
+        data_reference=input_val.format(parse_step),
     )
     step.add_output("produce")
     step.add_hyperparameter(
@@ -168,7 +168,7 @@ def create_pipeline(
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(filter_step),
+        data_reference=input_val.format(parse_step),
     )
     step.add_output("produce")
     target_types = (
@@ -253,7 +253,7 @@ def create_pipeline(
     step.add_argument(
         name="reference",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(filter_step),
+        data_reference=input_val.format(parse_step),
     )
     step.add_output("produce")
     step.add_hyperparameter("use_columns", ArgumentType.VALUE, [0, 1])

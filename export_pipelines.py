@@ -120,6 +120,7 @@ SUBMISSION_SUBSET = set(
         "timeseries_kanine",  # covers timeseries formatter
         "common",
         "mi_ranking",
+        "remote_sensing_filtered",  # covers vector bounds filter
     ]
 )
 
