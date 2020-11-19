@@ -280,6 +280,17 @@ def create(
                     **pipeline_info,
                 )
             )
+            if max_models > 1:
+                pipelines.append(
+                    remote_sensing.create_pipeline(
+                        metric=metric,
+                        resolver=resolver,
+                        n_jobs=n_jobs,
+                        svc=False,
+                        batch_size=config.REMOTE_SENSING_BATCH_SIZE,
+                        **pipeline_info,
+                    )
+                )
     elif pipeline_type == "remote_sensing_pretrained":
         pipelines.append(
             remote_sensing_pretrained.create_pipeline(
