@@ -97,6 +97,7 @@ PIPE_TO_DATASET = {
     "remote_sensing": ("LL1_bigearth_landuse_detection", "f1Macro", {"svc": True}),
     "remote_sensing_mlp": ("LL1_bigearth_landuse_detection", "f1Macro", {}),
     "common": ("LL0_acled_reduced_MIN_METADATA", "f1Macro", {}),
+    "remote_sensing_filtered": ("LL1_bigearth_landuse_detection", "f1Macro", {}),
 }
 
 # Subset of pipelines that are aimed at coverage of only the primitives that we intend to
@@ -171,7 +172,12 @@ if __name__ == "__main__":
 
     # List all the pipelines
     PIPELINES_DIR = "processing/pipelines"
-    pipelines = [f for f in os.listdir(PIPELINES_DIR) if ".py" in f]
+    VALIDATION_PIPELINES_DIR = "processing/validation_pipelines"
+    pipelines = [
+        f
+        for f in os.listdir(PIPELINES_DIR) + os.listdir(VALIDATION_PIPELINES_DIR)
+        if ".py" in f
+    ]
 
     # For each pipeline, load it and export it
     for pipe in pipelines:
@@ -185,7 +191,10 @@ if __name__ == "__main__":
         print("Handling {}...".format(p))
 
         try:
-            lib = importlib.import_module("processing.pipelines." + p)
+            try:
+                lib = importlib.import_module("processing.pipelines." + p)
+            except ModuleNotFoundError:
+                lib = importlib.import_module("processing.validation_pipelines." + p)
             dataset_to_use, metric, hyperparams = PIPE_TO_DATASET[p]
             pipe_obj = lib.create_pipeline(metric=metric, **hyperparams)
             pipe_json = pipe_obj[0].to_json_structure()
