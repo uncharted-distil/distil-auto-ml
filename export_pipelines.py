@@ -38,7 +38,7 @@ PIPE_TO_DATASET = {
             "profiler": "simple",
             "use_boost": False,
             "grid_search": True,
-            "compute_confidences": False,
+            "compute_confidences": True,
         },
     ),
     "audio": ("31_urbansound_MIN_METADATA", "accuracy", {}),
@@ -80,7 +80,7 @@ PIPE_TO_DATASET = {
         {},
     ),
     "timeseries_nbeats": (
-        "LL1_terra_canopy_height_long_form_s4_80_MIN_METADATA",
+        "LL1_736_population_spawn_simpler_MIN_METADATA",
         "meanAbsoluteError",
         {},
     ),
