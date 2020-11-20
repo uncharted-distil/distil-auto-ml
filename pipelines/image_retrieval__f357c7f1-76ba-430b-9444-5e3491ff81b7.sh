@@ -1,3 +1,0 @@
-#!/bin/bash
-python3 -m d3m runtime -v $D3MSTATICDIR -d $D3MINPUTDIR fit-score -r $D3MINPUTDIR/LL1_bigearth_landuse_detection/LL1_bigearth_landuse_detection_problem/problemDoc.json 	-i $D3MINPUTDIR/LL1_bigearth_landuse_detection/TRAIN/dataset_TRAIN/datasetDoc.json -t $D3MINPUTDIR/LL1_bigearth_landuse_detection/TEST/dataset_TEST/datasetDoc.json -a $D3MINPUTDIR/LL1_bigearth_landuse_detection/SCORE/dataset_SCORE/datasetDoc.json -p pipelines/image_retrieval__f357c7f1-76ba-430b-9444-5e3491ff81b7.json -O pipelines/image_retrieval__f357c7f1-76ba-430b-9444-5e3491ff81b7_run.yaml && 
-gzip -f pipelines/image_retrieval__f357c7f1-76ba-430b-9444-5e3491ff81b7_run.yaml
