@@ -47,4 +47,4 @@ HYPERPARAMETER_TUNING = os.getenv("HYPERPARAMETER_TUNING", "True") == "True"
 N_JOBS = int(os.getenv("N_JOBS", -1))
 
 # enable use of mlp classifier + gradcam visualization
-MLP_CLASSIFIER = os.getenv("MLP_CLASSIFIER", "True") == "True"
+MLP_CLASSIFIER = os.getenv("MLP_CLASSIFIER", "False") == "True"
