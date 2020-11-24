@@ -75,8 +75,6 @@ import signal
 import psutil
 import copy
 
-# data_augmentation_tabular)
-
 logger = logging.getLogger(__name__)
 
 
@@ -282,6 +280,17 @@ def create(
                     **pipeline_info,
                 )
             )
+            if max_models > 1:
+                pipelines.append(
+                    remote_sensing.create_pipeline(
+                        metric=metric,
+                        resolver=resolver,
+                        n_jobs=n_jobs,
+                        svc=False,
+                        batch_size=config.REMOTE_SENSING_BATCH_SIZE,
+                        **pipeline_info,
+                    )
+                )
     elif pipeline_type == "remote_sensing_pretrained":
         pipelines.append(
             remote_sensing_pretrained.create_pipeline(
@@ -385,12 +394,6 @@ def create(
                 resolver=resolver,
                 exclude_column=exclude_column,
                 profiler="simple",
-            )
-        )
-    elif pipeline_type == "data_augmentation_tabular":
-        pipelines.append(
-            data_augmentation_tabular.create_pipeline(
-                metric, dataset=train_dataset, keywords=pipeline_info, resolver=resolver
             )
         )
     else:

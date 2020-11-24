@@ -32,9 +32,14 @@ META_DIR = "pipelines"
 # and metric for pipeline config.  This is intended to cover the full set of pipelines.
 PIPE_TO_DATASET = {
     "tabular": (
-        "LL0_acled_reduced_MIN_METADATA",
+        "185_baseball_MIN_METADATA",
         "f1Macro",
-        {"profiler": "simple", "use_boost": False, "grid_search": True},
+        {
+            "profiler": "simple",
+            "use_boost": False,
+            "grid_search": True,
+            "compute_confidences": True,
+        },
     ),
     "audio": ("31_urbansound_MIN_METADATA", "accuracy", {}),
     "clustering": (
@@ -68,16 +73,14 @@ PIPE_TO_DATASET = {
         "rootMeanSquaredError",
         {},
     ),
-    "timeseries_classification": ("LL1_50words_MIN_METADATA", "f1Macro", {}),
     "timeseries_kanine": ("LL1_50words_MIN_METADATA", "f1Macro", {}),
     "timeseries_var": (
         "LL1_736_population_spawn_simpler_MIN_METADATA",
         "meanAbsoluteError",
         {},
     ),
-    "timeseries_deepar": ("56_sunspots_MIN_METADATA", "meanAbsoluteError", {}),
     "timeseries_nbeats": (
-        "LL1_terra_canopy_height_long_form_s4_80_MIN_METADATA",
+        "LL1_736_population_spawn_simpler_MIN_METADATA",
         "meanAbsoluteError",
         {},
     ),
@@ -90,15 +93,15 @@ PIPE_TO_DATASET = {
     "vertex_classification": ("LL1_VTXC_1369_synthetic_MIN_METADATA", "f1Macro", {}),
     "semisupervised_tabular": ("SEMI_1040_sylva_prior_MIN_METADATA", "f1Macro", {}),
     "timeseries_lstm_fcn": ("LL1_50words_MIN_METADATA", "f1Macro", {}),
-    "data_augmentation_tabular": (
-        "DA_ny_taxi_demand_MIN_METADATA",
-        "meanAbsoluteError",
-        {},
-    ),
     "mi_ranking": ("185_baseball_MIN_METADATA", "f1Macro", {}),
-    "remote_sensing": ("LL1_bigearth_landuse_detection", "f1Macro", {"svc": True}),
+    "remote_sensing": (
+        "LL1_bigearth_landuse_detection",
+        "f1Macro",
+        {"svc": True, "confidences": False},
+    ),
     "remote_sensing_mlp": ("LL1_bigearth_landuse_detection", "f1Macro", {}),
     "common": ("LL0_acled_reduced_MIN_METADATA", "f1Macro", {}),
+    "remote_sensing_filtered": ("LL1_bigearth_landuse_detection", "f1Macro", {}),
     "image_retrieval": (
         "LL1_bigearth_landuse_detection",
         "f1Macro",
@@ -127,10 +130,11 @@ SUBMISSION_SUBSET = set(
         "text",
         "vertex_nomination",
         "remote_sensing",
-        "remote_sensing_mlp",
-        "timeseries_var",
+        "timeseries_var",  # covers timeseries binning
+        "timeseries_kanine",  # covers timeseries formatter
         "common",
         "mi_ranking",
+        "remote_sensing_filtered",  # covers vector bounds filter
     ]
 )
 
@@ -183,7 +187,12 @@ if __name__ == "__main__":
 
     # List all the pipelines
     PIPELINES_DIR = "processing/pipelines"
-    pipelines = [f for f in os.listdir(PIPELINES_DIR) if ".py" in f]
+    VALIDATION_PIPELINES_DIR = "processing/validation_pipelines"
+    pipelines = [
+        f
+        for f in os.listdir(PIPELINES_DIR) + os.listdir(VALIDATION_PIPELINES_DIR)
+        if ".py" in f
+    ]
 
     # For each pipeline, load it and export it
     for pipe in pipelines:
@@ -197,7 +206,10 @@ if __name__ == "__main__":
         print("Handling {}...".format(p))
 
         try:
-            lib = importlib.import_module("processing.pipelines." + p)
+            try:
+                lib = importlib.import_module("processing.pipelines." + p)
+            except ModuleNotFoundError:
+                lib = importlib.import_module("processing.validation_pipelines." + p)
             dataset_to_use, metric, hyperparams = PIPE_TO_DATASET[p]
             pipe_obj = lib.create_pipeline(metric=metric, **hyperparams)
             pipe_json = pipe_obj[0].to_json_structure()

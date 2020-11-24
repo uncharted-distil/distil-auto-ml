@@ -16,7 +16,6 @@ from d3m.primitives.remote_sensing.remote_sensing_pretrained import (
     RemoteSensingPretrained,
 )
 from d3m.primitives.remote_sensing.mlp import MlpClassifier
-from distil.primitives.label_encoder import SKLabelEncoder
 from distil.primitives.satellite_image_loader import (
     DataFrameSatelliteImageLoaderPrimitive,
 )

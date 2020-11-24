@@ -44,6 +44,7 @@ def create_pipeline(
     use_boost: bool = True,
     grid_search=False,
     n_jobs: int = -1,
+    compute_confidences=True,
     resolver: Optional[Resolver] = None,
 ) -> Pipeline:
     input_val = "steps.{}.produce"
@@ -371,7 +372,9 @@ def create_pipeline(
         )
         step.add_hyperparameter("grid_search", ArgumentType.VALUE, grid_search)
         step.add_hyperparameter("small_dataset_fits", ArgumentType.VALUE, 1)
-        step.add_hyperparameter("compute_confidences", ArgumentType.VALUE, True)
+        step.add_hyperparameter(
+            "compute_confidences", ArgumentType.VALUE, compute_confidences
+        )
         step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
     step.add_argument(
         name="inputs",
