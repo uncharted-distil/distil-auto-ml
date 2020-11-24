@@ -102,6 +102,11 @@ PIPE_TO_DATASET = {
     "image_retrieval": (
         "LL1_bigearth_landuse_detection",
         "f1Macro",
+        {"gem_p": 1, "reduce_dimension": 22},
+    ),
+    "image_retrieval_featurized": (
+        "LL1_bigearth_landuse_detection",
+        "f1Macro",
         {"gem_p": 1, "reduce_dimension": 32},
     ),
 }
