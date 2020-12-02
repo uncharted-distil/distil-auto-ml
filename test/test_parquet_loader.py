@@ -18,6 +18,7 @@ from ast import literal_eval
 import unittest
 from os import path
 import urllib.parse
+import numpy as np
 
 from d3m import container
 from d3m.metadata import base as metadata_base
@@ -46,6 +47,7 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
         self.assertFalse(loader.can_load(dataset_url))
 
     def test_load(self) -> None:
+
         dataset_path = path.join(_parquet_dataset_path, "datasetDoc.json")
         dataset_url = urllib.parse.urlunparse(("file", "", dataset_path, "", "", ""))
         loader = ParquetDatasetLoader()
@@ -71,7 +73,7 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 0))[
                 "structural_type"
             ],
-            int,
+            np.int64,
         )
         self.assertEqual(
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 0))[
@@ -93,7 +95,7 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 1))[
                 "structural_type"
             ],
-            int,
+            np.int64,
         )
         self.assertEqual(
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 1))[
@@ -115,7 +117,7 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 2))[
                 "structural_type"
             ],
-            float,
+            np.float64,
         )
         self.assertEqual(
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 2))[
@@ -137,7 +139,7 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 3))[
                 "structural_type"
             ],
-            str,
+            np.object_,
         )
         self.assertEqual(
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 3))[
@@ -159,7 +161,7 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 4))[
                 "structural_type"
             ],
-            str,
+            np.object_,
         )
         self.assertEqual(
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 4))[
@@ -181,7 +183,7 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 5))[
                 "structural_type"
             ],
-            container.ndarray,
+            np.object_,
         )
         self.assertEqual(
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 5))[
@@ -203,7 +205,7 @@ class ParquetDatasetLoaderTestCase(unittest.TestCase):
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 6))[
                 "structural_type"
             ],
-            container.ndarray,
+            np.object_,
         )
         self.assertEqual(
             dataset.metadata.query(("learningData", metadata_base.ALL_ELEMENTS, 6))[
