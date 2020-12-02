@@ -18,19 +18,6 @@ from d3m.container.dataset import (
 from d3m import exceptions
 from pandas.core.arrays.sparse import dtype
 
-D3M_COLUMN_TYPE_CONSTANTS_TO_STRUCT_TYPES = {
-    "boolean": bool,
-    "integer": int,
-    "real": float,
-    "string": str,
-    "categorical": str,
-    "dateTime": str,
-    "realVector": container_ndarray,
-    "json": str,
-    "geojson": str,
-    "unknown": str,
-}
-
 logger = logging.getLogger(__name__)
 
 
@@ -262,13 +249,12 @@ class ParquetDatasetLoader(D3MDatasetLoader):
                     D3M_ROLE_CONSTANTS_TO_SEMANTIC_TYPES[role]
                     for role in col_data["role"]
                 ]
+                structural_type = df.dtypes[i].type
                 metadata = metadata.update(
                     ("learningData", metadata_base.ALL_ELEMENTS, i),
                     {
                         "name": column_name,
-                        "structural_type": D3M_COLUMN_TYPE_CONSTANTS_TO_STRUCT_TYPES[
-                            col_data["colType"]
-                        ],
+                        "structural_type": structural_type,
                         "semantic_types": semantic_types,
                     },
                 )
