@@ -69,6 +69,7 @@ from processing.pipelines import (
     timeseries_lstm_fcn,
     semisupervised_tabular,
     timeseries_deepar,
+    timeseries_nbeats,
 )
 import pymongo
 import signal
@@ -373,6 +374,10 @@ def create(
             timeseries_var.create_pipeline(metric=metric, resolver=resolver)
         )
         if max_models > 1:
+            pipelines.append(
+                timeseries_nbeats.create_pipeline(metric=metric, resolver=resolver)
+            )
+        if max_models > 2:
             pipelines.append(
                 timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
             )
