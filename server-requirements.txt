@@ -23,5 +23,6 @@ gputil==1.3.0
 # Hyperparameter tuning
 -e git://github.com/BalazsHoranyi/sherpa@v1.0.6_bool#egg=parameter-sherpa
 
-# fastparquet for parquet data loading
+# fastparquet + snappy for parquet save/loads
 fastparquet==0.4.1
+python-snappy==0.5.4
