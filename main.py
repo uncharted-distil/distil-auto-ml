@@ -46,7 +46,7 @@ def produce_task(logger, session, server, task):
             test_dataset = server.get_loaded_dataset(dataset_uri)
             if test_dataset is None:
                 test_dataset = load_data(dataset_uri)
-            test_datasets.append(train_dataset)
+            test_datasets.append(test_dataset)
         results = ex_pipeline.produce(
             fitted_runtime, test_datasets, outputs_to_expose=output_keys
         )
