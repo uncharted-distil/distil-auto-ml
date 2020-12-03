@@ -37,6 +37,9 @@ class TaskManager:
         _id = utils.generate_id()
         return _id
 
+    def _encode_dataset_uri(self, dataset_uri):
+        return ",".join(dataset_uri)
+
     def SearchSolutions(self, message):
 
         """Get potential pipelines and load into DB."""
@@ -81,7 +84,7 @@ class TaskManager:
             problem=problem_json,
             time_limit=time_limit,
             max_models=max_models,
-            dataset_uri=dataset_uri,
+            dataset_uri=self._encode_dataset_uri(dataset_uri),
             search_template=search_template_json,
         )
 
@@ -209,7 +212,7 @@ class TaskManager:
             request_id=request_id,
             solution_id=solution_id,
             fit_solution_id=fit_solution_id,
-            dataset_uri=dataset_uri,
+            dataset_uri=self._encode_dataset_uri(dataset_uri),
             score_config_id=conf_id,
             problem=search.problem,
             pipeline=pipeline_json,
@@ -354,7 +357,7 @@ class TaskManager:
             request_id=request_id,
             fit_solution_id=fit_solution_id,
             solution_id=solution_id,
-            dataset_uri=dataset_uri,
+            dataset_uri=self._encode_dataset_uri(dataset_uri),
             pipeline=pipeline_json,
             problem=search.problem,
             fully_specified=fully_specified,
@@ -483,7 +486,7 @@ class TaskManager:
             request_id=request_id,
             fit_solution_id=fitted_solution_id,
             solution_id=fit_solution.solution_id,
-            dataset_uri=dataset_uri,
+            dataset_uri=self._encode_dataset_uri(dataset_uri),
             output_keys=output_keys_json,
             output_types=output_types_json,
         )

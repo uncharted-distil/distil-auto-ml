@@ -467,7 +467,7 @@ def create(
 def fit(
     pipeline: pipeline.Pipeline,
     problem: problem.Problem,
-    input_dataset: container.Dataset,
+    input_datasets: typing.Iterable[container.Dataset],
     is_standard_pipeline=True,
     outputs_to_expose: typing.Iterable[str] = None,
 ) -> Tuple[Optional[runtime.Runtime], Optional[runtime.Result]]:
@@ -477,7 +477,7 @@ def fit(
 
     fitted_runtime, _, result = runtime.fit(
         pipeline,
-        [input_dataset],
+        input_datasets,
         problem_description=problem,
         hyperparams=hyperparams,
         random_seed=random_seed,
@@ -496,12 +496,12 @@ def fit(
 
 def produce(
     fitted_pipeline: runtime.Runtime,
-    input_dataset: container.Dataset,
+    input_datasets: typing.Iterable[container.Dataset],
     outputs_to_expose: typing.Iterable[str] = None,
 ) -> runtime.Result:
     _, result = runtime.produce(
         fitted_pipeline,
-        [input_dataset],
+        input_datasets,
         expose_produced_outputs=True,
         outputs_to_expose=outputs_to_expose,
     )

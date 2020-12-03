@@ -28,6 +28,9 @@ from server import messages
 pathlib.Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
 
+def decode_dataset_uri(dataset_uri):
+    return dataset_uri.split(",")
+
 def produce_task(logger, session, server, task):
     try:
         logger.info("Starting produce task ID {}".format(task.id))
@@ -37,11 +40,15 @@ def produce_task(logger, session, server, task):
 
         # call produce on a fitted pipeline
         fitted_runtime = server.get_fitted_runtime(task.fit_solution_id)
-        test_dataset = server.get_loaded_dataset(task.dataset_uri)
-        if test_dataset is None:
-            test_dataset = load_data(task.dataset_uri)
+        dataset_uris = decode_dataset_uri(task.dataset_uri)
+        test_datasets = []
+        for dataset_uri in dataset_uris:
+            test_dataset = server.get_loaded_dataset(dataset_uri)
+            if test_dataset is None:
+                test_dataset = load_data(dataset_uri)
+            test_datasets.append(test_dataset)
         results = ex_pipeline.produce(
-            fitted_runtime, test_dataset, outputs_to_expose=output_keys
+            fitted_runtime, test_datasets, outputs_to_expose=output_keys
         )
 
         # loop over the (ordered) list of requested output types until we find one that we support
@@ -178,13 +185,17 @@ def fit_task(logger, session, server, task):
         # it doesn't need to be serialized.
         run_as_standard = not task.fully_specified
 
-        train_dataset = server.get_loaded_dataset(task.dataset_uri)
-        if train_dataset is None:
-            train_dataset = load_data(task.dataset_uri)
+        dataset_uris = decode_dataset_uri(task.dataset_uri)
+        train_datasets = []
+        for dataset_uri in dataset_uris:
+            train_dataset = server.get_loaded_dataset(dataset_uri)
+            if train_dataset is None:
+                train_dataset = load_data(dataset_uri)
+            train_datasets.append(train_dataset)
         fitted_runtime, result = ex_pipeline.fit(
             pipeline_obj,
             problem_obj,
-            train_dataset,
+            train_datasets,
             is_standard_pipeline=run_as_standard,
             outputs_to_expose=output_keys,
         )
@@ -281,15 +292,19 @@ def search_task(logger, session, server, search):
         )
 
         # based on our problem type and data type, create a pipeline
+        dataset_uris = decode_dataset_uri(search.dataset_uri)
+        dataset_uri = ""
+        if len(dataset_uris) > 0:
+            dataset_uri = dataset_uris[0]
         pipeline_objs, dataset, ranks = ex_pipeline.create(
-            search.dataset_uri,
+            dataset_uri,
             problem_obj,
             search.time_limit,
             search.max_models,
             search_template_obj,
             resolver=resolver,
         )
-        server.add_loaded_dataset(search.dataset_uri, dataset)
+        server.add_loaded_dataset(dataset_uri, dataset)
         for i, pipeline_obj in enumerate(pipeline_objs):
             pipeline_json = pipeline_obj.to_json(nest_subpipelines=True)
 
