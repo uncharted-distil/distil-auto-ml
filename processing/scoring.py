@@ -152,7 +152,7 @@ class Scorer:
         # produce predictions from the fitted model and extract to single col dataframe
         # with the d3mIndex as the index
         _in = copy.deepcopy(self.inputs)
-        results = pipeline.produce(self.fitted_pipeline, _in)
+        results = pipeline.produce(self.fitted_pipeline, (_in,))
         # Not sure how to do this properly - we assume that we will use `outputs.0` for scoring, but it is
         # possible that, in a non-standard pipeline, `outputs.0` could be the output from another step,
         # and `outputs.1` contains the predictions.
