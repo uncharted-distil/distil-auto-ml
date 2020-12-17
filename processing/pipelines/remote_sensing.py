@@ -20,6 +20,7 @@ from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.satellite_image_loader import (
     DataFrameSatelliteImageLoaderPrimitive,
 )
+from distil.primitives.prefeaturised_pooler import PrefeaturisedPoolingPrimitive
 
 # Overall implementation relies on passing the entire dataset through the pipeline, with the primitives
 # identifying columns to operate on based on type.  Alternative implementation (that better lines up with
@@ -162,6 +163,20 @@ def create_pipeline(
     # step 6 - featurize imagery
     step = PrimitiveStep(
         primitive_description=RemoteSensingPretrained.metadata.query(),
+        resolver=resolver,
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(attributes_step),
+    )
+    step.add_output("produce")
+    step.add_hyperparameter("batch_size", ArgumentType.VALUE, batch_size)
+    image_pipeline.add_step(step)
+    previous_step += 1
+
+    step = PrimitiveStep(
+        primitive_description=PrefeaturisedPoolingPrimitive.metadata.query(),
         resolver=resolver,
     )
     step.add_argument(

@@ -52,14 +52,14 @@ from processing.pipelines import (
     remote_sensing_mlp,
     remote_sensing_pretrained,
     # object_detection,
-    object_detection_yolo,
+    # object_detection_yolo,
     question_answer,
     tabular,
     text,
     text_sent2vec,
     link_prediction,
     link_prediction_jhu,
-    audio,
+    # audio,
     vertex_nomination,
     # vertex_nomination_jhu,
     # vertex_classification,
@@ -297,7 +297,8 @@ def create(
             remote_sensing_pretrained.create_pipeline(
                 metric=metric,
                 resolver=resolver,
-                use_linear_svc=True,
+                predictive_primitive="svc",
+                is_pooled=False,
                 n_jobs=n_jobs,
                 **pipeline_info,
             )
@@ -307,21 +308,32 @@ def create(
                 remote_sensing_pretrained.create_pipeline(
                     metric=metric,
                     resolver=resolver,
-                    use_linear_svc=False,
+                    predictive_primitive="forest",
+                    is_pooled=False,
                     n_jobs=n_jobs,
                     **pipeline_info,
                 )
             )
-    elif pipeline_type == "object_detection":
-        # pipelines.append(
-        #     object_detection.create_pipeline(
-        #         metric=metric, resolver=resolver
-        #     ))
-        pipelines.append(
-            object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
-        )
-    elif pipeline_type == "audio":
-        pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))
+            pipelines.append(
+                remote_sensing_pretrained.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    predictive_primitive="mlp",
+                    is_pooled=False,
+                    n_jobs=n_jobs,
+                    **pipeline_info,
+                )
+            )
+    # elif pipeline_type == "object_detection":
+    #     # pipelines.append(
+    #     #     object_detection.create_pipeline(
+    #     #         metric=metric, resolver=resolver
+    #     #     ))
+    #     pipelines.append(
+    #         object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
+    #     )
+    # elif pipeline_type == "audio":
+    #     pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))
     elif pipeline_type == "collaborative_filtering":
         if gpu:
             pipelines.append(
