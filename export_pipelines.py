@@ -112,11 +112,6 @@ PIPE_TO_DATASET = {
         "f1Macro",
         {"gem_p": 1, "reduce_dimension": 32},
     ),
-    "remote_sensing_pretrained": (
-        "LL1_bigearth_landuse_detection",
-        "f1Macro",
-        {"predictive_primitive": "mlp"},
-    ),
 }
 
 # Subset of pipelines that are aimed at coverage of only the primitives that we intend to
@@ -202,11 +197,9 @@ if __name__ == "__main__":
     # For each pipeline, load it and export it
     for pipe in pipelines:
         p = pipe.replace(".py", "")
-        if p == "remote_sensing_pretrained":
-            print("hi")
 
-        # if submission_only and p not in SUBMISSION_SUBSET:
-        #     continue
+        if submission_only and p not in SUBMISSION_SUBSET:
+            continue
 
         # if we're generating pipelines for submission only, use the subset that covers
         # our primitives only
