@@ -2,6 +2,7 @@ from typing import Optional
 import numpy
 import config
 import os
+import uuid
 
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
@@ -270,7 +271,9 @@ def create_pipeline(
         step.add_hyperparameter(
             "weights_filepath",
             ArgumentType.VALUE,
-            os.path.join(config.OUTPUT_DIR, "mlp_classifier.pth"),
+            os.path.join(
+                config.OUTPUT_DIR, "mlp_classifier_" + str(uuid.uuid4()) + ".pth"
+            ),
         )
         # always return a 4x4 explanation matrix
         step.add_hyperparameter("image_dim", ArgumentType.VALUE, 4)
