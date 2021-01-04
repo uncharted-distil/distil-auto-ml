@@ -48,3 +48,6 @@ N_JOBS = int(os.getenv("N_JOBS", -1))
 
 # enable use of mlp classifier + gradcam visualization
 MLP_CLASSIFIER = os.getenv("MLP_CLASSIFIER", "False") == "True"
+
+# whether or not received features for remote sensing are pooled or not
+IS_POOLED = os.getenv("POOL_FEATURES", "True") == "True"
