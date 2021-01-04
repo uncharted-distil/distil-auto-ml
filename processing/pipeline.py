@@ -297,7 +297,8 @@ def create(
             remote_sensing_pretrained.create_pipeline(
                 metric=metric,
                 resolver=resolver,
-                use_linear_svc=True,
+                predictive_primitive="svc",
+                is_pooled=False,
                 n_jobs=n_jobs,
                 **pipeline_info,
             )
@@ -307,7 +308,18 @@ def create(
                 remote_sensing_pretrained.create_pipeline(
                     metric=metric,
                     resolver=resolver,
-                    use_linear_svc=False,
+                    predictive_primitive="forest",
+                    is_pooled=False,
+                    n_jobs=n_jobs,
+                    **pipeline_info,
+                )
+            )
+            pipelines.append(
+                remote_sensing_pretrained.create_pipeline(
+                    metric=metric,
+                    resolver=resolver,
+                    predictive_primitive="mlp",
+                    is_pooled=False,
                     n_jobs=n_jobs,
                     **pipeline_info,
                 )

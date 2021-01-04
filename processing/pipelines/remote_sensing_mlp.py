@@ -21,6 +21,7 @@ from distil.primitives.satellite_image_loader import (
 )
 import config
 import os
+import uuid
 
 # Overall implementation relies on passing the entire dataset through the pipeline, with the primitives
 # identifying columns to operate on based on type.  Alternative implementation (that better lines up with
@@ -190,7 +191,7 @@ def create_pipeline(
     step.add_hyperparameter(
         "weights_filepath",
         ArgumentType.VALUE,
-        os.path.join(config.OUTPUT_DIR, "mlp_classifier.pth"),
+        os.path.join(config.OUTPUT_DIR, "mlp_classifier_" + str(uuid.uuid4()) + ".pth"),
     )
     # always return a 4x4 explanation matrix
     step.add_hyperparameter("image_dim", ArgumentType.VALUE, 4)

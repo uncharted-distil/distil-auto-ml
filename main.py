@@ -31,6 +31,7 @@ pathlib.Path(config.OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 def decode_dataset_uri(dataset_uri):
     return dataset_uri.split(",")
 
+
 def produce_task(logger, session, server, task):
     try:
         logger.info("Starting produce task ID {}".format(task.id))

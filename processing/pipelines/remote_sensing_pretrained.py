@@ -1,5 +1,8 @@
 from typing import Optional
 import numpy
+import config
+import os
+import uuid
 
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
@@ -12,11 +15,13 @@ from common_primitives.extract_columns_structural_types import (
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
+from d3m.primitives.remote_sensing.mlp import MlpClassifier
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.ranked_linear_svc import RankedLinearSVCPrimitive
 from distil.primitives.column_parser import ColumnParserPrimitive
 from distil.primitives.enrich_dates import EnrichDatesPrimitive
 from distil.primitives.list_to_dataframe import ListEncoderPrimitive
+from distil.primitives.prefeaturised_pooler import PrefeaturisedPoolingPrimitive
 from dsbox.datapreprocessing.cleaner.iterative_regression import (
     IterativeRegressionImputation,
 )
@@ -25,7 +30,9 @@ from dsbox.datapreprocessing.cleaner.iterative_regression import (
 def create_pipeline(
     metric: str,
     profiler="none",
-    use_linear_svc=True,
+    predictive_primitive="svc",
+    is_pooled=True,
+    batch_size: int = 128,
     n_jobs=-1,
     resolver: Optional[Resolver] = None,
 ) -> Pipeline:
@@ -122,6 +129,22 @@ def create_pipeline(
     previous_step += 1
     target_step = previous_step
 
+    if not is_pooled and predictive_primitive != "mlp":
+        step = PrimitiveStep(
+            primitive_description=PrefeaturisedPoolingPrimitive.metadata.query(),
+            resolver=resolver,
+        )
+        step.add_argument(
+            name="inputs",
+            argument_type=ArgumentType.CONTAINER,
+            data_reference=input_val.format(attributes_step),
+        )
+        step.add_output("produce")
+        step.add_hyperparameter("batch_size", ArgumentType.VALUE, batch_size)
+        rs_pretrained_pipeline.add_step(step)
+        previous_step += 1
+        attributes_step = previous_step
+
     # List encoder to get from vectors to columns
     step = PrimitiveStep(
         primitive_description=ListEncoderPrimitive.metadata.query(),
@@ -150,7 +173,7 @@ def create_pipeline(
     rs_pretrained_pipeline.add_step(step)
     previous_step += 1
 
-    # Extract floats to ensure that we're only passing valid data into the learner
+    # # Extract floats to ensure that we're only passing valid data into the learner
     step = PrimitiveStep(
         primitive_description=ExtractColumnsByStructuralTypesPrimitive.metadata.query(),
         resolver=resolver,
@@ -183,7 +206,7 @@ def create_pipeline(
     rs_pretrained_pipeline.add_step(step)
     previous_step += 1
 
-    if use_linear_svc:
+    if predictive_primitive == "svc":
         # Generates a linear svc model.
         step = PrimitiveStep(
             primitive_description=RankedLinearSVCPrimitive.metadata.query(),
@@ -205,7 +228,7 @@ def create_pipeline(
         rs_pretrained_pipeline.add_step(step)
         previous_step += 1
         tune_steps.append(previous_step)
-    else:
+    elif predictive_primitive == "forest":
         # Generates a random forest ensemble model.
         step = PrimitiveStep(
             primitive_description=EnsembleForestPrimitive.metadata.query(),
@@ -226,6 +249,34 @@ def create_pipeline(
             argument_type=ArgumentType.CONTAINER,
             data_reference=input_val.format(target_step),
         )
+        step.add_output("produce")
+        rs_pretrained_pipeline.add_step(step)
+        previous_step += 1
+        tune_steps.append(previous_step)
+    elif predictive_primitive == "mlp" and not is_pooled:
+        step = PrimitiveStep(
+            primitive_description=MlpClassifier.metadata.query(), resolver=resolver
+        )
+        step.add_argument(
+            name="inputs",
+            argument_type=ArgumentType.CONTAINER,
+            data_reference=input_val.format(previous_step),
+        )
+        step.add_argument(
+            name="outputs",
+            argument_type=ArgumentType.CONTAINER,
+            data_reference=input_val.format(target_step),
+        )
+        step.add_hyperparameter("all_confidences", ArgumentType.VALUE, True)
+        step.add_hyperparameter(
+            "weights_filepath",
+            ArgumentType.VALUE,
+            os.path.join(
+                config.OUTPUT_DIR, "mlp_classifier_" + str(uuid.uuid4()) + ".pth"
+            ),
+        )
+        # always return a 4x4 explanation matrix
+        step.add_hyperparameter("image_dim", ArgumentType.VALUE, 4)
         step.add_output("produce")
         rs_pretrained_pipeline.add_step(step)
         previous_step += 1
