@@ -298,7 +298,7 @@ def create(
                 metric=metric,
                 resolver=resolver,
                 predictive_primitive="svc",
-                is_pooled=False,
+                is_pooled=config.IS_POOLED,
                 n_jobs=n_jobs,
                 **pipeline_info,
             )
@@ -309,7 +309,7 @@ def create(
                     metric=metric,
                     resolver=resolver,
                     predictive_primitive="forest",
-                    is_pooled=False,
+                    is_pooled=config.IS_POOLED,
                     n_jobs=n_jobs,
                     **pipeline_info,
                 )
@@ -319,7 +319,7 @@ def create(
                     metric=metric,
                     resolver=resolver,
                     predictive_primitive="mlp",
-                    is_pooled=False,
+                    is_pooled=config.IS_POOLED,
                     n_jobs=n_jobs,
                     **pipeline_info,
                 )
