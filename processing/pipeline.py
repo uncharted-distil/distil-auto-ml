@@ -314,12 +314,13 @@ def create(
                     **pipeline_info,
                 )
             )
+        if max_models > 2:
             pipelines.append(
                 remote_sensing_pretrained.create_pipeline(
                     metric=metric,
                     resolver=resolver,
                     predictive_primitive="mlp",
-                    is_pooled=config.IS_POOLED,
+                    is_pooled=not config.IS_POOLED and config.MLP_CLASSIFIER,
                     n_jobs=n_jobs,
                     **pipeline_info,
                 )
