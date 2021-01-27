@@ -26,7 +26,7 @@ ARG CACHEBUSTER=0
 # Update as needed when new versions not built into base image
 RUN rm -rf /src/distil-primitives
 RUN rm -rf /app/src/distilprimitives
-RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git@e38a399bf1116006d58e716a4ce8c6adcd4f4236#egg=DistilPrimitives
+RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git@3c38a251c12b2b4b3f5fea97521fd7042653a25c#egg=DistilPrimitives
 # Pass the optional gpu version for mxnet - see the kf-d3m-primitives setup.py for valid values
 ARG GPU_MXNET=""
 RUN pip3 install -e git+https://github.com/kungfuai/d3m-primitives.git@35ff0b0c86125f20e103544f998b379bddbc0cda#egg=kf-d3m-primitives$GPU_MXNET
