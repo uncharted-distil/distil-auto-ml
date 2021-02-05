@@ -1,6 +1,6 @@
 from typing import Optional
 
-from common_primitives.column_parser import ColumnParserPrimitive
+# from common_primitives.column_parser import ColumnParserPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.extract_columns_semantic_types import (
     ExtractColumnsBySemanticTypesPrimitive,
@@ -8,6 +8,8 @@ from common_primitives.extract_columns_semantic_types import (
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from distil.primitives.time_series_binner import TimeSeriesBinnerPrimitive
+
+from distil.primitives.column_parser import ColumnParserPrimitive
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
 from d3m.primitives.time_series_forecasting.vector_autoregression import VAR
@@ -63,8 +65,9 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         "http://schema.org/Float",
         "https://metadata.datadrivendiscovery.org/types/FloatVector",
         "http://schema.org/DateTime",
+        "https://metadata.datadrivendiscovery.org/types/CategoricalData",
     )
-    step.add_hyperparameter("parse_semantic_types", ArgumentType.VALUE, semantic_types)
+    step.add_hyperparameter("parsing_semantics", ArgumentType.VALUE, semantic_types)
     var_pipeline.add_step(step)
     previous_step += 1
     parse_step = previous_step
