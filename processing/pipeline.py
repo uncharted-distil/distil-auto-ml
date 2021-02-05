@@ -52,14 +52,14 @@ from processing.pipelines import (
     remote_sensing_mlp,
     remote_sensing_pretrained,
     # object_detection,
-    object_detection_yolo,
+    # object_detection_yolo,
     question_answer,
     tabular,
     text,
     text_sent2vec,
     link_prediction,
     link_prediction_jhu,
-    audio,
+    # audio,
     vertex_nomination,
     # vertex_nomination_jhu,
     # vertex_classification,
@@ -325,16 +325,16 @@ def create(
                     **pipeline_info,
                 )
             )
-    elif pipeline_type == "object_detection":
-        # pipelines.append(
-        #     object_detection.create_pipeline(
-        #         metric=metric, resolver=resolver
-        #     ))
-        pipelines.append(
-            object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
-        )
-    elif pipeline_type == "audio":
-        pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))
+    # elif pipeline_type == "object_detection":
+    #     # pipelines.append(
+    #     #     object_detection.create_pipeline(
+    #     #         metric=metric, resolver=resolver
+    #     #     ))
+    #     pipelines.append(
+    #         object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
+    #     )
+    # elif pipeline_type == "audio":
+    #     pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))
     elif pipeline_type == "collaborative_filtering":
         if gpu:
             pipelines.append(
@@ -393,6 +393,16 @@ def create(
         if max_models > 2:
             pipelines.append(
                 timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
+            )
+        if max_models > 3:
+            pipelines.append(
+                timeseries_tabular.create_pipeline(metric=metric, resolver=resolver)
+            )
+        if max_models > 4:
+            pipelines.append(
+                timeseries_tabular.create_pipeline(
+                    metric=metric, use_boost=True, resolver=resolver
+                )
             )
 
     elif pipeline_type == "semisupervised_tabular":
