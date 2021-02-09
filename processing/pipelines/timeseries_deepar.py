@@ -152,6 +152,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
     step.add_hyperparameter(
         name="prediction_length", argument_type=ArgumentType.VALUE, data=288
     )
+    step.add_hyperparameter("nan_padding", ArgumentType.VALUE, False)
     step.add_output("produce")
 
     deepar_pipeline.add_step(step)
