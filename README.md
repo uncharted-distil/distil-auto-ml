@@ -24,10 +24,34 @@ Description of shortest path to running the system with some data. This would in
 
 ### Instructions on setting up to run from source:
 
-> - Clone the repository
+> - Clone distil-auto-ml
 >
 > ```console
 >   $ git clone https://github.com/uncharted-distil/distil-auto-ml
+> ```
+>
+> - Clone common-primitives
+>
+> ```console
+>   $ git clone https://gitlab.com/datadrivendiscovery/common-primitives.git
+> ```
+>
+> - Clone d3m-primitives
+>
+> ```console
+>   $ git clone https://github.com/cdbethune/d3m-primitives
+> ```
+>
+> - Clone d3m
+>
+> ```console
+>   $ git clone https://gitlab.com/datadrivendiscovery/d3m
+> ```
+>
+> - Clone distil-primitives
+>
+> ```console
+>   $ git clone https://github.com/uncharted-distil/distil-primitives
 > ```
 >
 > - Change into the distil-auto-ml directory
@@ -59,6 +83,23 @@ Description of shortest path to running the system with some data. This would in
 >
 > ```console
 >  $ pip install -r server-requirements.txt
+> ```
+>
+> - Install all the other repository dependencies <b>IMPORTANT:</b> if running on the <b>CPU</b> replace /[gpu/] with /[cpu/]
+>
+> ```console
+>  $ cd ..
+>  $ cd d3m
+>  $ pip install -e ./[gpu/]
+>  $ cd ..
+>  $ cd d3m-primitives
+>  $ pip install -e ./[gpu/]
+>  $ cd ..
+>  $ cd distil-primitives
+>  $ pip install -e ./[gpu/]
+>  $ cd ..
+>  $ cd common-primitives
+>  $ pip install -e ./[gpu/]
 > ```
 >
 > - Distil-auto-ml is ready for use
