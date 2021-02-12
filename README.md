@@ -36,15 +36,17 @@ Description of shortest path to running the system with some data. This would in
 >   $ cd distil-auto-ml
 > ```
 >
-> - To avoid package collision it is recommended to create a [virtual environment](https://python.readthedocs.io/en/stable/library/venv.html)
+> - To avoid package collision it is recommended to create a [virtual environment](https://pypi.org/project/virtualenv/)
 > - If virtualenv is not installed. Install virtualenv now.
 >
 > ```console
 >   $ python3 -m pip install virtualenv
 > ```
 >
+> - Create the environment
+>
 > ```console
->   $ python3 -m venv /env
+>   $ virtualenv env
 > ```
 >
 > - Activate the environment
@@ -62,11 +64,9 @@ Description of shortest path to running the system with some data. This would in
 > - Distil-auto-ml is ready for use
 > - Use [D3M CLI](https://gitlab.com/datadrivendiscovery/d3m) to interface with distil-auto-ml
 
-Can we make
-
 ### Building the Docker Container
 
-#### CPU
+#### CPU:
 
 > Building a docker image with <b>CPU</b> support is accomplished by invoking the <b>docker_build.sh</b> script:
 >
@@ -84,7 +84,7 @@ Can we make
 > $./docker_build.sh
 > ```
 
-#### GPU
+#### GPU:
 
 > Building a docker image with <b>GPU</b> support is accomplished by adding the -g flag to the <b>docker_build.sh</b> call:
 >
@@ -102,7 +102,7 @@ Can we make
 > $./docker_build.sh -g
 > ```
 
-#### Troubleshooting Building the Docker Container
+#### Troubleshooting Docker Image Failing to Build:
 
 > In the event that building the docker image fails and all of the above criteria has been met. One can invoke the <b>docker_build.sh</b> script again this time adding the -f flag. The -f flag forces the download and reinstall of all dependencies regardless of if they meet criteria. <b>Note:</b> if one is building for <b>GPU</b> support - remember the additional -g flag.
 >
