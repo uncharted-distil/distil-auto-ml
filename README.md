@@ -1,35 +1,30 @@
 # Distil Auto ML
 
-## Summary
-TA2 system for Uncharted and Qntfy 
+Introductory text here.  Reference relevant repositories - d3m, primitives, datasets
 
-Main repo is https://github.com/uncharted-distil/distil-auto-ml
+## Quickstart
 
-## How to run
-The TA2 system can be built and started via docker-compose:
-```bash
-# symlink your datasets directory 
-ln -s ../datasets/seed_datasets_current seed_datasets_current`
+Description of shortest path to running the system with some data.  This would involve:
 
-# choose the dataset you want to run 
-export DATASET=185_baseball
+1.  Getting data sets - we probably need guidance from D3M program on this since they have been private to date
+2.  Getting static files - d3m CLI command is `python3 -m d3m index download`
+3.  Pulling the TA2 docker image from some place public
+4.  Running the search command through the container using the d3m CLI
+5.  Running the score command on the top ranked pipeline using the d3m CLI
 
-# run it
-docker-compose up distil
-```
+## Development
+### Running From Source
 
-There are two testing TA3 systems also available via docker-compose:
-```bash
-# run the dummy-ta3 test suite
-docker-compose up distil dummy-ta3
+Instructions on setting up to run from source
 
-# run the simple-ta3 system, which will then be available in the browser at localhost:80
-# this requires a directory named 'output' to exist, in addition to the seed_datasets_current directory
-docker-compose up distil envoy simple-ta3
-```
+- installing via requirements.txt
+- running search, score using the d3m CLI
 
-## Get those static files 
-```bash
-docker-compose run distil bash 
-# cd /static && python3 -m d3m index download
-```
+Can we make
+
+### Building the Docker Container
+
+Instructions on building the docker container using our build script - cpu vs gpu support
+
+
+
