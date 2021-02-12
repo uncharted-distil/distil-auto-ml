@@ -33,6 +33,7 @@ def create_pipeline(
     min_meta: bool = False,
     batch_size: int = 128,
     n_jobs: int = -1,
+    confidences: bool = True,
     resolver: Optional[Resolver] = None,
 ) -> Pipeline:
     input_val = "steps.{}.produce"

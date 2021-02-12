@@ -51,3 +51,5 @@ MLP_CLASSIFIER = os.getenv("MLP_CLASSIFIER", "False") == "True"
 
 # whether or not received features for remote sensing are pooled or not
 IS_POOLED = os.getenv("POOL_FEATURES", "True") == "True"
+
+COMPUTE_CONFIDENCES = os.getenv("COMPUTE_CONFIDENCES", "False") == "False"
