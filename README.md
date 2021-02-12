@@ -55,10 +55,10 @@ Description of shortest path to running the system with some data. This would in
 >   $ source env/bin/activate
 > ```
 >
-> - Installing through requirements.txt
+> - Installing through server-requirements.txt
 >
 > ```console
->  $ pip install -r requirements.txt
+>  $ pip install -r server-requirements.txt
 > ```
 >
 > - Distil-auto-ml is ready for use
