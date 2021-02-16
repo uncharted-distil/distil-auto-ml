@@ -182,7 +182,16 @@ docker-compose up distil envoy simple-ta3
 ```
  - Use [D3M CLI](https://gitlab.com/datadrivendiscovery/d3m) to interface with distil-auto-ml
 ### Running D3M CLI Example
-This section assumes the [source](#Instructions-on-setting-up-to-run-from-source) has been successfully installed and the [datasets](#quickstart-using-docker) have been downloaded.
+This section assumes the [source](#Instructions-on-setting-up-to-run-from-source) has been successfully installed and the [datasets](#quickstart-using-docker) have been downloaded. Launch d3m with the following arguments.
+```console
+python3 d3m runtime -v {location/to/static_resources} -d {location/to/datasets/seed_datasets_current} fit-score 
+-r {..seed_datasets_current/LL1_PHEM_Monthly_Malnutrition_MIN_METADATA/LL1_PHEM_Monthly_Malnutrition_MIN_METADATA_problem/problemDoc.json}
+-i {..seeds_datasets_current/LL1_PHEM_Monthly_Malnutrition_MIN_METADATA/TRAIN/dataset_TRAIN/datasetDoc.json}
+-t {..seeds_datasets_current/LL1_PHEM_Monthly_Malnutrition_MIN_METADATA/TEST/dataset_TEST/datasetDoc.json}
+-a {..seeds_datasets_current/LL1_PHEM_Monthly_Malnutrition_MIN_METADATA/SCORE/dataset_SCORE/datasetDoc.json}
+-p {..distil-auto-ml/pipelines/timeseries_rnn__a9cc5349-e328-401d-abb7-ada6b101e573.json}
+-O {..distil-auto-ml/pipelines/timeseries_rnn__a9cc5349-e328-401d-abb7-ada6b101e573_run.yaml}
+```
 ### Building the Docker Container
 
 #### CPU:
