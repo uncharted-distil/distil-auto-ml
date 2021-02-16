@@ -29,13 +29,13 @@ Description of shortest path to running the system with some data. This would in
 > ```console
 > git clone https://github.com/uncharted-distil/distil-auto-ml
 > ```
-> - Install snappy on <b>Linux</b>
+> - Install libraries on <b>Linux</b>
 > ```console
-> sudo apt-get install snappy-dev
+> sudo apt-get install snappy-dev build-essential libopenblas-dev libcap-dev ffmpeg
 > ```
 > - Install snappy on <b>MacOS</b>
 > ```console
-> homebrew install snappy
+> brew install snappy cmake openblas libcap ffmpeg
 > ```
 > - Clone common-primitives
 >
