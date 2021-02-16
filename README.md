@@ -167,9 +167,9 @@ docker-compose up distil envoy simple-ta3
   pip install -U pandas
  ```
 
- ## MongoDB
- Distil AutoML uses MongoDB as a backend store for it's internal hyperparameter tuning
- There are good instructions depending on your os from the official MongoDB Docs: https://docs.mongodb.com/manual/installation/
+ - MongoDB
+ > Distil AutoML uses MongoDB as a backend store for it's internal hyperparameter tuning
+ > There are good instructions depending on your os from the official MongoDB Docs: https://docs.mongodb.com/manual/installation/
 
  - Distil-auto-ml is ready for use 
 ```console
