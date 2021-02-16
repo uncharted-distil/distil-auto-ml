@@ -92,7 +92,7 @@ Description of shortest path to running the system with some data. This would in
 > pip install -r server-requirements.txt
 > ```
 >
-> - Install all the other repository dependencies <b>IMPORTANT:</b> if running on the <b>CPU</b> replace /[gpu/] with /[cpu/]
+> - Install all the other repository dependencies <b>IMPORTANT:</b> if running on the <b>CPU</b> replace \[gpu\] with \[cpu\]
 >
 > ```console
 >  cd ..
