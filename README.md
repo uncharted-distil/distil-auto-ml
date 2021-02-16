@@ -147,7 +147,7 @@ Description of shortest path to running the system with some data. This would in
 > Run command prompt as administrator.
 >
 > ```console
-> $./docker_build.sh
+> ./docker_build.sh
 > ```
 
 #### GPU:
