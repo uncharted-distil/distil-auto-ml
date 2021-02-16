@@ -33,7 +33,7 @@ Description of shortest path to running the system with some data. This would in
 > ```console
 > sudo apt-get install snappy-dev build-essential libopenblas-dev libcap-dev ffmpeg
 > ```
-> - Install snappy on <b>MacOS</b>
+> - Install libraries on <b>MacOS</b>
 > ```console
 > brew install snappy cmake openblas libcap ffmpeg
 > ```
