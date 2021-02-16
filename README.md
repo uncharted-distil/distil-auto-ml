@@ -86,10 +86,15 @@ Description of shortest path to running the system with some data. This would in
 >  source env/bin/activate
 > ```
 >
-> - Installing through server-requirements.txt
+> - Installing through server-requirements.txt <b>Linux</b>
 >
 > ```console
 > pip install -r server-requirements.txt
+> ```
+> - Installing through server-requirements.txt <b>MacOS</b>
+>
+> ```console
+> CPPFLAGS="-I/usr/local/include -L/usr/local/lib" pip install -r server-requirements.txt
 > ```
 >
 > - Install all the other repository dependencies <b>IMPORTANT:</b> if running on the <b>CPU</b> replace \[gpu\] with \[cpu\]
