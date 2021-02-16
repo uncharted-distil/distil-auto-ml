@@ -182,7 +182,7 @@ docker-compose up distil envoy simple-ta3
 ```
  - Use [D3M CLI](https://gitlab.com/datadrivendiscovery/d3m) to interface with distil-auto-ml
 ### Running D3M CLI Example
-This section assumes the source has been successfully installed and the [datasets](#quickstart-using-docker) have been downloaded.
+This section assumes the [source](#Instructions-on-setting-up-to-run-from-source) has been successfully installed and the [datasets](#quickstart-using-docker) have been downloaded.
 ### Building the Docker Container
 
 #### CPU:
