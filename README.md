@@ -124,7 +124,10 @@ Description of shortest path to running the system with some data. This would in
 > Distil AutoML uses MongoDB as a backend store for it's internal hyperparameter tuning
 > There are good instructions depending on your os from the official MongoDB Docs: https://docs.mongodb.com/manual/installation/
 >
-> - Distil-auto-ml is ready for use
+> - Distil-auto-ml is ready for use 
+>```console
+> ./run.sh
+>```
 > - Use [D3M CLI](https://gitlab.com/datadrivendiscovery/d3m) to interface with distil-auto-ml
  
 ### Building the Docker Container
