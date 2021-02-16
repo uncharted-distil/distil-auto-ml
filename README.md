@@ -29,7 +29,14 @@ Description of shortest path to running the system with some data. This would in
 > ```console
 >   $ git clone https://github.com/uncharted-distil/distil-auto-ml
 > ```
->
+> - Install snappy on <b>Linux</b>
+> ```console
+>   $ sudo apt-get install snappy-dev
+> ```
+> - Install snappy on <b>MacOS</b>
+> ```console
+>   $ homebrew install snappy
+> ```
 > - Clone common-primitives
 >
 > ```console
@@ -90,16 +97,16 @@ Description of shortest path to running the system with some data. This would in
 > ```console
 >  $ cd ..
 >  $ cd d3m
->  $ pip install -e ./[gpu/]
+>  $ pip install -e .\[gpu\]
 >  $ cd ..
 >  $ cd d3m-primitives
->  $ pip install -e ./[gpu/]
+>  $ pip install -e .\[gpu\]
 >  $ cd ..
 >  $ cd distil-primitives
->  $ pip install -e ./[gpu/]
+>  $ pip install -e .\[gpu\]
 >  $ cd ..
 >  $ cd common-primitives
->  $ pip install -e ./[gpu/]
+>  $ pip install -e .\[gpu\]
 > ```
 >
 > - Distil-auto-ml is ready for use
