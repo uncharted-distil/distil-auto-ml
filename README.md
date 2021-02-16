@@ -1,16 +1,58 @@
 # Distil Auto ML
 
-Introductory text here. Reference relevant repositories - d3m, primitives, datasets
+Distil Auto ML is an AutoML system that integrates with [D3M](https://datadrivendiscovery.org/) 
 
-## Quickstart
+More specifically it is the TA2 system from Uncharted and Qntfy
 
-Description of shortest path to running the system with some data. This would involve:
+Main repo is https://github.com/uncharted-distil/distil-auto-ml
 
-> 1.  Getting data sets - we probably need guidance from D3M > program on this since they have been private to date
-> 2.  Getting static files - d3m CLI command is `python3 -m d3m > index download`
-> 3.  Pulling the TA2 docker image from some place public
-> 4.  Running the search command through the container using the > d3m CLI
-> 5.  Running the score command on the top ranked pipeline using > the d3m CLI
+## Quickstart using Docker
+The TA2 system can be built and started via docker-compose however several static files must be 
+downloaded before hand. 
+
+**Datasets** to train on. These may be user created or many examples can be downloaded from https://datasets.datadrivendiscovery.org/d3m/datasets
+
+To train only using the TA2 user generated datasets must be formatted in the same way as the public datasets
+
+**Static Files** may be pretrained weights of a neural network model, or a simple dictionary mapping tokens to necessary ids. 
+Pretty much anything *extra* needed to run a ML model within the pipelines. 
+
+To bulk download all static files within the D3M universe **WARNING** this may be quite large
+```bash
+docker-compose run distil bash 
+# cd /static && python3 -m d3m index download
+```
+
+One can also pick and choose which static files they wish to download via 
+
+```bash
+python3 -m d3m primitive download -p d3m.primitives.path.of.Primitive -o /static
+```
+For more info on how static files integrate within D3M: https://datadrivendiscovery.org/v2020.11.3/tutorial.html#advanced-primitive-with-static-files
+
+Once the static files and the dataset(s) you want to run on are downloaded
+
+```bash
+# symlink your datasets directory 
+ln -s ../datasets/seed_datasets_current seed_datasets_current`
+
+# choose the dataset you want to run 
+export DATASET=185_baseball
+
+# run it
+docker-compose up distil
+```
+
+There are two testing TA3 systems also available via docker-compose:
+```bash
+# run the dummy-ta3 test suite
+docker-compose up distil dummy-ta3
+
+# run the simple-ta3 system, which will then be available in the browser at localhost:80
+# this requires a directory named 'output' to exist, in addition to the seed_datasets_current directory
+docker-compose up distil envoy simple-ta3
+```
+
 
 ## Development
 
@@ -132,6 +174,11 @@ Description of shortest path to running the system with some data. This would in
 > - Distil-auto-ml is ready for use 
 >```console
 > ./run.sh
+>```
+> - generate pipelines
+>```console
+> mkdir pipelines
+> python3 export_pipelines.sh
 >```
 > - Use [D3M CLI](https://gitlab.com/datadrivendiscovery/d3m) to interface with distil-auto-ml
  
