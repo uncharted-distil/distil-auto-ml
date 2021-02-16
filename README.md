@@ -35,7 +35,7 @@ Description of shortest path to running the system with some data. This would in
 > ```
 > - Install libraries on <b>MacOS</b>
 > ```console
-> brew install snappy cmake openblas libcap ffmpeg
+> brew install snappy cmake openblas libpcap ffmpeg
 > ```
 > - Clone common-primitives
 >
