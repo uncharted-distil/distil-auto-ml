@@ -119,7 +119,7 @@ docker-compose up distil envoy simple-ta3
  - Create the environment
 
  ```console
-  virtualenv env
+  python3 -m virtualenv env
  ```
 
  - Activate the environment
