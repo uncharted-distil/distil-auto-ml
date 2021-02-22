@@ -29,7 +29,9 @@ RUN rm -rf /app/src/distilprimitives
 RUN pip3 install -e git+https://github.com/uncharted-distil/distil-primitives.git@3c38a251c12b2b4b3f5fea97521fd7042653a25c#egg=DistilPrimitives
 # Pass the optional gpu version for mxnet - see the kf-d3m-primitives setup.py for valid values
 ARG GPU_MXNET=""
-RUN pip3 install -e git+https://github.com/kungfuai/d3m-primitives.git@35ff0b0c86125f20e103544f998b379bddbc0cda#egg=kf-d3m-primitives$GPU_MXNET
+# RUN pip3 install -e git+https://github.com/kungfuai/d3m-primitives.git@5530da1b8efba7de8cec6890401c5d4091acd45a#egg=kf-d3m-primitives$GPU_MXNET
+RUN pip3 install -e git+https://github.com/cdbethune/d3m-primitives.git@e4a516148911ae7ae2e3885db525290e2132ed21#egg=kf-d3m-primitives$GPU_MXNET
+
 
 COPY . .
 
