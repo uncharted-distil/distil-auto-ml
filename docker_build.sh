@@ -17,4 +17,4 @@ while getopts ":fg" opt; do
   esac
 done
 
-docker build --build-arg CACHEBUSTER=$CACHEBUSTER_VAL --build-arg GPU_MXNET=$GPU_MXNET -t registry.datadrivendiscovery.org/uncharted/distil-integration/distil-auto-ml:latest .
+docker build --build-arg CACHEBUSTER=$CACHEBUSTER_VAL --build-arg GPU_MXNET=$GPU_MXNET -t docker.uncharted.software/distil-auto-ml:latest .
