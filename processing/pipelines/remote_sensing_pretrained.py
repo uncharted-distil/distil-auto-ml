@@ -224,7 +224,7 @@ def create_pipeline(
         )
         step.add_hyperparameter("scaling", ArgumentType.VALUE, "unit_norm")
         step.add_hyperparameter("rank_confidences", ArgumentType.VALUE, True)
-        step.add_hyperparameter("calibrate", ArgumentType.VALUE, False)
+        step.add_hyperparameter("calibrate", ArgumentType.VALUE, True)
         step.add_output("produce")
         rs_pretrained_pipeline.add_step(step)
         previous_step += 1
