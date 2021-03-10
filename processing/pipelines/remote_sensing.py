@@ -7,7 +7,7 @@ from common_primitives.extract_columns_semantic_types import (
     ExtractColumnsBySemanticTypesPrimitive,
 )
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
-
+from common_primitives.replace_semantic_types import ReplaceSemanticTypesPrimitive
 from d3m import utils
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
@@ -16,6 +16,7 @@ from d3m.primitives.remote_sensing.remote_sensing_pretrained import (
 )
 
 from distil.primitives.ranked_linear_svc import RankedLinearSVCPrimitive
+from distil.primitives.list_to_dataframe import ListEncoderPrimitive
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.satellite_image_loader import (
     DataFrameSatelliteImageLoaderPrimitive,
@@ -118,6 +119,29 @@ def create_pipeline(
     previous_step += 1
     parse_step = previous_step
 
+    # step = PrimitiveStep(
+    #     primitive_description=ReplaceSemanticTypesPrimitive.metadata.query(),
+    #     resolver=resolver,
+    # )
+    # step.add_argument(
+    #     name="inputs",
+    #     argument_type=ArgumentType.CONTAINER,
+    #     data_reference=input_val.format(parse_step),
+    # )
+    # step.add_output("produce")
+    # step.add_hyperparameter(
+    #     "from_semantic_types",
+    #     ArgumentType.VALUE,
+    #     ("https://metadata.datadrivendiscovery.org/types/FloatVector",),
+    # )
+    # step.add_hyperparameter(
+    #     "to_semantic_types",
+    #     ArgumentType.VALUE,
+    #     ("https://metadata.datadrivendiscovery.org/types/LocationPolygon",),
+    # )
+    # image_pipeline.add_step(step)
+    # previous_step += 1
+
     # step 4 - extract attributes
     # Extract attributes
     step = PrimitiveStep(
@@ -133,11 +157,27 @@ def create_pipeline(
     step.add_hyperparameter(
         "semantic_types",
         ArgumentType.VALUE,
-        ("http://schema.org/ImageObject",),
+        (
+            "https://metadata.datadrivendiscovery.org/types/LocationPolygon",
+            "http://schema.org/ImageObject",
+        ),
     )
     image_pipeline.add_step(step)
     previous_step += 1
     attributes_step = previous_step
+
+    step = PrimitiveStep(
+        primitive_description=ListEncoderPrimitive.metadata.query(), resolver=resolver
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(attributes_step),
+    )
+    step.add_output("produce")
+    image_pipeline.add_step(step)
+    previous_step += 1
+    list_encoding_step = previous_step
 
     # step 5 - extract targets
     step = PrimitiveStep(
@@ -167,7 +207,7 @@ def create_pipeline(
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(attributes_step),
+        data_reference=input_val.format(list_encoding_step),
     )
     step.add_output("produce")
     step.add_hyperparameter("batch_size", ArgumentType.VALUE, batch_size)
