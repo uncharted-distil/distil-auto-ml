@@ -52,14 +52,14 @@ from processing.pipelines import (
     remote_sensing_mlp,
     remote_sensing_pretrained,
     # object_detection,
-    # object_detection_yolo,
+    object_detection_yolo,
     question_answer,
     tabular,
     text,
     text_sent2vec,
     link_prediction,
     link_prediction_jhu,
-    # audio,
+    audio,
     vertex_nomination,
     # vertex_nomination_jhu,
     # vertex_classification,
@@ -333,16 +333,16 @@ def create(
         pipelines.append(
             object_detection_yolo.create_pipeline(metric=metric, resolver=resolver)
         )
-    # elif pipeline_type == "audio":
-    #     pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))
-    # elif pipeline_type == "collaborative_filtering":
-    #     if gpu:
-    #         pipelines.append(
-    #             collaborative_filtering.create_pipeline(
-    #                 metric=metric, n_jobs=n_jobs, resolver=resolver, **pipeline_info
-    #             )
-    #         )
-    #     pipelines.append(tabular.create_pipeline(metric=metric, resolver=resolver))
+    elif pipeline_type == "audio":
+        pipelines.append(audio.create_pipeline(metric=metric, resolver=resolver))
+    elif pipeline_type == "collaborative_filtering":
+        if gpu:
+            pipelines.append(
+                collaborative_filtering.create_pipeline(
+                    metric=metric, n_jobs=n_jobs, resolver=resolver, **pipeline_info
+                )
+            )
+        pipelines.append(tabular.create_pipeline(metric=metric, resolver=resolver))
     elif pipeline_type == "vertex_nomination":
         pipelines.append(
             vertex_nomination.create_pipeline(metric, resolver, **pipeline_info)
