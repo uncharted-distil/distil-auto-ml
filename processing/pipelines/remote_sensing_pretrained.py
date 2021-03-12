@@ -145,33 +145,35 @@ def create_pipeline(
         previous_step += 1
         attributes_step = previous_step
 
-    # List encoder to get from vectors to columns
-    step = PrimitiveStep(
-        primitive_description=ListEncoderPrimitive.metadata.query(),
-        resolver=resolver,
-    )
-    step.add_argument(
-        name="inputs",
-        argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(attributes_step),
-    )
-    step.add_output("produce")
-    rs_pretrained_pipeline.add_step(step)
-    previous_step += 1
+    if predictive_primitive != "mlp":
+        # List encoder to get from vectors to columns
+        step = PrimitiveStep(
+            primitive_description=ListEncoderPrimitive.metadata.query(),
+            resolver=resolver,
+        )
+        step.add_argument(
+            name="inputs",
+            argument_type=ArgumentType.CONTAINER,
+            data_reference=input_val.format(attributes_step),
+        )
+        step.add_output("produce")
+        rs_pretrained_pipeline.add_step(step)
+        previous_step += 1
 
-    # Enrich any dates present
-    step = PrimitiveStep(
-        primitive_description=EnrichDatesPrimitive.metadata.query(),
-        resolver=resolver,
-    )
-    step.add_argument(
-        name="inputs",
-        argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(previous_step),
-    )
-    step.add_output("produce")
-    rs_pretrained_pipeline.add_step(step)
-    previous_step += 1
+        # Enrich any dates present
+        step = PrimitiveStep(
+            primitive_description=EnrichDatesPrimitive.metadata.query(),
+            resolver=resolver,
+        )
+        step.add_argument(
+            name="inputs",
+            argument_type=ArgumentType.CONTAINER,
+            data_reference=input_val.format(previous_step),
+        )
+        step.add_output("produce")
+        rs_pretrained_pipeline.add_step(step)
+        previous_step += 1
+        attributes_step = previous_step
 
     # # Extract floats to ensure that we're only passing valid data into the learner
     step = PrimitiveStep(
@@ -181,7 +183,7 @@ def create_pipeline(
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(previous_step),
+        data_reference=input_val.format(attributes_step),
     )
     step.add_output("produce")
     step.add_hyperparameter(
