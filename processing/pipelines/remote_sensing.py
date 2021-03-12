@@ -178,7 +178,7 @@ def create_pipeline(
     image_pipeline.add_step(step)
     previous_step += 1
 
-    # step 7get coordinates into separate columns
+    # step 7 get coordinates into separate columns
     step = PrimitiveStep(
         primitive_description=ListEncoderPrimitive.metadata.query(), resolver=resolver
     )
