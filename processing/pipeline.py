@@ -320,7 +320,7 @@ def create(
                     metric=metric,
                     resolver=resolver,
                     predictive_primitive="mlp",
-                    is_pooled=not config.IS_POOLED and config.MLP_CLASSIFIER,
+                    is_pooled=config.IS_POOLED and config.MLP_CLASSIFIER,
                     n_jobs=n_jobs,
                     **pipeline_info,
                 )
