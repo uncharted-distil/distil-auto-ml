@@ -396,6 +396,8 @@ def main(once=False):
     logger.info(f"Baseline time out {config.TIME_LIMIT}")
     logger.info(f"Full hyperparameter tuning enabled {config.HYPERPARAMETER_TUNING}")
     logger.info(f"GPU support {config.GPU}")
+    logger.info(f"Expect pooled remote sensing features {config.IS_POOLED}")
+    logger.info(f"Enable MLP remote sensing classifier {config.MLP_CLASSIFIER}")
 
     # Get DB access
     session = models.start_session(config.DB_LOCATION)
