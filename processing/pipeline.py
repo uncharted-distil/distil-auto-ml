@@ -162,6 +162,7 @@ def create(
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
                     n_jobs=n_jobs,
+                    pos_label=protobuf_pos_label,
                 )
             )
             pipelines.append(
@@ -199,6 +200,7 @@ def create(
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
                     n_jobs=n_jobs,
+                    pos_label=protobuf_pos_label,
                 )
             )
         else:
@@ -212,6 +214,7 @@ def create(
                         use_boost=True,
                         max_one_hot=8,
                         n_jobs=n_jobs,
+                        pos_label=protobuf_pos_label,
                     )
                 )
             pipelines.append(
@@ -259,7 +262,11 @@ def create(
     elif pipeline_type == "image":
         pipelines.append(
             image.create_pipeline(
-                metric=metric, n_jobs=n_jobs, resolver=resolver, **pipeline_info
+                metric=metric,
+                n_jobs=n_jobs,
+                resolver=resolver,
+                pos_label=protobuf_pos_label,
+                **pipeline_info,
             )
         )
     elif pipeline_type == "remote_sensing":
