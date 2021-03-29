@@ -110,6 +110,9 @@ def create(
 
     # extract metric from the problem
     protobuf_metric = problem["problem"]["performance_metrics"][0]["metric"]
+    protobuf_pos_label = problem["problem"]["performance_metrics"][0]["params"][
+        "pos_label"
+    ]
     metric = metrics.translate_proto_metric(protobuf_metric)
     logger.info(f"Optimizing on metric {metric}")
 
@@ -159,6 +162,7 @@ def create(
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
                     n_jobs=n_jobs,
+                    pos_label=protobuf_pos_label,
                 )
             )
             pipelines.append(
@@ -196,6 +200,7 @@ def create(
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
                     n_jobs=n_jobs,
+                    pos_label=protobuf_pos_label,
                 )
             )
         else:
@@ -209,6 +214,7 @@ def create(
                         use_boost=True,
                         max_one_hot=8,
                         n_jobs=n_jobs,
+                        pos_label=protobuf_pos_label,
                     )
                 )
             pipelines.append(
@@ -256,7 +262,11 @@ def create(
     elif pipeline_type == "image":
         pipelines.append(
             image.create_pipeline(
-                metric=metric, n_jobs=n_jobs, resolver=resolver, **pipeline_info
+                metric=metric,
+                n_jobs=n_jobs,
+                resolver=resolver,
+                pos_label=protobuf_pos_label,
+                **pipeline_info,
             )
         )
     elif pipeline_type == "remote_sensing":
@@ -278,6 +288,7 @@ def create(
                     n_jobs=n_jobs,
                     svc=True,
                     batch_size=config.REMOTE_SENSING_BATCH_SIZE,
+                    pos_label=protobuf_pos_label,
                     **pipeline_info,
                 )
             )
@@ -289,6 +300,7 @@ def create(
                         n_jobs=n_jobs,
                         svc=False,
                         batch_size=config.REMOTE_SENSING_BATCH_SIZE,
+                        pos_label=protobuf_pos_label,
                         **pipeline_info,
                     )
                 )
@@ -300,6 +312,7 @@ def create(
                 predictive_primitive="svc",
                 is_pooled=config.IS_POOLED,
                 n_jobs=n_jobs,
+                pos_label=protobuf_pos_label,
                 **pipeline_info,
             )
         )
@@ -311,6 +324,7 @@ def create(
                     predictive_primitive="forest",
                     is_pooled=config.IS_POOLED,
                     n_jobs=n_jobs,
+                    pos_label=protobuf_pos_label,
                     **pipeline_info,
                 )
             )

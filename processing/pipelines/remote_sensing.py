@@ -34,7 +34,8 @@ def create_pipeline(
     batch_size: int = 128,
     svc: bool = False,
     n_jobs: int = -1,
-    confidences=True,
+    confidences: bool = True,
+    pos_label=None,
     resolver: Optional[Resolver] = None,
 ) -> Pipeline:
     input_val = "steps.{}.produce"
@@ -213,6 +214,7 @@ def create_pipeline(
         step.add_hyperparameter("rank_confidences", ArgumentType.VALUE, True)
         step.add_hyperparameter("confidences", ArgumentType.VALUE, confidences)
         step.add_hyperparameter("calibrate", ArgumentType.VALUE, True)
+        step.add_hyperparameter("pos_label", ArgumentType.VALUE, pos_label)
     else:
         # use random forest
         step = PrimitiveStep(
@@ -234,6 +236,7 @@ def create_pipeline(
         step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
         step.add_hyperparameter("grid_search", ArgumentType.VALUE, grid_search)
         step.add_hyperparameter("compute_confidences", ArgumentType.VALUE, confidences)
+        step.add_hyperparameter("pos_label", ArgumentType.VALUE, pos_label)
 
     image_pipeline.add_step(step)
     previous_step += 1
