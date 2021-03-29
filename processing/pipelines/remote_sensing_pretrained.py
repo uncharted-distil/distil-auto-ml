@@ -34,6 +34,7 @@ def create_pipeline(
     is_pooled=True,
     batch_size: int = 128,
     n_jobs=-1,
+    pos_label=None,
     resolver: Optional[Resolver] = None,
 ) -> Pipeline:
     input_val = "steps.{}.produce"
@@ -227,6 +228,7 @@ def create_pipeline(
         step.add_hyperparameter("scaling", ArgumentType.VALUE, "unit_norm")
         step.add_hyperparameter("rank_confidences", ArgumentType.VALUE, True)
         step.add_hyperparameter("calibrate", ArgumentType.VALUE, True)
+        step.add_hyperparameter("pos_label", ArgumentType.VALUE, pos_label)
         step.add_output("produce")
         rs_pretrained_pipeline.add_step(step)
         previous_step += 1
@@ -242,6 +244,7 @@ def create_pipeline(
         step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
         step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
         step.add_hyperparameter("compute_confidences", ArgumentType.VALUE, True)
+        step.add_hyperparameter("pos_label", ArgumentType.VALUE, pos_label)
         step.add_argument(
             name="inputs",
             argument_type=ArgumentType.CONTAINER,

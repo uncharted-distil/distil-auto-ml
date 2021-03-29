@@ -45,6 +45,7 @@ def create_pipeline(
     grid_search=False,
     n_jobs: int = -1,
     compute_confidences=True,
+    pos_label=None,
     resolver: Optional[Resolver] = None,
 ) -> Pipeline:
     input_val = "steps.{}.produce"
@@ -375,6 +376,7 @@ def create_pipeline(
         step.add_hyperparameter(
             "compute_confidences", ArgumentType.VALUE, compute_confidences
         )
+        step.add_hyperparameter("pos_label", ArgumentType.VALUE, pos_label)
         step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
     step.add_argument(
         name="inputs",
