@@ -109,10 +109,11 @@ def create(
         dataset_doc = json.load(json_file)
 
     # extract metric from the problem
-    protobuf_metric = problem["problem"]["performance_metrics"][0]["metric"]
-    protobuf_pos_label = problem["problem"]["performance_metrics"][0]["params"][
-        "pos_label"
-    ]
+    first_metric = problem["problem"]["performance_metrics"][0]
+    protobuf_metric = first_metric["metric"]
+    protobuf_pos_label = (
+        first_metric["params"]["pos_label"] if "params" in first_metric else None
+    )
     metric = metrics.translate_proto_metric(protobuf_metric)
     logger.info(f"Optimizing on metric {metric}")
 
