@@ -146,25 +146,20 @@ docker-compose up distil envoy simple-ta3
   cd d3m
   pip install -e .\[gpu\]
   cd ..
-  cd d3m-primitives
+  cd common-primitives
   pip install -e .\[gpu\]
   cd ..
   cd distil-primitives
   pip install -e .\[gpu\]
   cd ..
-  cd common-primitives
+  cd d3m-primitives
   pip install -e .\[gpu\]
-  pip install python-lzo
-  pip install sent2vec
-  pip install hyppo==0.1.3
-  pip install mxnet
+  pip install python-lzo hyppo==0.1.3 mxnet
   pip install -e git+https://github.com/NewKnowledge/simon-d3m-wrapper.git#egg=SimonD3MWrapper
   pip install -e git+https://gitlab.com/datadrivendiscovery/sklearn-wrap.git@dist#egg=sklearn_wrap
   pip install -e git+https://github.com/usc-isi-i2/dsbox-primitives#egg=dsbox-primitives
   pip install -e git+https://github.com/neurodata/primitives-interfaces#egg=jhu-primitives
    # if error with enum and IntFlag try pip uninstall -y enum34
-   # fix some clobberd versioning
-  pip install -U pandas
  ```
 
  - MongoDB
