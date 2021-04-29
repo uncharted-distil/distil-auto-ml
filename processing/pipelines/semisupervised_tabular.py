@@ -87,9 +87,12 @@ def create_pipeline(
         argument_type=ArgumentType.CONTAINER,
         data_reference=input_val.format(previous_step),
     )
-    step_2.add_hyperparameter(
-        name="exclude_columns", argument_type=ArgumentType.VALUE, data=[exclude_column]
-    )
+    if exclude_column:
+        step_2.add_hyperparameter(
+            name="exclude_columns",
+            argument_type=ArgumentType.VALUE,
+            data=[exclude_column],
+        )
     step_2.add_output("produce")
     pipeline_description.add_step(step_2)
     previous_step += 1
@@ -109,9 +112,12 @@ def create_pipeline(
     step_3.add_hyperparameter(
         name="use_semantic_types", argument_type=ArgumentType.VALUE, data=True
     )
-    step_3.add_hyperparameter(
-        name="exclude_columns", argument_type=ArgumentType.VALUE, data=(exclude_column,)
-    )
+    if exclude_column:
+        step_3.add_hyperparameter(
+            name="exclude_columns",
+            argument_type=ArgumentType.VALUE,
+            data=[exclude_column],
+        )
     step_3.add_output("produce")
     pipeline_description.add_step(step_3)
     previous_step += 1
