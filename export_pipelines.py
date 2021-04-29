@@ -92,6 +92,11 @@ PIPE_TO_DATASET = {
     ),
     "vertex_classification": ("LL1_VTXC_1369_synthetic_MIN_METADATA", "f1Macro", {}),
     "semisupervised_tabular": ("SEMI_1040_sylva_prior_MIN_METADATA", "f1Macro", {}),
+    "semisupervised_correct_and_smooth": (
+        "SEMI_1040_sylva_prior_MIN_METADATA",
+        "f1Macro",
+        {},
+    ),
     "timeseries_lstm_fcn": ("LL1_50words_MIN_METADATA", "f1Macro", {}),
     "mi_ranking": ("185_baseball_MIN_METADATA", "f1Macro", {}),
     "remote_sensing": (

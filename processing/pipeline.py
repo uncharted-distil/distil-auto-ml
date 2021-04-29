@@ -68,6 +68,7 @@ from processing.pipelines import (
     timeseries_var,
     timeseries_lstm_fcn,
     semisupervised_tabular,
+    semisupervised_correct_and_smooth,
     timeseries_deepar,
     timeseries_nbeats,
 )
@@ -427,6 +428,20 @@ def create(
                 resolver=resolver,
                 exclude_column=exclude_column,
                 profiler="simple",
+            )
+        )
+        pipelines.append(
+            semisupervised_correct_and_smooth.create_pipeline(
+                metric=metric,
+                normalize_features=True,
+                resolver=resolver,
+            )
+        )
+        pipelines.append(
+            semisupervised_correct_and_smooth.create_pipeline(
+                metric=metric,
+                normalize_features=False,
+                resolver=resolver,
             )
         )
     else:
