@@ -91,7 +91,11 @@ PIPE_TO_DATASET = {
         {"is_edgelist": True},
     ),
     "vertex_classification": ("LL1_VTXC_1369_synthetic_MIN_METADATA", "f1Macro", {}),
-    "semisupervised_tabular": ("SEMI_1040_sylva_prior_MIN_METADATA", "f1Macro", {}),
+    "semisupervised_tabular": (
+        "SEMI_1040_sylva_prior_MIN_METADATA",
+        "f1Macro",
+        {"exclude_column": 109},
+    ),
     "semisupervised_correct_and_smooth": (
         "SEMI_1040_sylva_prior_MIN_METADATA",
         "f1Macro",
