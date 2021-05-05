@@ -17,9 +17,11 @@ def clean_pipelines(folder_path):
 
 annotations_only = False
 needs_pipelines = False
+delete_pipelines = False
 if len(sys.argv) > 1:
     annotations_only = sys.argv[1] == "--annotations"
     needs_pipelines = sys.argv[1] == "--needs-pipelines"
+    delete_pipelines = sys.argv[1] == "--clean"
 
 # Generate the list of run archive files, and store the set of their ids.
 run_files = glob.glob("pipelines/*_run.yaml.gz")
@@ -60,7 +62,8 @@ for p in primitive_files:
     )
 
     # clean existing pipelines out of the `primitives` pipeline folders to avoid accumulating
-    clean_pipelines(folder_path)
+    if delete_pipelines:
+        clean_pipelines(folder_path)
 
     # loop through primitives in each pipeline to find one that matches our current annotation
     if not annotations_only:

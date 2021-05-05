@@ -429,9 +429,20 @@ class TaskManager:
                 if task.output_keys:
                     task_keys = json.loads(task.output_keys)
                     output_key_map = {}
+
+                    # loop  through the allowed output types in order and select the first we support
+                    output_types = json.loads(task.output_types)
+                    selected_output_type = ValueType.CSV_URI
+                    for output_type in output_types:
+                        if output_type in ALLOWED_TYPES:
+                            selected_output_type = output_type
+                            break
+
                     for task_key in task_keys:
                         preds_path = utils.make_preds_filename(
-                            task.request_id, output_key=task_key
+                            task.request_id,
+                            output_key=task_key,
+                            output_type=selected_output_type,
                         )
                         if not preds_path.exists() and not preds_path.is_file():
                             # return error to ta3

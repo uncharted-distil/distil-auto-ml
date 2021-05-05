@@ -7,7 +7,7 @@ from common_primitives.extract_columns_semantic_types import (
     ExtractColumnsBySemanticTypesPrimitive,
 )
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
-
+from common_primitives.replace_semantic_types import ReplaceSemanticTypesPrimitive
 from d3m import utils
 from d3m.metadata.base import ArgumentType
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
@@ -16,6 +16,7 @@ from d3m.primitives.remote_sensing.remote_sensing_pretrained import (
 )
 
 from distil.primitives.ranked_linear_svc import RankedLinearSVCPrimitive
+from distil.primitives.list_to_dataframe import ListEncoderPrimitive
 from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from distil.primitives.satellite_image_loader import (
     DataFrameSatelliteImageLoaderPrimitive,
@@ -33,7 +34,8 @@ def create_pipeline(
     batch_size: int = 128,
     svc: bool = False,
     n_jobs: int = -1,
-    confidences=True,
+    confidences: bool = True,
+    pos_label=None,
     resolver: Optional[Resolver] = None,
 ) -> Pipeline:
     input_val = "steps.{}.produce"
@@ -133,7 +135,10 @@ def create_pipeline(
     step.add_hyperparameter(
         "semantic_types",
         ArgumentType.VALUE,
-        ("http://schema.org/ImageObject",),
+        (
+            "https://metadata.datadrivendiscovery.org/types/LocationPolygon",
+            "http://schema.org/ImageObject",
+        ),
     )
     image_pipeline.add_step(step)
     previous_step += 1
@@ -174,7 +179,20 @@ def create_pipeline(
     image_pipeline.add_step(step)
     previous_step += 1
 
-    # step 7 - Generates a linear sv or random forest model.
+    # step 7 get coordinates into separate columns
+    step = PrimitiveStep(
+        primitive_description=ListEncoderPrimitive.metadata.query(), resolver=resolver
+    )
+    step.add_argument(
+        name="inputs",
+        argument_type=ArgumentType.CONTAINER,
+        data_reference=input_val.format(previous_step),
+    )
+    step.add_output("produce")
+    image_pipeline.add_step(step)
+    previous_step += 1
+
+    # step 8 - Generates a linear sv or random forest model.
     if svc:
         # use linear svc
         step = PrimitiveStep(
@@ -196,6 +214,7 @@ def create_pipeline(
         step.add_hyperparameter("rank_confidences", ArgumentType.VALUE, True)
         step.add_hyperparameter("confidences", ArgumentType.VALUE, confidences)
         step.add_hyperparameter("calibrate", ArgumentType.VALUE, True)
+        step.add_hyperparameter("pos_label", ArgumentType.VALUE, pos_label)
     else:
         # use random forest
         step = PrimitiveStep(
@@ -217,11 +236,12 @@ def create_pipeline(
         step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
         step.add_hyperparameter("grid_search", ArgumentType.VALUE, grid_search)
         step.add_hyperparameter("compute_confidences", ArgumentType.VALUE, confidences)
+        step.add_hyperparameter("pos_label", ArgumentType.VALUE, pos_label)
 
     image_pipeline.add_step(step)
     previous_step += 1
 
-    # step 8 - convert predictions to expected format
+    # step 9 - convert predictions to expected format
     step = PrimitiveStep(
         primitive_description=ConstructPredictionsPrimitive.metadata.query(),
         resolver=resolver,

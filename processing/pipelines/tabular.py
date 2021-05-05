@@ -1,6 +1,6 @@
 from typing import Optional
 
-from common_primitives.column_parser import ColumnParserPrimitive
+from distil.primitives.column_parser import ColumnParserPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
 from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.extract_columns_semantic_types import (
@@ -45,6 +45,7 @@ def create_pipeline(
     grid_search=False,
     n_jobs: int = -1,
     compute_confidences=True,
+    pos_label=None,
     resolver: Optional[Resolver] = None,
 ) -> Pipeline:
     input_val = "steps.{}.produce"
@@ -118,7 +119,7 @@ def create_pipeline(
         "http://schema.org/Float",
         "https://metadata.datadrivendiscovery.org/types/FloatVector",
     )
-    step.add_hyperparameter("parse_semantic_types", ArgumentType.VALUE, semantic_types)
+    step.add_hyperparameter("parsing_semantics", ArgumentType.VALUE, semantic_types)
     tabular_pipeline.add_step(step)
     previous_step += 1
     parse_step = previous_step
@@ -375,6 +376,7 @@ def create_pipeline(
         step.add_hyperparameter(
             "compute_confidences", ArgumentType.VALUE, compute_confidences
         )
+        step.add_hyperparameter("pos_label", ArgumentType.VALUE, pos_label)
         step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
     step.add_argument(
         name="inputs",

@@ -68,6 +68,7 @@ from processing.pipelines import (
     timeseries_var,
     timeseries_lstm_fcn,
     semisupervised_tabular,
+    semisupervised_correct_and_smooth,
     timeseries_deepar,
     timeseries_nbeats,
 )
@@ -109,7 +110,11 @@ def create(
         dataset_doc = json.load(json_file)
 
     # extract metric from the problem
-    protobuf_metric = problem["problem"]["performance_metrics"][0]["metric"]
+    first_metric = problem["problem"]["performance_metrics"][0]
+    protobuf_metric = first_metric["metric"]
+    protobuf_pos_label = (
+        first_metric["params"]["pos_label"] if "params" in first_metric else None
+    )
     metric = metrics.translate_proto_metric(protobuf_metric)
     logger.info(f"Optimizing on metric {metric}")
 
@@ -159,6 +164,7 @@ def create(
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
                     n_jobs=n_jobs,
+                    pos_label=protobuf_pos_label,
                 )
             )
             pipelines.append(
@@ -196,6 +202,7 @@ def create(
                     grid_search=not tune_pipeline,
                     max_one_hot=8,
                     n_jobs=n_jobs,
+                    pos_label=protobuf_pos_label,
                 )
             )
         else:
@@ -209,6 +216,7 @@ def create(
                         use_boost=True,
                         max_one_hot=8,
                         n_jobs=n_jobs,
+                        pos_label=protobuf_pos_label,
                     )
                 )
             pipelines.append(
@@ -256,7 +264,11 @@ def create(
     elif pipeline_type == "image":
         pipelines.append(
             image.create_pipeline(
-                metric=metric, n_jobs=n_jobs, resolver=resolver, **pipeline_info
+                metric=metric,
+                n_jobs=n_jobs,
+                resolver=resolver,
+                pos_label=protobuf_pos_label,
+                **pipeline_info,
             )
         )
     elif pipeline_type == "remote_sensing":
@@ -280,6 +292,7 @@ def create(
                     confidences=config.COMPUTE_CONFIDENCES,
                     svc=True,
                     batch_size=config.REMOTE_SENSING_BATCH_SIZE,
+                    pos_label=protobuf_pos_label,
                     **pipeline_info,
                 )
             )
@@ -292,6 +305,7 @@ def create(
                         confidences=config.COMPUTE_CONFIDENCES,
                         svc=False,
                         batch_size=config.REMOTE_SENSING_BATCH_SIZE,
+                        pos_label=protobuf_pos_label,
                         **pipeline_info,
                     )
                 )
@@ -303,6 +317,7 @@ def create(
                 predictive_primitive="svc",
                 is_pooled=config.IS_POOLED,
                 n_jobs=n_jobs,
+                pos_label=protobuf_pos_label,
                 **pipeline_info,
             )
         )
@@ -314,6 +329,7 @@ def create(
                     predictive_primitive="forest",
                     is_pooled=config.IS_POOLED,
                     n_jobs=n_jobs,
+                    pos_label=protobuf_pos_label,
                     **pipeline_info,
                 )
             )
@@ -323,7 +339,7 @@ def create(
                     metric=metric,
                     resolver=resolver,
                     predictive_primitive="mlp",
-                    is_pooled=not config.IS_POOLED and config.MLP_CLASSIFIER,
+                    is_pooled=config.IS_POOLED and config.MLP_CLASSIFIER,
                     n_jobs=n_jobs,
                     **pipeline_info,
                 )
@@ -429,6 +445,20 @@ def create(
                 resolver=resolver,
                 exclude_column=exclude_column,
                 profiler="simple",
+            )
+        )
+        pipelines.append(
+            semisupervised_correct_and_smooth.create_pipeline(
+                metric=metric,
+                normalize_features=True,
+                resolver=resolver,
+            )
+        )
+        pipelines.append(
+            semisupervised_correct_and_smooth.create_pipeline(
+                metric=metric,
+                normalize_features=False,
+                resolver=resolver,
             )
         )
     else:

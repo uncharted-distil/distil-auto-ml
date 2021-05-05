@@ -809,7 +809,7 @@ def decode_pipeline_description(pipeline_description, resolver, *, pipeline_clas
                 elif argument_type == 'data':
                     step.add_argument(argument_name, metadata_base.ArgumentType.DATA, argument_description.data.data)
                 elif argument_type == 'container_list':
-                    step.add_argument(argument_name, metadata_base.ArgumentType.CONTAINER, argument_description.container_list.data)
+                    step.add_argument(argument_name, metadata_base.ArgumentType.CONTAINER, list(argument_description.container_list.data))
                 else:
                     raise exceptions.UnexpectedValueError("Unknown argument type: {argument_type}".format(argument_type=argument_type))
 
