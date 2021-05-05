@@ -30,7 +30,6 @@ def create_pipeline(
     max_one_hot: int = 16,
     scale: bool = False,
     min_meta: bool = False,
-    max_features: int = None,
     resolver: Optional[Resolver] = None,
 ) -> Pipeline:
 
