@@ -134,7 +134,7 @@ def create_pipeline(
     )
     text_pipeline.add_step(step)
     previous_step += 1
-    attibute_step = previous_step
+    attribute_step = previous_step
 
     # step 5 - Extract targets
     step = PrimitiveStep(
@@ -164,7 +164,7 @@ def create_pipeline(
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(attibute_step),
+        data_reference=input_val.format(attribute_step),
     )
     step.add_argument(
         name="outputs",

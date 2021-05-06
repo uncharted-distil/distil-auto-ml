@@ -1,28 +1,40 @@
 from typing import Optional
-
-from common_primitives.column_parser import ColumnParserPrimitive
-from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
+from distil.primitives.ensemble_forest import EnsembleForestPrimitive
 from common_primitives.extract_columns_semantic_types import (
     ExtractColumnsBySemanticTypesPrimitive,
 )
 from common_primitives.grouping_field_compose import GroupingFieldComposePrimitive
+from common_primitives.column_parser import ColumnParserPrimitive
+from common_primitives.dataset_to_dataframe import DatasetToDataFramePrimitive
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
-from d3m import utils
-from d3m.metadata.base import ArgumentType
+from common_primitives.xgboost_gbtree import XGBoostGBTreeClassifierPrimitive
+from common_primitives.xgboost_regressor import XGBoostGBTreeRegressorPrimitive
+from common_primitives.construct_predictions import ConstructPredictionsPrimitive
+from processing.metrics import (
+    regression_metrics,
+    classification_metrics,
+    confidence_metrics,
+)
 from d3m.metadata.pipeline import Pipeline, PrimitiveStep, Resolver
-from d3m.primitives.data_transformation import construct_predictions
-from d3m.primitives.time_series_forecasting.lstm import DeepAR
+from d3m.metadata.base import ArgumentType
+from d3m.metadata.pipeline import Pipeline, PrimitiveStep
+from d3m.metadata.pipeline import Resolver
 
-PipelineContext = utils.Enum(value="PipelineContext", names=["TESTING"], start=1)
 
-
-def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipeline:
+def create_pipeline(
+    metric: str,
+    use_boost: bool = False,
+    grid_search=False,
+    n_jobs: int = -1,
+    compute_confidences=False,
+    resolver: Optional[Resolver] = None,
+) -> Pipeline:
     previous_step = 0
-    input_val = "steps.{}.produce"
     tune_steps = []
-    # create the basic pipeline
-    deepar_pipeline = Pipeline(context=PipelineContext.TESTING)
-    deepar_pipeline.add_input(name="inputs")
+    input_val = "steps.{}.produce"
+
+    ts_tabular_pipeline = Pipeline()
+    ts_tabular_pipeline.add_input(name="inputs")
 
     # step 0 - Extract dataframe from dataset
     step = PrimitiveStep(
@@ -33,7 +45,7 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         name="inputs", argument_type=ArgumentType.CONTAINER, data_reference="inputs.0"
     )
     step.add_output("produce")
-    deepar_pipeline.add_step(step)
+    ts_tabular_pipeline.add_step(step)
 
     step = PrimitiveStep(
         primitive_description=SimpleProfilerPrimitive.metadata.query(),
@@ -44,15 +56,11 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         argument_type=ArgumentType.CONTAINER,
         data_reference=input_val.format(previous_step),
     )
-    step.add_hyperparameter(
-        "categorical_max_ratio_distinct_values", ArgumentType.VALUE, 0
-    )
     step.add_output("produce")
-    deepar_pipeline.add_step(step)
+    ts_tabular_pipeline.add_step(step)
     previous_step += 1
-    # tune_steps.append(previous_step)
 
-    # step 1 - Parse columns.
+    # Parse columns.
     step = PrimitiveStep(
         primitive_description=ColumnParserPrimitive.metadata.query(), resolver=resolver
     )
@@ -70,11 +78,11 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         "http://schema.org/DateTime",
     )
     step.add_hyperparameter("parse_semantic_types", ArgumentType.VALUE, semantic_types)
-    deepar_pipeline.add_step(step)
+    ts_tabular_pipeline.add_step(step)
     previous_step += 1
     parse_step = previous_step
 
-    # Step 2: parse attribute semantic types
+    # Extract attributes
     step = PrimitiveStep(
         primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query(),
         resolver=resolver,
@@ -84,31 +92,20 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         argument_type=ArgumentType.CONTAINER,
         data_reference=input_val.format(parse_step),
     )
+    step.add_output("produce")
     step.add_hyperparameter(
-        name="semantic_types",
-        argument_type=ArgumentType.VALUE,
-        data=["https://metadata.datadrivendiscovery.org/types/Attribute"],
+        "semantic_types",
+        ArgumentType.VALUE,
+        (
+            "https://metadata.datadrivendiscovery.org/types/Attribute",
+            "https://metadata.datadrivendiscovery.org/types/PrimaryKey",
+        ),
     )
-    step.add_output("produce")
-    deepar_pipeline.add_step(step)
+    ts_tabular_pipeline.add_step(step)
     previous_step += 1
-    attribute_step = previous_step
+    attributes_step = previous_step
 
-    # Step 3: Grouping Field Compose
-    step = PrimitiveStep(
-        primitive_description=GroupingFieldComposePrimitive.metadata.query(),
-        resolver=resolver,
-    )
-    step.add_argument(
-        name="inputs",
-        argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(previous_step),
-    )
-    step.add_output("produce")
-    deepar_pipeline.add_step(step)
-    previous_step += 1
-
-    # Step 4: parse target semantic types
+    # Extract targets
     step = PrimitiveStep(
         primitive_description=ExtractColumnsBySemanticTypesPrimitive.metadata.query(),
         resolver=resolver,
@@ -118,50 +115,61 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         argument_type=ArgumentType.CONTAINER,
         data_reference=input_val.format(parse_step),
     )
-    step.add_hyperparameter(
-        name="semantic_types",
-        argument_type=ArgumentType.VALUE,
-        data=[
-            "https://metadata.datadrivendiscovery.org/types/Target",
-            "https://metadata.datadrivendiscovery.org/types/TrueTarget",
-            "https://metadata.datadrivendiscovery.org/types/SuggestedTarget",
-        ],
-    )
     step.add_output("produce")
-    deepar_pipeline.add_step(step)
+    target_types = (
+        "https://metadata.datadrivendiscovery.org/types/Target",
+        "https://metadata.datadrivendiscovery.org/types/TrueTarget",
+    )
+    step.add_hyperparameter("semantic_types", ArgumentType.VALUE, target_types)
+    ts_tabular_pipeline.add_step(step)
     previous_step += 1
     target_step = previous_step
 
-    # step 5 - Forecasting Primitive
-    step = PrimitiveStep(
-        primitive_description=DeepAR.metadata.query(), resolver=resolver
-    )
+    if use_boost:
+        if metric in regression_metrics:
+            step = PrimitiveStep(
+                primitive_description=XGBoostGBTreeRegressorPrimitive.metadata.query(),
+                resolver=resolver,
+            )
+        elif metric in classification_metrics and metric not in confidence_metrics:
+            # xgboost classifier doesn't support probability generation so no support for confidence-based metrics
+            step = PrimitiveStep(
+                primitive_description=XGBoostGBTreeClassifierPrimitive.metadata.query(),
+                resolver=resolver,
+            )
+    else:
+        step = PrimitiveStep(
+            primitive_description=EnsembleForestPrimitive.metadata.query(),
+            resolver=resolver,
+        )
+        step.add_hyperparameter("grid_search", ArgumentType.VALUE, grid_search)
+        step.add_hyperparameter("small_dataset_fits", ArgumentType.VALUE, 1)
+        step.add_hyperparameter(
+            "compute_confidences", ArgumentType.VALUE, compute_confidences
+        )
+
+    step.add_hyperparameter("n_jobs", ArgumentType.VALUE, n_jobs)
     step.add_argument(
         name="inputs",
         argument_type=ArgumentType.CONTAINER,
-        data_reference=input_val.format(attribute_step),
+        data_reference=input_val.format(attributes_step),
     )
     step.add_argument(
         name="outputs",
         argument_type=ArgumentType.CONTAINER,
         data_reference=input_val.format(target_step),
-    ),
-    step.add_hyperparameter(
-        name="quantiles", argument_type=ArgumentType.VALUE, data=[0.05, 0.95]
     )
-    step.add_hyperparameter(
-        name="prediction_length", argument_type=ArgumentType.VALUE, data=288
-    )
-    step.add_hyperparameter("nan_padding", ArgumentType.VALUE, False)
     step.add_output("produce")
 
-    deepar_pipeline.add_step(step)
+    if not use_boost:
+        step.add_hyperparameter("metric", ArgumentType.VALUE, metric)
+
+    ts_tabular_pipeline.add_step(step)
     previous_step += 1
     tune_steps.append(previous_step)
 
-    # Step 6: construct predictions
     step = PrimitiveStep(
-        primitive_description=construct_predictions.Common.metadata.query(),
+        primitive_description=ConstructPredictionsPrimitive.metadata.query(),
         resolver=resolver,
     )
     step.add_argument(
@@ -175,12 +183,12 @@ def create_pipeline(metric: str, resolver: Optional[Resolver] = None) -> Pipelin
         data_reference=input_val.format(parse_step),
     )
     step.add_output("produce")
-    deepar_pipeline.add_step(step)
+    ts_tabular_pipeline.add_step(step)
     previous_step += 1
 
     # Adding output step to the pipeline
-    deepar_pipeline.add_output(
+    ts_tabular_pipeline.add_output(
         name="output", data_reference=input_val.format(previous_step)
     )
 
-    return (deepar_pipeline, tune_steps)
+    return (ts_tabular_pipeline, tune_steps)

@@ -84,6 +84,21 @@ PIPE_TO_DATASET = {
         "meanAbsoluteError",
         {},
     ),
+    "timeseries_deepar": (
+        "56_sunspots_monthly_MIN_METADATA",
+        "meanAbsoluteError",
+        {},
+    ),
+    "timeseries_tabular": (
+        "LL1_terra_canopy_height_long_form_s4_70_MIN_METADATA",
+        "meanAbsoluteError",
+        {},
+    ),
+    "timeseries_rnn": (
+        "LL1_PHEM_Monthly_Malnutrition_MIN_METADATA",
+        "meanAbsoluteError",
+        {},
+    ),
     "vertex_nomination": ("LL1_net_nomination_seed_MIN_METADATA", "accuracy", {}),
     "vertex_nomination": (
         "LL1_EDGELIST_net_nomination_seed_MIN_METADATA",

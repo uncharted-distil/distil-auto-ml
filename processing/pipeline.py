@@ -279,6 +279,7 @@ def create(
                     resolver=resolver,
                     batch_size=config.REMOTE_SENSING_BATCH_SIZE,
                     n_jobs=n_jobs,
+                    confidences=config.COMPUTE_CONFIDENCES,
                     **pipeline_info,
                 )
             )
@@ -288,6 +289,7 @@ def create(
                     metric=metric,
                     resolver=resolver,
                     n_jobs=n_jobs,
+                    confidences=config.COMPUTE_CONFIDENCES,
                     svc=True,
                     batch_size=config.REMOTE_SENSING_BATCH_SIZE,
                     pos_label=protobuf_pos_label,
@@ -300,6 +302,7 @@ def create(
                         metric=metric,
                         resolver=resolver,
                         n_jobs=n_jobs,
+                        confidences=config.COMPUTE_CONFIDENCES,
                         svc=False,
                         batch_size=config.REMOTE_SENSING_BATCH_SIZE,
                         pos_label=protobuf_pos_label,
@@ -409,6 +412,20 @@ def create(
         if max_models > 2:
             pipelines.append(
                 timeseries_deepar.create_pipeline(metric=metric, resolver=resolver)
+            )
+        if max_models > 3:
+            pipelines.append(
+                timeseries_rnn.create_pipeline(metric=metric, resolver=resolver)
+            )
+        if max_models > 4:
+            pipelines.append(
+                timeseries_tabular.create_pipeline(metric=metric, resolver=resolver)
+            )
+        if max_models > 5:
+            pipelines.append(
+                timeseries_tabular.create_pipeline(
+                    metric=metric, use_boost=True, resolver=resolver
+                )
             )
 
     elif pipeline_type == "semisupervised_tabular":
