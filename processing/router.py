@@ -211,12 +211,12 @@ def is_text(dataset_doc: dict) -> bool:
 
 def is_semisupervised_tabular(problem: dict) -> bool:
     remote_sensing = _problem.TaskKeyword.REMOTE_SENSING in problem["problem"]["task_keywords"]
-    return !remote_sensing && _problem.TaskKeyword.SEMISUPERVISED in problem["problem"]["task_keywords"]
+    return not remote_sensing and _problem.TaskKeyword.SEMISUPERVISED in problem["problem"]["task_keywords"]
 
 
 def is_semisupervised_remote_sensing_pretrained(problem: dict) -> bool:
     remote_sensing = _problem.TaskKeyword.REMOTE_SENSING in problem["problem"]["task_keywords"]
-    return remote_sensing && _problem.TaskKeyword.SEMISUPERVISED in problem["problem"]["task_keywords"]
+    return remote_sensing and _problem.TaskKeyword.SEMISUPERVISED in problem["problem"]["task_keywords"]
 
 
 # --
@@ -266,6 +266,9 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
 
     elif is_image(dataset_doc, problem):
         return "image", {}
+
+    elif is_semisupervised_remote_sensing_pretrained(problem):
+        return "semisupervised_remote_sensing_pretrained", {}
 
     elif is_remote_sensing_pretrained(dataset_doc, problem):
         return "remote_sensing_pretrained", {}
@@ -342,9 +345,6 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
     elif is_semisupervised_tabular(problem):
         # return 'table', {'semi': True}
         return "semisupervised_tabular", {}
-    elif is_semisupervised_remote_sensing_pretrained(problem):
-        # return 'table', {'semi': True}
-        return "semisupervised_remote_sensing_pretrained", {}
 
     else:
         raise Exception("!! router failed on problem")
