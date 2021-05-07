@@ -145,6 +145,7 @@ def is_remote_sensing_pretrained(dataset_doc: dict, problem: dict) -> bool:
         "image" not in get_resource_types(dataset_doc)
         and classification
         and remote_sensing
+        and _problem.TaskKeyword.SEMISUPERVISED not in problem["problem"]["task_keywords"]
     )
 
 
@@ -160,6 +161,7 @@ def is_remote_sensing(dataset_doc: dict, problem: dict) -> bool:
         "image" in get_resource_types(dataset_doc)
         and (classification or regression)
         and remote_sensing
+        and _problem.TaskKeyword.SEMISUPERVISED not in problem["problem"]["task_keywords"]
     )
 
 
@@ -208,7 +210,13 @@ def is_text(dataset_doc: dict) -> bool:
 
 
 def is_semisupervised_tabular(problem: dict) -> bool:
-    return _problem.TaskKeyword.SEMISUPERVISED in problem["problem"]["task_keywords"]
+    remote_sensing = _problem.TaskKeyword.REMOTE_SENSING in problem["problem"]["task_keywords"]
+    return not remote_sensing and _problem.TaskKeyword.SEMISUPERVISED in problem["problem"]["task_keywords"]
+
+
+def is_semisupervised_remote_sensing_pretrained(problem: dict) -> bool:
+    remote_sensing = _problem.TaskKeyword.REMOTE_SENSING in problem["problem"]["task_keywords"]
+    return remote_sensing and _problem.TaskKeyword.SEMISUPERVISED in problem["problem"]["task_keywords"]
 
 
 # --
@@ -258,6 +266,9 @@ def get_routing_info(dataset_doc: dict, problem: dict, metric: str) -> Tuple[str
 
     elif is_image(dataset_doc, problem):
         return "image", {}
+
+    elif is_semisupervised_remote_sensing_pretrained(problem):
+        return "semisupervised_remote_sensing_pretrained", {}
 
     elif is_remote_sensing_pretrained(dataset_doc, problem):
         return "remote_sensing_pretrained", {}

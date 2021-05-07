@@ -461,6 +461,23 @@ def create(
                 resolver=resolver,
             )
         )
+
+    elif pipeline_type == "semisupervised_remote_sensing_pretrained":
+        pipelines.append(
+            semisupervised_correct_and_smooth.create_pipeline(
+                metric=metric,
+                normalize_features=True,
+                resolver=resolver,
+            )
+        )
+        pipelines.append(
+            semisupervised_correct_and_smooth.create_pipeline(
+                metric=metric,
+                normalize_features=False,
+                resolver=resolver,
+            )
+        )
+
     else:
         logger.error(f"Pipeline type [{pipeline_type}] is not yet supported.")
         return None, train_dataset, []
