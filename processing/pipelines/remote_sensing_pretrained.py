@@ -21,7 +21,7 @@ from distil.primitives.ranked_linear_svc import RankedLinearSVCPrimitive
 from distil.primitives.column_parser import ColumnParserPrimitive
 from distil.primitives.enrich_dates import EnrichDatesPrimitive
 from distil.primitives.list_to_dataframe import ListEncoderPrimitive
-from distil.primitives.prefeaturised_pooler import PrefeaturisedPoolingPrimitive
+from distil_primitives_contrib.prefeaturised_pooler import PrefeaturisedPoolingPrimitive
 from dsbox.datapreprocessing.cleaner.iterative_regression import (
     IterativeRegressionImputation,
 )

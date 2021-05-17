@@ -6,8 +6,6 @@ import json
 import logging
 import importlib
 import hashlib
-import traceback
-import pprint
 
 # Make the output a bit quieter...
 l = logging.getLogger()
@@ -125,7 +123,6 @@ PIPE_TO_DATASET = {
     ),
     "remote_sensing_mlp": ("LL1_bigearth_landuse_detection", "f1Macro", {}),
     "common": ("LL0_acled_reduced_MIN_METADATA", "f1Macro", {}),
-    "remote_sensing_filtered": ("LL1_bigearth_landuse_detection", "f1Macro", {}),
     "image_retrieval": (
         "LL1_bigearth_landuse_detection",
         "f1Macro",
@@ -154,11 +151,9 @@ SUBMISSION_SUBSET = set(
         "text",
         "vertex_nomination",
         "remote_sensing",
-        "timeseries_var",  # covers timeseries binning
         "timeseries_kanine",  # covers timeseries formatter
         "common",
         "mi_ranking",
-        "remote_sensing_filtered",  # covers vector bounds filter
     ]
 )
 
