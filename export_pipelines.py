@@ -172,6 +172,9 @@ def generate_hash(pipe_json):
 def generate_file_info():
     print("Generating hashes of existing files....")
     # open the existing pipeline dir and generate hashes for each
+    if not os.path.exists(META_DIR):
+        os.makedirs(META_DIR)
+
     files = [f for f in os.listdir(META_DIR) if ".json" in f and not "_run" in f]
     hashes = set()
     pipeline_filenames = {}
