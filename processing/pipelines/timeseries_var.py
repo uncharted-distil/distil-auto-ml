@@ -6,7 +6,6 @@ from common_primitives.extract_columns_semantic_types import (
 )
 from common_primitives.simple_profiler import SimpleProfilerPrimitive
 from common_primitives.construct_predictions import ConstructPredictionsPrimitive
-from distil.primitives.time_series_binner import TimeSeriesBinnerPrimitive
 
 from distil.primitives.column_parser import ColumnParserPrimitive
 from d3m.metadata.base import ArgumentType
