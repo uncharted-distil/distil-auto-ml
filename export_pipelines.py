@@ -115,7 +115,6 @@ PIPE_TO_DATASET = {
         {},
     ),
     "timeseries_lstm_fcn": ("LL1_50words_MIN_METADATA", "f1Macro", {}),
-    "mi_ranking": ("185_baseball_MIN_METADATA", "f1Macro", {}),
     "remote_sensing": (
         "LL1_bigearth_landuse_detection",
         "f1Macro",
@@ -152,8 +151,7 @@ SUBMISSION_SUBSET = set(
         "vertex_nomination",
         "remote_sensing",
         "timeseries_kanine",  # covers timeseries formatter
-        "common",
-        "mi_ranking",
+        "common"
     ]
 )
 
