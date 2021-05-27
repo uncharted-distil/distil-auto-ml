@@ -102,7 +102,12 @@ docker-compose up distil envoy simple-ta3
  ```console
   git clone https://github.com/uncharted-distil/distil-primitives
  ```
-
+ 
+ - Clone distil-primitives-contrib
+ 
+ ```console
+  git clone https://github.com/uncharted-distil/distil-primitives-contrib
+ ```
  - Change into the distil-auto-ml directory
 
  ```console
@@ -153,6 +158,9 @@ docker-compose up distil envoy simple-ta3
   pip install -e .\[gpu\]
   cd ..
   cd d3m-primitives
+  pip install -e .\[gpu\]
+  cd ..
+  cd distil-primitives-contrib
   pip install -e .\[gpu\]
   pip install python-lzo hyppo==0.1.3 mxnet
   pip install -e git+https://github.com/NewKnowledge/simon-d3m-wrapper.git#egg=SimonD3MWrapper
