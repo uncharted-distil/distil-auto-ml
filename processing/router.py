@@ -138,12 +138,13 @@ def is_remote_sensing_pretrained(dataset_doc: dict, problem: dict) -> bool:
     classification = (
         _problem.TaskKeyword.CLASSIFICATION in problem["problem"]["task_keywords"]
     )
+    regression = _problem.TaskKeyword.REGRESSION in problem["problem"]["task_keywords"]
     remote_sensing = (
         _problem.TaskKeyword.REMOTE_SENSING in problem["problem"]["task_keywords"]
     )
     return (
         "image" not in get_resource_types(dataset_doc)
-        and classification
+        and (classification or regression)
         and remote_sensing
         and _problem.TaskKeyword.SEMISUPERVISED not in problem["problem"]["task_keywords"]
     )
