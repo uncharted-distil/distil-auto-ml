@@ -1,5 +1,6 @@
 import copy
 import logging
+from os import posix_fallocate
 from typing import Tuple
 from d3m.metadata.hyperparams import List
 import numpy as np
@@ -8,7 +9,7 @@ from d3m.container import dataset
 from processing import pipeline
 from sklearn import metrics
 from processing import metrics as processing_metrics
-from sklearn.preprocessing import LabelBinarizer
+from sklearn.preprocessing import label_binarize
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ class Scorer:
     PREDICTION_IDX = 1
     CONFIDENCE_IDX = 2
 
-    def __init__(self, logger, task, score_config, fitted_pipeline, target_idx):
+    def __init__(self, logger, task, score_config, fitted_pipeline, target_idx, pos_label):
         self.logger = logger
         self.solution_id = task.solution_id
 
@@ -34,6 +35,7 @@ class Scorer:
         self.train_size = score_config.train_size
         self.fitted_pipeline = fitted_pipeline
         self.target_idx = target_idx
+        self.pos_label = pos_label
 
     def run(self):
 
@@ -63,6 +65,11 @@ class Scorer:
         sklearn binary scoring funcs run on indicator types just fine
         but will break on categorical w/o setting pos_label kwarg
         """
+
+        # use any explicitly set positive label
+        if self.pos_label:
+            return self.pos_label
+
         # can safely assume there is only one target for now, will have to change in the future
         labels_dtype = labels_series.dtype.name
         # not ideal to compare by string name, but direct comparison of the dtype will throw errors
@@ -96,7 +103,25 @@ class Scorer:
             return metrics.recall_score(true, preds, pos_label=pos_label)
         return metrics.recall_score(true, preds)
 
-    def _roc_score(self, true, confidences, average=None):
+    def _roc_score(self, true, confidences, pos_label=None, average=None):
+        # roc_auc_score assumes that the confidence scores "must be the scores of
+        # the class with the greater label".  In our case, they are (and should be) the confidence
+        # scores of the label the user identified as positive, which may not line up with the
+        # expectation of the roc_auc_score calculation.  What the "greater label" actually is isn't
+        # ever clearly defined in the docs, but looking at the implementation it is the last label in
+        # in the list when unique(labels) is run.  We mimic that logic here, and re-map the labels
+        # so that the positive label will be identified as the greater label within the roc_auc_score
+        # function.
+        if pos_label is not None:
+            labels = np.unique(true)
+            if len(labels) == 1 and pos_label != labels[0]:
+                labels[0] = pos_label
+            elif len(labels) > 1 and  pos_label != labels[1]:
+                temp = labels[1]
+                labels[1] = pos_label
+                labels[0] = temp
+            true = label_binarize(true, labels)[:, 0]
+
         if average is not None:
             return metrics.roc_auc_score(
                 true, confidences, average=average, multi_class="ovr"
@@ -108,7 +133,7 @@ class Scorer:
             metrics.mean_squared_error(true, preds, multioutput="raw_values") ** 0.5
         )
 
-    def _score(self, metric, true, preds, confidences=None):
+    def _score(self, metric, true, preds, confidences=None, pos_label=None):
         if metric == "f1_micro":
             score = metrics.f1_score(true, preds, average="micro")
         elif metric == "f1_macro":
@@ -116,7 +141,7 @@ class Scorer:
         elif metric == "f1":
             score = self._f1(true, preds)
         elif metric == "roc_auc":
-            score = self._roc_score(true, confidences)
+            score = self._roc_score(true, confidences, pos_label=pos_label)
         elif metric == "roc_auc_micro":
             score = self._roc_score(true, confidences, average="micro")
         elif metric == "roc_auc_macro":
@@ -254,7 +279,7 @@ class Scorer:
         metric = processing_metrics.translate_d3m_metric(metric)
 
         # return the score and the metric that was actually applied
-        return ([self._score(metric, true_series, result_series, confidences)], metric)
+        return ([self._score(metric, true_series, result_series, confidences, self.pos_label)], metric)
 
     def ranking(self):
         # rank is always 1 when requested since the system only generates a single solution

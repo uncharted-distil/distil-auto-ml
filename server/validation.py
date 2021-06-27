@@ -98,7 +98,7 @@ class RequestValidator:
     def validate_score_solution_request(self, request):
         r = self.msg.unpack_score_solution_request(request)
         # unpack fields to be validated from request
-        solution_id, _, metrics, method, _, _, _, _, _ = r
+        solution_id, _, metrics, _, method, _, _, _, _, _ = r
 
         if not solution_id:
             raise ValueError("Must pass a solution_id: {}".format(request))
