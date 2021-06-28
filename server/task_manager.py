@@ -154,6 +154,7 @@ class TaskManager:
             solution_id,
             dataset_uri,
             metrics,
+            pos_labels,
             method,
             folds,
             train_test_ratio,
@@ -191,10 +192,12 @@ class TaskManager:
         if len(metrics) > 1:
             self.logger.warn(f"only support scoring on one metric - using {metrics[0]}")
         metric = metrics[0]
+        pos_label = pos_labels[0] if len(pos_labels) >= 1 else None
         conf_id = self._generate_id()
         conf = models.ScoreConfig(
             id=conf_id,
             metric=metric,
+            pos_label=pos_label,
             method=method,
             num_folds=folds,
             # TODO: train_test_ratio is currently unused by SolutionScorer

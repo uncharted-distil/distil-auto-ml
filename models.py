@@ -9,7 +9,6 @@ from sqlalchemy import (
     Text,
     Boolean,
     Float,
-    Binary,
 )
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -157,6 +156,7 @@ class ScoreConfig(Base):
     shuffle = Column(Boolean, default=True)
     random_seed = Column(Integer, default=505)
     stratified = Column(Boolean, default=False)
+    pos_label = Column(String, default="")
 
 
 class Scores(Base):

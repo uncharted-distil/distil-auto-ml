@@ -81,6 +81,13 @@ class Messaging:
             if len(m.metric) is not 0
         ]
 
+        pos_labels = [
+            m.pos_label
+            for m in request.performance_metrics
+            if len(m.pos_label) is not 0
+        ]
+
+
         # method required to be defined
         method = request.configuration.method.lower()
         if len(method) == 0:
@@ -103,6 +110,7 @@ class Messaging:
             solution_id,
             dataset_uri,
             metrics,
+            pos_labels,
             method,
             folds,
             train_test_ratio,
