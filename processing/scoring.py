@@ -20,7 +20,7 @@ class Scorer:
     PREDICTION_IDX = 1
     CONFIDENCE_IDX = 2
 
-    def __init__(self, logger, task, score_config, fitted_pipeline, target_idx, pos_label):
+    def __init__(self, logger, task, score_config, fitted_pipeline, target_idx):
         self.logger = logger
         self.solution_id = task.solution_id
 
@@ -35,7 +35,7 @@ class Scorer:
         self.train_size = score_config.train_size
         self.fitted_pipeline = fitted_pipeline
         self.target_idx = target_idx
-        self.pos_label = pos_label
+        self.pos_label = score_config.pos_label
 
     def run(self):
 
