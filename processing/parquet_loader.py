@@ -183,7 +183,8 @@ class ParquetDatasetLoader(D3MDatasetLoader):
         df = container_pandas.DataFrame(raw_df)
 
         resource_id = resources["resID"]
-        resources[resource_id] = df
+        resources_loaded = {}
+        resources_loaded[resource_id] = df
 
         if "d3mIndex" not in df.columns:
             df.insert(0, "d3mIndex", range(len(df)))
@@ -269,4 +270,4 @@ class ParquetDatasetLoader(D3MDatasetLoader):
                         to_replace='[\[\]()<>""{}]', value="", regex=True
                     )
 
-        return metadata, resources
+        return metadata, resources_loaded
